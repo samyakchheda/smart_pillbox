@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "353991824699",
+    "project_id": "final-year-project-6ebae",
+    "storage_bucket": "final-year-project-6ebae.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353991824699:android:4171e19d9e6982f1ba931e",
+        "android_client_info": {
+          "package_name": "com.example.smart_pillbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "353991824699-5cpjjbqbadoudbap4qro74l4s5ca7rqf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smart_pillbox",
+            "certificate_hash": "375c3c99ef971850b350f95e2ad3da885c48257d"
+          }
+        },
+        {
+          "client_id": "353991824699-b3ftrph2hvcvpa3e3eef6sj3v9pmmhbj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5VZ-KQtlO_KzGwdV0DFHlYfULBKIuVkI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "353991824699-b3ftrph2hvcvpa3e3eef6sj3v9pmmhbj.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "353991824699-93lc6p7ir452nc4kv2r8vfena3v85dbd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.smartPillbox"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
