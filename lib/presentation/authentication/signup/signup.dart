@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../common/theme/app_color.dart';
-import '../../common/widgets/snackbar/basic_snack_bar.dart';
-import '../../services/providers/auth_service.dart';
-import '../authentication/signin.dart';
-import '../home/home_screen.dart';
+import 'package:smart_pillbox/presentation/authentication/signup/components/registration_form.dart';
+import '../../../common/theme/app_color.dart';
+import '../../../common/widgets/snackbar/basic_snack_bar.dart';
+import '../../../services/auth_service.dart';
+import '../login/login.dart';
+
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -33,13 +34,13 @@ class _SignupScreenState extends State<SignupScreen> {
       String res = await AuthService().signUpUser(
         email: _emailController.text,
         password: _passwordController.text,
-        name: _usernameController.text,
+        // name: _usernameController.text,
       );
 
       if (res == "success") {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (BuildContext context) => const HomeScreen(),
+            builder: (BuildContext context) => RegistrationForm(email: _emailController.text),
           ),
         );
       } else {
@@ -63,8 +64,6 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                _usernameTextField(),
-                const SizedBox(height: 18),
                 _emailTextField(),
                 const SizedBox(height: 18),
                 _passwordTextField(),
@@ -120,7 +119,7 @@ class _SignupScreenState extends State<SignupScreen> {
         AuthService().signInWithGoogle(context);
       },
       icon: Image.asset(
-        'assets/icons/ic_google.png', // Ensure you have the Google logo in your assets folder
+        'assets/icons/ic_google.png',
         height: 24,
       ),
       label: const Text(
@@ -133,23 +132,6 @@ class _SignupScreenState extends State<SignupScreen> {
           borderRadius: BorderRadius.circular(20),
         ),
       ),
-    );
-  }
-
-  Widget _usernameTextField() {
-    return TextFormField(
-      controller: _usernameController,
-      decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.person),
-        hintText: 'Enter Your Name',
-      ).applyDefaults(Theme.of(context).inputDecorationTheme),
-      keyboardType: TextInputType.name,
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Please enter your name';
-        }
-        return null;
-      },
     );
   }
 
@@ -227,7 +209,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 MaterialPageRoute(
                   builder: (context) => const SigninScreen(),
                 ),
-                (route) => false, // Remove all previous routes
+                (route) => false, 
               );
             },
             child: const Text(
@@ -240,3 +222,4 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 }
+

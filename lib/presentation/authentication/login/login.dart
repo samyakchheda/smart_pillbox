@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:smart_pillbox/presentation/authentication/signup.dart';
-import '../../common/widgets/snackbar/basic_snack_bar.dart';
-import '../../common/theme/app_color.dart';
-import '../../services/providers/auth_service.dart';
-import '../home/home_screen.dart';
+import '../../../common/theme/app_color.dart';
+import '../../../common/widgets/snackbar/basic_snack_bar.dart';
+import '../../../services/auth_service.dart';
+import '../../home/home_screen.dart';
+import '../signup/signup.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -26,24 +26,6 @@ class _SigninScreenState extends State<SigninScreen> {
     super.dispose();
   }
 
-  // void loginUser() async {
-  //   if (_formKey.currentState?.validate() ?? false) {
-  //     String res = await AuthService().loginUser(
-  //       email: _emailController.text.trim(),
-  //       password: _passwordController.text.trim(),
-  //     );
-  //
-  //     if (res == "success") {
-  //       Navigator.of(context).pushReplacement(
-  //         MaterialPageRoute(
-  //           builder: (BuildContext context) => const HomeScreen(),
-  //         ),
-  //       );
-  //     } else {
-  //       showSnackBar(context, res);
-  //     }
-  //   }
-  // }
   void loginUser() async {
     if (_formKey.currentState?.validate() ?? false) {
       String res = await AuthService().loginUser(
@@ -55,7 +37,7 @@ class _SigninScreenState extends State<SigninScreen> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false, // Remove all previous routes
+          (route) => false,
         );
       } else {
         showSnackBar(context, res);
@@ -113,7 +95,7 @@ class _SigninScreenState extends State<SigninScreen> {
                         );
                         if (res == "success") {
                           showSnackBar(context, "Password reset email sent.");
-                          Navigator.pop(context); // Close the dialog
+                          Navigator.pop(context); 
                         } else {
                           showSnackBar(context, res);
                         }
@@ -127,7 +109,7 @@ class _SigninScreenState extends State<SigninScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context), // Close the dialog
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
           ],
@@ -260,7 +242,7 @@ class _SigninScreenState extends State<SigninScreen> {
         AuthService().signInWithGoogle(context);
       },
       icon: Image.asset(
-        'assets/icons/ic_google.png', // Ensure you have the Google logo in your assets folder
+        'assets/icons/ic_google.png', 
         height: 24,
       ),
       label: const Text(
@@ -310,7 +292,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 MaterialPageRoute(
                   builder: (context) => const SignupScreen(),
                 ),
-                (route) => false, // Remove all previous routes
+                (route) => false, 
               );
             },
             child: const Text(
