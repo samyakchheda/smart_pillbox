@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AddMedicineScreen extends StatefulWidget {
@@ -21,6 +22,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         currentPage = _pageController.page!.round();
       });
     });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
@@ -356,9 +363,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _buildTimePicker(
-                            0,
-                            12,
-                            0, // Set initial value to 00
+                            1, // Start from 1 for hours
+                            12, // End at 12 for hours
+                            selectedTimes[frequencyIndex]?.hour ??
+                                0, // Set initial value to current hour or 0 if none
                             (value) {
                               setState(() {
                                 selectedTimes[frequencyIndex] = TimeOfDay(
@@ -379,15 +387,16 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                             ),
                           ),
                           _buildTimePicker(
-                            0,
-                            59,
-                            0, // Set initial value to 00
+                            0, // Start from 0 for minutes
+                            59, // End at 59 for minutes
+                            selectedTimes[frequencyIndex]?.minute ??
+                                0, // Set initial value to current minute or 0 if none
                             (value) {
                               setState(() {
                                 selectedTimes[frequencyIndex] = TimeOfDay(
-                                  hour:
-                                      selectedTimes[frequencyIndex]?.hour ?? 0,
-                                  minute: value,
+                                  hour: selectedTimes[frequencyIndex]?.hour ??
+                                      0, // Keep current hour
+                                  minute: value, // Update the selected minute
                                 );
                               });
                             },
@@ -401,23 +410,46 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                             ),
                           ),
                           _buildTimePicker(
-                            0,
-                            1,
-                            0, // Set initial value to AM
+                            0, // Start from 0 (AM)
+                            1, // End at 1 (PM)
+                            selectedTimes[frequencyIndex]?.hour == null
+                                ? 0 // Set to 0 (AM) if time is null
+                                : selectedTimes[frequencyIndex]!.hour >= 12
+                                    ? 1 // PM
+                                    : 0, // AM
                             (value) {
                               setState(() {
                                 int currentHour =
                                     selectedTimes[frequencyIndex]?.hour ?? 0;
+                                int currentMinute =
+                                    selectedTimes[frequencyIndex]?.minute ?? 0;
+
+                                if (value == 1) {
+                                  // PM selected
+                                  if (currentHour >= 1 && currentHour <= 11) {
+                                    currentHour +=
+                                        12; // Convert hour to PM (1-11 -> 13-23)
+                                  } else if (currentHour == 12) {
+                                    // Keep 12 PM as it is
+                                    currentHour = 12;
+                                  }
+                                } else {
+                                  // AM selected
+                                  if (currentHour >= 12) {
+                                    currentHour -=
+                                        12; // Convert hour to AM (12 PM -> 0, 1 PM -> 1)
+                                  }
+                                }
+
+                                // Update the selected time with the adjusted hour
                                 selectedTimes[frequencyIndex] = TimeOfDay(
-                                  hour: currentHour + (value == 1 ? 12 : 0),
-                                  minute:
-                                      selectedTimes[frequencyIndex]?.minute ??
-                                          0,
+                                  hour: currentHour,
+                                  minute: currentMinute,
                                 );
                               });
                             },
                             labels: ['AM', 'PM'],
-                          ),
+                          )
                         ],
                       ),
                     ),
@@ -429,7 +461,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              _saveDataToFirestore();
+              _saveDataToFirestore(medicineName, isChecked, context);
               print("Selected Times: $selectedTimes");
               Navigator.of(context).pop();
             },
@@ -531,7 +563,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   // Firestore data saving logic
-  void _saveDataToFirestore() {
+  void _saveDataToFirestore(
+      String medicineName, List<bool> isChecked, BuildContext context) {
     // Prepare data: Convert times to DateTime format
     List<Timestamp> times = [];
     selectedTimes.forEach((key, value) {
@@ -546,25 +579,61 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       }
     });
 
-    // Save the data to Firestore
-    FirebaseFirestore.instance.collection('medicines').add({
-      'name': medicineName,
-      'frequency': isChecked
-          .asMap()
-          .entries
-          .where((e) => e.value)
-          .map((e) => ['Morning', 'Afternoon', 'Evening'][e.key])
-          .toList(),
-      'times': times, // Save DateTime as Firestore Timestamps
-    }).then((value) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Medicine added successfully')),
-      );
-      Navigator.of(context).pop();
-    }).catchError((e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    });
+    // Add medicine function
+    void addMedicine(String medicineName, List<bool> isChecked,
+        List<Timestamp> times, BuildContext context) async {
+      try {
+        // Get the current user ID
+        User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('No user is logged in')),
+            );
+          }
+          return;
+        }
+
+        String userId = currentUser.uid;
+
+        // Add medicine to Firestore
+        await FirebaseFirestore.instance
+            .collection('users') // Target the users collection
+            .doc(userId) // Use the logged-in user's ID
+            .set({
+          'medicines': FieldValue.arrayUnion([
+            {
+              'name': medicineName,
+              'frequency': isChecked
+                  .asMap()
+                  .entries
+                  .where((e) => e.value)
+                  .map((e) => ['Morning', 'Afternoon', 'Evening'][e.key])
+                  .toList(),
+              'times': times, // Save DateTime as Firestore Timestamps
+            }
+          ])
+        }, SetOptions(merge: true));
+
+        // Show success message
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Medicine added')),
+          );
+        }
+
+        Navigator.of(context).pop();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      }
+    }
+
+    // Call addMedicine with the prepared data
+    addMedicine(medicineName, isChecked, times, context);
   }
 }

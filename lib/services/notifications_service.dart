@@ -1,82 +1,111 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class NotificationsService {
-  static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+class NotificationHelper {
+  static final FlutterLocalNotificationsPlugin _notification =
       FlutterLocalNotificationsPlugin();
 
-  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'high_importance_channel',
-    'High Importance Notifications',
-    description: 'This channel is used for important notifications.',
-    importance: Importance.high,
-  );
+  // Backend URL for sending notifications via Flask server
+  static const String backendUrl =
+      'https://notification-api-git-main-rishivejani15s-projects.vercel.app/send_notification'; // Replace with your actual server URL
 
-  static void initialize() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
+  // Initialize local notifications
+  static Future<void> init() async {
+    const AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+        InitializationSettings(android: androidInitializationSettings);
 
-    await _localNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        print("Notification clicked: ${response.payload}");
-      },
+    await _notification.initialize(initializationSettings);
+
+    tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+  }
+
+  // Schedule local notification for medicine reminder
+  static Future<void> scheduleMedicineReminder(
+    DateTime medicineTime,
+    String title,
+    String body, {
+    required String notificationId,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+      'medicine_reminder',
+      'Medicine Reminders',
+      channelDescription: 'This channel is for medicine reminders',
+      importance: Importance.max,
+      priority: Priority.high,
     );
 
-    await _localNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_channel);
+    const NotificationDetails notificationDetails =
+        NotificationDetails(android: androidDetails);
 
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        _showNotification(message);
+    try {
+      // Adjust time if it's in the past
+      tz.TZDateTime scheduledTime = tz.TZDateTime.from(medicineTime, tz.local);
+      if (scheduledTime
+          .isBefore(tz.TZDateTime.now(tz.local).add(Duration(minutes: 5)))) {
+        scheduledTime = scheduledTime.add(Duration(days: 1));
       }
-    });
 
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print("Notification opened: ${message.notification?.title}");
-    });
+      await _notification.zonedSchedule(
+        notificationId.hashCode,
+        title,
+        body,
+        scheduledTime,
+        notificationDetails,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } catch (e) {
+      // Optionally, log to a service like Firebase Crashlytics
+      print("Error scheduling notification: $e");
+    }
   }
 
-  static Future<void> requestPermission() async {
-    NotificationSettings settings =
-        await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+  Future<void> sendNotificationToBackend(
+      String deviceToken, String title, String body) async {
+    try {
+      final response = await http.post(
+        Uri.parse(backendUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'device_token':
+              "dcxeyWktSlGFIwetDW0io5:APA91bFFhD4PlijUGTUdeKUf31wAMP0kUQGKvCZQ3S7C3pGSLfzsRvX9siYoy94y4E_bVSzefzKqRlvDqofubJzxQMFQLr-VAHf9d8OQFbUJvJfZGAcDNQY",
+          'title': title,
+          'body': body,
+        }),
+      );
 
-    print('Notification permission status: ${settings.authorizationStatus}');
+      if (response.statusCode == 200) {
+        print('Notification sent successfully');
+      } else {
+        // Print response body for debugging
+        print('Failed to send notification');
+        print('Response code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error sending notification: $e');
+    }
   }
 
-  static Future<void> showCustomNotification(String title, String body) async {
-    await _localNotificationsPlugin.show(
-      0,
-      title,
-      body,
-      NotificationDetails(android: _androidDetails),
-    );
-  }
-
-  static const AndroidNotificationDetails _androidDetails =
-      AndroidNotificationDetails(
-    'high_importance_channel',
-    'High Importance Notifications',
-    channelDescription: 'This channel is used for important notifications.',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
-
-  static Future<void> _showNotification(RemoteMessage message) async {
-    await _localNotificationsPlugin.show(
-      message.hashCode,
-      message.notification?.title,
-      message.notification?.body,
-      NotificationDetails(android: _androidDetails),
-    );
+  // Check if a notification is already scheduled
+  static Future<bool> isNotificationScheduled(String notificationId) async {
+    try {
+      final pendingNotifications =
+          await _notification.pendingNotificationRequests();
+      return pendingNotifications
+          .any((notification) => notification.id == notificationId.hashCode);
+    } catch (e) {
+      // Optionally, log to a service like Firebase Crashlytics
+      return false;
+    }
   }
 }

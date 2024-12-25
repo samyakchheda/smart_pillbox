@@ -1,9 +1,9 @@
 import 'dart:async'; // Import Timer for periodic checks
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import 'add_medicine_screen.dart'; // Import the new screen
-import 'services/notifications_service.dart'; // Import notification service
 
 class HomePage extends StatefulWidget {
   @override
@@ -16,7 +16,6 @@ class _HomePageState extends State<HomePage> {
   late DateTime today;
   late DateTime selectedDate;
   late ScrollController _scrollController; // Declare the controller
-  Timer? _timer; // Timer to check periodically for notifications
 
   @override
   void initState() {
@@ -27,53 +26,19 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToDate(); // Scroll to the current date after the widget is built
     });
-    _startPeriodicCheck(); // Start checking periodically for notifications
   }
 
   @override
   void dispose() {
-    _timer?.cancel(); // Cancel the timer when the widget is disposed
+    print('Disposing HomePage state');
     _scrollController.dispose();
     super.dispose();
   }
 
-  // Start periodic check every 30 seconds
-  void _startPeriodicCheck() {
-    _timer = Timer.periodic(Duration(seconds: 30), (timer) {
-      _checkMedicineTimes();
-    });
-  }
-
-  // Check if the current time matches any medicine time
-  void _checkMedicineTimes() {
-    DateTime now = DateTime.now();
-    FirebaseFirestore.instance
-        .collection('medicines')
-        .get()
-        .then((querySnapshot) {
-      for (var doc in querySnapshot.docs) {
-        var times = doc['times'] ?? [];
-        if (times.isNotEmpty) {
-          var timeStamp = times[0]; // Assuming the first time is the target
-          if (timeStamp is Timestamp) {
-            DateTime medicineTime = timeStamp.toDate();
-
-            // Check if current time is within a 30-second window of the medicine time
-            if (now.year == medicineTime.year &&
-                now.month == medicineTime.month &&
-                now.day == medicineTime.day &&
-                (now.isAfter(medicineTime.subtract(Duration(seconds: 30))) &&
-                    now.isBefore(medicineTime.add(Duration(seconds: 30))))) {
-              // Trigger notification when time matches
-              NotificationsService.showCustomNotification(
-                "Medicine Reminder",
-                "It's time to take your medicine: ${doc['name'] ?? 'Unnamed medicine'}",
-              );
-            }
-          }
-        }
-      }
-    });
+// Fetch the current user's UID
+  String? getCurrentUserId() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user?.uid;
   }
 
   // Scroll to the current date after the widget is built
@@ -87,6 +52,8 @@ class _HomePageState extends State<HomePage> {
         date.day == selectedDate.day &&
         date.month == selectedDate.month &&
         date.year == selectedDate.year);
+
+    print('Selected date index: $selectedDateIndex');
 
     double screenWidth = MediaQuery.of(context).size.width;
     double itemWidth = 50.0;
@@ -141,6 +108,7 @@ class _HomePageState extends State<HomePage> {
                         ? null
                         : () {
                             setState(() {
+                              print('Selected date: $date');
                               selectedDate = date;
                             });
                           },
@@ -180,26 +148,39 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
+            child: StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
-                  .collection('medicines') // 'medicines' collection
+                  .collection('users')
+                  .doc(FirebaseAuth.instance.currentUser?.uid)
                   .snapshots(),
               builder: (context, snapshot) {
+                print('StreamBuilder state: ${snapshot.connectionState}');
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 }
 
-                var medicines = snapshot.data!.docs;
+                if (!snapshot.hasData || snapshot.data?.data() == null) {
+                  print('No data available for user');
+                  return Center(child: Text('No data available'));
+                }
+
+                var medicines = (snapshot.data!.data()
+                        as Map<String, dynamic>)['medicines'] ??
+                    [];
+
+                if (medicines.isEmpty) {
+                  print('No medicines found');
+                  return Center(child: Text('No medicines found'));
+                }
+
                 return ListView.builder(
                   itemCount: medicines.length,
                   itemBuilder: (context, index) {
                     var medicine = medicines[index];
-                    var medicineName = medicine['name'] ??
-                        'Unnamed medicine'; // Default if 'name' is missing
-                    var times = medicine['times'] ??
-                        []; // A list of times for the medicine
+                    var medicineName = medicine['name'] ?? 'Unnamed medicine';
+                    var frequency = medicine['frequency'] ?? [];
+                    var times = medicine['times'] ?? [];
 
-                    // Display the first available time
                     String displayTime = 'No upcoming dose';
 
                     if (times.isNotEmpty) {
@@ -209,6 +190,8 @@ class _HomePageState extends State<HomePage> {
                         displayTime = DateFormat("hh:mm a").format(time);
                       }
                     }
+
+                    print('Medicine: $medicineName, Time: $displayTime');
 
                     return Padding(
                       padding: const EdgeInsets.symmetric(
@@ -250,21 +233,43 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       );
                                     } else if (value == 'delete') {
-                                      FirebaseFirestore.instance
-                                          .collection('medicines')
-                                          .doc(medicine.id)
-                                          .delete()
-                                          .then((_) {
+                                      String? userId = getCurrentUserId();
+
+                                      if (userId != null) {
+                                        FirebaseFirestore.instance
+                                            .collection('users')
+                                            .doc(userId)
+                                            .update({
+                                          'medicines': FieldValue.arrayRemove([
+                                            medicine
+                                          ]) // Remove the medicine from array
+                                        }).then((_) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content:
+                                                      Text('Medicine deleted')),
+                                            );
+                                          }
+                                        }).catchError((e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Error deleting medicine: $e')),
+                                            );
+                                          }
+                                        });
+                                      } else {
                                         ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                          content: Text('Medicine deleted'),
-                                        ));
-                                      }).catchError((e) {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(SnackBar(
-                                          content: Text('Error: $e'),
-                                        ));
-                                      });
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content:
+                                                  Text('User not logged in')),
+                                        );
+                                      }
                                     }
                                   },
                                   itemBuilder: (BuildContext context) => [
