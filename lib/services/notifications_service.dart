@@ -10,7 +10,7 @@ class NotificationHelper {
 
   // Backend URL for sending notifications via Flask server
   static const String backendUrl =
-      'https://notification-api-git-main-rishivejani15s-projects.vercel.app/send_notification'; // Replace with your actual server URL
+      'https://notification-api-iota.vercel.app/send_notification'; // Replace with your actual server URL
 
   // Initialize local notifications
   static Future<void> init() async {
@@ -76,8 +76,7 @@ class NotificationHelper {
         Uri.parse(backendUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'device_token':
-              "dcxeyWktSlGFIwetDW0io5:APA91bFFhD4PlijUGTUdeKUf31wAMP0kUQGKvCZQ3S7C3pGSLfzsRvX9siYoy94y4E_bVSzefzKqRlvDqofubJzxQMFQLr-VAHf9d8OQFbUJvJfZGAcDNQY",
+          'device_token': deviceToken,
           'title': title,
           'body': body,
         }),
