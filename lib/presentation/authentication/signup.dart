@@ -4,7 +4,6 @@ import '../../common/theme/app_color.dart';
 import '../../common/widgets/snackbar/basic_snack_bar.dart';
 import '../../services/providers/auth_service.dart';
 import 'signin.dart';
-import '../home/home_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

@@ -177,7 +177,6 @@ class _HomePageState extends State<HomePage> {
                   itemBuilder: (context, index) {
                     var medicine = medicines[index];
                     var medicineName = medicine['name'] ?? 'Unnamed medicine';
-                    var frequency = medicine['frequency'] ?? [];
                     var times = medicine['times'] ?? [];
 
                     String displayTime = 'No upcoming dose';
