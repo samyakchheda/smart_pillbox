@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'services/medicine_service.dart';
+
 class AddMedicineScreen extends StatefulWidget {
   @override
   _AddMedicineScreenState createState() => _AddMedicineScreenState();
@@ -635,5 +637,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     // Call addMedicine with the prepared data
     addMedicine(medicineName, isChecked, times, context);
+    // Fetch the user ID dynamically
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      checkMedicineTimes(user.uid); // Pass the userId to the function
+    } else {
+      print("User not logged in.");
+    }
   }
 }

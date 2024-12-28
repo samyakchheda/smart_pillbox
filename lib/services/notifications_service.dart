@@ -8,11 +8,9 @@ class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notification =
       FlutterLocalNotificationsPlugin();
 
-  // Backend URL for sending notifications via Flask server
   static const String backendUrl =
-      'https://notification-api-iota.vercel.app/send_notification'; // Replace with your actual server URL
+      'https://notification-api-yham.onrender.com/send_notification'; // Replace with your actual server URL
 
-  // Initialize local notifications
   static Future<void> init() async {
     const AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -24,9 +22,19 @@ class NotificationHelper {
 
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
+
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'medicine_reminder',
+      'Medicine Reminders',
+      description: 'This channel is for medicine reminders',
+      importance: Importance.high,
+    );
+    await _notification
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
   }
 
-  // Schedule local notification for medicine reminder
   static Future<void> scheduleMedicineReminder(
     DateTime medicineTime,
     String title,
@@ -46,12 +54,7 @@ class NotificationHelper {
         NotificationDetails(android: androidDetails);
 
     try {
-      // Adjust time if it's in the past
       tz.TZDateTime scheduledTime = tz.TZDateTime.from(medicineTime, tz.local);
-      if (scheduledTime
-          .isBefore(tz.TZDateTime.now(tz.local).add(Duration(minutes: 5)))) {
-        scheduledTime = scheduledTime.add(Duration(days: 1));
-      }
 
       await _notification.zonedSchedule(
         notificationId.hashCode,
@@ -64,7 +67,6 @@ class NotificationHelper {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );
     } catch (e) {
-      // Optionally, log to a service like Firebase Crashlytics
       print("Error scheduling notification: $e");
     }
   }
@@ -83,28 +85,12 @@ class NotificationHelper {
       );
 
       if (response.statusCode == 200) {
-        print('Notification sent successfully');
+        print('[DEBUG] Notification sent successfully');
       } else {
-        // Print response body for debugging
-        print('Failed to send notification');
-        print('Response code: ${response.statusCode}');
-        print('Response body: ${response.body}');
+        print('[DEBUG] Failed to send notification');
       }
     } catch (e) {
-      print('Error sending notification: $e');
-    }
-  }
-
-  // Check if a notification is already scheduled
-  static Future<bool> isNotificationScheduled(String notificationId) async {
-    try {
-      final pendingNotifications =
-          await _notification.pendingNotificationRequests();
-      return pendingNotifications
-          .any((notification) => notification.id == notificationId.hashCode);
-    } catch (e) {
-      // Optionally, log to a service like Firebase Crashlytics
-      return false;
+      print('[ERROR] Error sending notification: $e');
     }
   }
 }
