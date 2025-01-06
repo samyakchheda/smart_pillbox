@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
-import 'add_medicine_screen.dart'; // Import the new screen
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+
+import 'add_medicine_screen.dart'; // Import for adding medicines
+import 'presentation/profile/user_profile_screen.dart'; // User profile screen
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,33 +17,33 @@ class _HomePageState extends State<HomePage> {
       "Rishi"; // Replace with dynamic username logic if needed
   late DateTime today;
   late DateTime selectedDate;
-  late ScrollController _scrollController; // Declare the controller
+  late ScrollController _scrollController;
+  int _selectedIndex = 0;
+
+  // Screens for navigation
+  final List<Widget> _widgetOptions = [
+    HomeContentScreen(),
+    const UserProfileScreen(),
+  ];
 
   @override
   void initState() {
     super.initState();
-    today = DateTime.now(); // Dynamically fetch today's date
-    selectedDate = today; // Preselect today's date
-    _scrollController = ScrollController(); // Initialize the scroll controller
+    today = DateTime.now();
+    selectedDate = today;
+    _scrollController = ScrollController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToDate(); // Scroll to the current date after the widget is built
+      _scrollToDate();
     });
   }
 
   @override
   void dispose() {
-    print('Disposing HomePage state');
     _scrollController.dispose();
     super.dispose();
   }
 
-// Fetch the current user's UID
-  String? getCurrentUserId() {
-    User? user = FirebaseAuth.instance.currentUser;
-    return user?.uid;
-  }
-
-  // Scroll to the current date after the widget is built
+  // Scroll to the current date
   void _scrollToDate() {
     List<DateTime> dateRange = List.generate(
       21,
@@ -52,7 +55,88 @@ class _HomePageState extends State<HomePage> {
         date.month == selectedDate.month &&
         date.year == selectedDate.year);
 
-    print('Selected date index: $selectedDateIndex');
+    double screenWidth = MediaQuery.of(context).size.width;
+    double itemWidth = 50.0;
+    double offset =
+        (selectedDateIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        offset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: _widgetOptions[_selectedIndex],
+      bottomNavigationBar: CurvedNavigationBar(
+        backgroundColor: Colors.deepPurple,
+        color: Colors.deepPurple.shade200,
+        items: const [
+          Icon(Icons.home, color: Colors.deepPurple, size: 30),
+          Icon(Icons.person, color: Colors.deepPurple, size: 30),
+        ],
+        animationDuration: const Duration(milliseconds: 300),
+        index: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+class HomeContentScreen extends StatefulWidget {
+  @override
+  _HomeContentScreenState createState() => _HomeContentScreenState();
+}
+
+class _HomeContentScreenState extends State<HomeContentScreen> {
+  late DateTime today;
+  late DateTime selectedDate;
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    today = DateTime.now();
+    selectedDate = today;
+    _scrollController = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToDate();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Fetch the current user's UID
+  String? getCurrentUserId() {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user?.uid;
+  }
+
+  void _scrollToDate() {
+    List<DateTime> dateRange = List.generate(
+      21,
+      (index) => today.subtract(Duration(days: 10 - index)),
+    );
+
+    int selectedDateIndex = dateRange.indexWhere((date) =>
+        date.day == selectedDate.day &&
+        date.month == selectedDate.month &&
+        date.year == selectedDate.year);
 
     double screenWidth = MediaQuery.of(context).size.width;
     double itemWidth = 50.0;
@@ -62,7 +146,7 @@ class _HomePageState extends State<HomePage> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: Duration(milliseconds: 500),
+        duration: const Duration(milliseconds: 500),
         curve: Curves.easeInOut,
       );
     }
@@ -77,10 +161,10 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hi, $username!'),
+        title: const Text('Medicine Tracker'),
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings),
             onPressed: () {
               // Handle settings navigation
             },
@@ -107,15 +191,14 @@ class _HomePageState extends State<HomePage> {
                         ? null
                         : () {
                             setState(() {
-                              print('Selected date: $date');
                               selectedDate = date;
                             });
                           },
                     child: Container(
                       width: 50.0,
-                      margin: EdgeInsets.symmetric(horizontal: 2),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6, horizontal: 12),
                       decoration: BoxDecoration(
                         color: isSelected ? Colors.grey.withOpacity(0.2) : null,
                         borderRadius: BorderRadius.circular(8),
@@ -130,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                               color: isFutureDate ? Colors.grey : Colors.black,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             DateFormat('d').format(date),
                             style: TextStyle(
@@ -153,14 +236,12 @@ class _HomePageState extends State<HomePage> {
                   .doc(FirebaseAuth.instance.currentUser?.uid)
                   .snapshots(),
               builder: (context, snapshot) {
-                print('StreamBuilder state: ${snapshot.connectionState}');
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 if (!snapshot.hasData || snapshot.data?.data() == null) {
-                  print('No data available for user');
-                  return Center(child: Text('No data available'));
+                  return const Center(child: Text('No data available'));
                 }
 
                 var medicines = (snapshot.data!.data()
@@ -168,8 +249,7 @@ class _HomePageState extends State<HomePage> {
                     [];
 
                 if (medicines.isEmpty) {
-                  print('No medicines found');
-                  return Center(child: Text('No medicines found'));
+                  return const Center(child: Text('No medicines found'));
                 }
 
                 return ListView.builder(
@@ -189,13 +269,11 @@ class _HomePageState extends State<HomePage> {
                       }
                     }
 
-                    print('Medicine: $medicineName, Time: $displayTime');
-
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                           vertical: 8.0, horizontal: 16.0),
                       child: Container(
-                        padding: EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
@@ -203,7 +281,7 @@ class _HomePageState extends State<HomePage> {
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
                               blurRadius: 6,
-                              offset: Offset(0, 2),
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
@@ -215,7 +293,7 @@ class _HomePageState extends State<HomePage> {
                               children: [
                                 Text(
                                   medicineName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 18,
                                     color: Colors.black,
                                   ),
@@ -238,35 +316,11 @@ class _HomePageState extends State<HomePage> {
                                             .collection('users')
                                             .doc(userId)
                                             .update({
-                                          'medicines': FieldValue.arrayRemove([
-                                            medicine
-                                          ]) // Remove the medicine from array
-                                        }).then((_) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content:
-                                                      Text('Medicine deleted')),
-                                            );
-                                          }
-                                        }).catchError((e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                  content: Text(
-                                                      'Error deleting medicine: $e')),
-                                            );
-                                          }
+                                          'medicines':
+                                              FieldValue.arrayRemove([medicine])
                                         });
                                       } else {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content:
-                                                  Text('User not logged in')),
-                                        );
+                                        print('User not logged in');
                                       }
                                     }
                                   },
@@ -283,17 +337,73 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             ),
-                            Divider(
-                              color: Colors.grey,
-                              thickness: 1,
-                            ),
-                            SizedBox(height: 8),
+                            const Divider(color: Colors.grey, thickness: 1),
+                            const SizedBox(height: 8),
                             Text(
                               '$displayTime',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 20,
                                 color: Colors.black,
                               ),
+                            ),
+                            const Divider(color: Colors.grey, thickness: 1),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment
+                                  .spaceEvenly, // Distribute buttons evenly
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // Handle Ring Daily action
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    minimumSize: const Size(60, 24),
+                                  ),
+                                  child: const Text(
+                                    'Ring Daily',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // Handle Ring Once action
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey,
+                                    minimumSize: const Size(60, 24),
+                                  ),
+                                  child: const Text(
+                                    'Ring Once',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 10,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    // Handle Custom action
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey,
+                                    minimumSize: const Size(60, 24),
+                                  ),
+                                  child: const Text(
+                                    'Custom',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 10,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -303,7 +413,7 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
-          ),
+          )
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -311,39 +421,18 @@ class _HomePageState extends State<HomePage> {
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
-            shape: RoundedRectangleBorder(
+            shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             builder: (context) => AddMedicineScreen(),
           );
         },
-        child: Icon(
+        child: const Icon(
           Icons.add,
           color: Colors.white,
         ),
         backgroundColor: const Color.fromARGB(255, 58, 55, 223),
         elevation: 5,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: 0,
-        onTap: (index) {
-          // Handle bottom navigation taps
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medical_services),
-            label: 'Box',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Me',
-          ),
-        ],
       ),
     );
   }

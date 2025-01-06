@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:home/presentation/introduction/intro_screen1.dart';
-import 'package:home/presentation/introduction/intro_screen2.dart';
-import 'package:home/presentation/introduction/intro_screen3.dart';
+import 'package:home/presentation/onboarding/introduction/intro_screen1.dart';
+import 'package:home/presentation/onboarding/introduction/intro_screen2.dart';
+import 'package:home/presentation/onboarding/introduction/intro_screen3.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-
-import 'authentication/signin.dart';
+import '../authentication/login/login.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -32,7 +31,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: const [IntroScreen1(), IntroScreen2(), IntroScreen3()],
           ),
           Container(
-            alignment: const Alignment(0, 0.85),
+            alignment: const Alignment(0, 0.96),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -43,15 +42,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       MaterialPageRoute(
                         builder: (context) => const SigninScreen(),
                       ),
-                      (route) => false, // Remove all previous routes
+                      (route) => false,
                     );
                   },
                   child: const Padding(
-                    padding: EdgeInsets.symmetric(
-                        vertical: 15.0, horizontal: 25.0), // Increased padding
+                    padding:
+                        EdgeInsets.symmetric(vertical: 15.0, horizontal: 25.0),
                     child: Text(
                       'Skip',
-                      style: TextStyle(fontSize: 18), // Increased font size
+                      style: TextStyle(fontSize: 18),
                     ),
                   ),
                 ),
@@ -64,17 +63,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             MaterialPageRoute(
                               builder: (context) => const SigninScreen(),
                             ),
-                            (route) => false, // Remove all previous routes
+                            (route) => false,
                           );
                         },
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
-                              vertical: 15.0,
-                              horizontal: 25.0), // Increased padding
+                              vertical: 15.0, horizontal: 25.0),
                           child: Text(
                             'Done',
-                            style:
-                                TextStyle(fontSize: 18), // Increased font size
+                            style: TextStyle(fontSize: 18),
                           ),
                         ),
                       )
@@ -86,12 +83,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         },
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
-                              vertical: 15.0,
-                              horizontal: 25.0), // Increased padding
+                              vertical: 15.0, horizontal: 25.0),
                           child: Text(
                             'Next',
-                            style:
-                                TextStyle(fontSize: 18), // Increased font size
+                            style: TextStyle(fontSize: 18),
                           ),
                         ),
                       ),
