@@ -70,7 +70,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     try {
       User? currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        // Only show SnackBar if widget is mounted
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('No user is logged in')),
@@ -81,12 +80,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
       String userId = currentUser.uid;
 
+      // Prepare frequency and times
       List<String> frequency = isChecked
           .asMap()
           .entries
           .where((entry) => entry.value)
           .map((entry) => ['Morning', 'Afternoon', 'Evening'][entry.key])
           .toList();
+
       List<Timestamp> times = selectedTimes.entries
           .where((entry) => entry.value != null)
           .map((entry) {
@@ -97,22 +98,44 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         );
       }).toList();
 
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'medicines': FieldValue.arrayUnion([
-          {
-            'name': medicineName,
-            'frequency': frequency,
-            'times': times,
-          }
-        ]),
-      }, SetOptions(merge: true));
+      // Sort times for the new medicine
+      times.sort((a, b) => a.toDate().compareTo(b.toDate()));
 
-      // Show success message if widget is still mounted
+      // Fetch existing medicines from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+
+      List<Map<String, dynamic>> medicines = [];
+      if (userDoc.exists && userDoc.data() != null) {
+        medicines = List<Map<String, dynamic>>.from(
+            (userDoc.data() as Map<String, dynamic>)['medicines'] ?? []);
+      }
+
+      // Add or update the current medicine
+      medicines.add({
+        'name': medicineName,
+        'frequency': frequency,
+        'times': times,
+      });
+
+      // Sort medicines by their earliest time
+      medicines.sort((a, b) {
+        Timestamp aEarliest = (a['times'] as List<dynamic>).first;
+        Timestamp bEarliest = (b['times'] as List<dynamic>).first;
+        return aEarliest.toDate().compareTo(bEarliest.toDate());
+      });
+
+      // Update the medicines field in Firestore (merge with existing data)
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'medicines': medicines,
+      }, SetOptions(merge: true)); // Ensures other fields are not overwritten
+
       if (context.mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      // Handle error, show SnackBar if widget is still mounted
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
