@@ -10,10 +10,30 @@ import 'home_page.dart';
 import 'services/notifications_service.dart';
 import 'services/permissions_helper.dart';
 
+// Background handler for receiving FCM messages when the app is killed
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Initialize Firebase in the background handler (necessary for Firebase to work)
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Call the notification handler to schedule a local notification
+  await NotificationHelper.scheduleMedicineReminder(
+    DateTime.now(),
+    message.notification?.title ?? 'Medicine Reminder',
+    message.notification?.body ?? 'Time to take your medicine',
+    notificationId: message.messageId ?? 'default',
+  );
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize the Notification helper
   await NotificationHelper.init();
+
+  // Set background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(const MyApp());
@@ -67,6 +87,7 @@ class AuthWrapper extends StatelessWidget {
   void requestPermissions(BuildContext context) async {
     await requestNotificationPermission();
     await requestAlarmPermission(context);
+    setupFCM();
   }
 }
 
@@ -84,6 +105,10 @@ Future<void> setupFCM() async {
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       await saveTokenToFirestore(newToken);
     });
+
+    // Request permissions for notifications
+    await messaging.requestPermission();
+
   } catch (e) {
     print("Error setting up FCM: $e");
   }
@@ -109,14 +134,4 @@ Future<void> saveTokenToFirestore(String token) async {
   } catch (e) {
     print('Error saving token: $e');
   }
-}
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print("Handling background message: ${message.messageId}");
-  await NotificationHelper.scheduleMedicineReminder(
-    DateTime.now(),
-    message.notification?.title ?? 'Medicine Reminder',
-    message.notification?.body ?? 'Time to take your medicine',
-    notificationId: message.messageId ?? 'default',
-  );
 }
