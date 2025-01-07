@@ -127,10 +127,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         return aEarliest.toDate().compareTo(bEarliest.toDate());
       });
 
-      // Update the medicines field in Firestore (merge with existing data)
+      // Update Firestore
       await FirebaseFirestore.instance.collection('users').doc(userId).set({
         'medicines': medicines,
-      }, SetOptions(merge: true)); // Ensures other fields are not overwritten
+      }, SetOptions(merge: true));
+
+      // Now trigger checkMedicineTimes after Firestore update is complete
+      checkMedicineTimes(userId);
 
       if (context.mounted) {
         Navigator.of(context).pop();
@@ -179,12 +182,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       },
       saveData: () {
         _saveDataToFirestore(medicineName, isChecked, context);
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          checkMedicineTimes(user.uid); // Pass the userId to the function
-        } else {
-          print("User not logged in.");
-        }
       },
     );
   }
