@@ -1,8 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:home/services/alarm_screen.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notification =
@@ -18,7 +22,19 @@ class NotificationHelper {
     const InitializationSettings initializationSettings =
         InitializationSettings(android: androidInitializationSettings);
 
-    await _notification.initialize(initializationSettings);
+    await _notification.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) async {
+        navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => AlarmScreen(
+              medicineName: response.payload ?? 'Your Medicine',
+            ),
+          ),
+          (route) => false, // Remove all other routes
+        );
+      },
+    );
 
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));

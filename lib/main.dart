@@ -10,6 +10,8 @@ import 'home_page.dart';
 import 'services/notifications_service.dart';
 import 'services/permissions_helper.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 // Background handler for receiving FCM messages when the app is killed
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Initialize Firebase in the background handler (necessary for Firebase to work)
@@ -45,6 +47,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'Smart Pillbox',
       theme: ThemeData(
@@ -108,7 +111,6 @@ Future<void> setupFCM() async {
 
     // Request permissions for notifications
     await messaging.requestPermission();
-
   } catch (e) {
     print("Error setting up FCM: $e");
   }

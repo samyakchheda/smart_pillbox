@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:home/services/medicine_service.dart';
 import 'medicine_setup/screen1.dart';
 import 'medicine_setup/screen2.dart';
@@ -132,8 +133,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         'medicines': medicines,
       }, SetOptions(merge: true));
 
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+          FlutterLocalNotificationsPlugin();
+// Initialize the plugin
+
       // Now trigger checkMedicineTimes after Firestore update is complete
-      checkMedicineTimes(userId);
+      checkMedicineTimes(userId, flutterLocalNotificationsPlugin);
 
       if (context.mounted) {
         Navigator.of(context).pop();
