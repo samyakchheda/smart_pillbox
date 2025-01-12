@@ -1,9 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-class AuthService {
+class FirebaseServices {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
@@ -157,14 +156,10 @@ class AuthService {
     return res;
   }
 
-  Future<void> signOut() async {
-    await _firebaseAuth.signOut();
-  }
-
   static Future<String?> changePassword(
       {required String currentPassword,
-      required String newPassword,
-      required BuildContext context}) async {
+        required String newPassword,
+        required BuildContext context}) async {
     try {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -182,55 +177,120 @@ class AuthService {
     }
   }
 
-  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+  Future<void> signOut() async {
+    await _firebaseAuth.signOut();
+  }
+
+  Future<void> addMedicineToUser(Map<String, dynamic> medicineData) async {
     try {
-      final GoogleSignInAccount? gUser = await GoogleSignIn().signIn();
-      if (gUser == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Google Sign-In was canceled.")),
-        );
-        return null;
-      }
-      final GoogleSignInAuthentication gAuth = await gUser.authentication;
+      String uid = FirebaseAuth.instance.currentUser!.uid;
 
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: gAuth.accessToken,
-        idToken: gAuth.idToken,
-      );
+      DocumentReference userDocRef = _firestore.collection('users').doc(uid);
 
-      final UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(credential);
+      // Fetch the current user document
+      DocumentSnapshot userDoc = await userDocRef.get();
 
-      final User? user = userCredential.user;
-      if (user != null) {
-        DocumentReference userRef =
-            _firestore.collection('users').doc(user.uid);
-        final docSnapshot = await userRef.get();
+      // Check if the user document exists
+      if (userDoc.exists) {
+        // Add the medicine to the 'medicines' field in the user's document
+        await userDocRef.update({
+          'medicines': FieldValue.arrayUnion([medicineData]), // Append medicine data to the array
+        });
 
-        if (!docSnapshot.exists) {
-          await userRef.set({
-            'name': user.displayName,
-            'email': user.email,
-            'profilePicture': user.photoURL ?? '',
-            'uid': user.uid,
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Welcome, ${user.displayName}!")),
-          );
-        }
-
-        return userCredential;
+        print('Medicine added to user document');
       } else {
-        throw FirebaseAuthException(
-            code: 'USER_NULL', message: "User returned as null after sign-in.");
+        print('User document not found');
       }
     } catch (e) {
-      print('Error during Google Sign-In: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: ${e.toString()}")),
-      );
-      return null;
+      print('Error adding medicine: $e');
+    }
+  }
+
+
+  Future<List<Map<String, dynamic>>> fetchMedicinesForUser() async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      // Get the user's document from the 'users' collection
+      DocumentSnapshot userDoc =
+      await _firestore.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        List<dynamic> medicines = userDoc['medicines'] ?? [];
+
+        return medicines.map((medicine) {
+          return {
+            'medicineName': medicine['medicineName'] ?? 'Unknown',
+            'startDate': medicine['startDate'] ?? '',
+            'endDate': medicine['endDate'] ?? '',
+            'doseFrequency': medicine['doseFrequency'] ?? 'Not specified',
+            'medicineTimes': medicine['medicineTimes'] ?? 'Not specified',
+            'selectedDays': medicine['selectedDays'] ?? [],
+          };
+        }).toList();
+      } else {
+        print('User document not found');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching medicines: $e');
+      return [];
+    }
+  }
+
+  Future<void> deleteMedicineFromUser(String medicineName) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      DocumentReference userDocRef = _firestore.collection('users').doc(uid);
+      DocumentSnapshot userDoc = await userDocRef.get();
+
+      if (userDoc.exists) {
+        List<dynamic> medicines = userDoc['medicines'] ?? [];
+        medicines.removeWhere(
+                (medicine) => medicine['medicineName'] == medicineName);
+        await userDocRef.update({
+          'medicines': medicines,
+        });
+        print('Medicine deleted from user document');
+      } else {
+        print('User document not found');
+      }
+    } catch (e) {
+      print('Error deleting medicine: $e');
+    }
+  }
+
+  Future<void> updateMedicineForUser(
+      String medicineName, Map<String, dynamic> updatedMedicineData) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      DocumentReference userDocRef = _firestore.collection('users').doc(uid);
+      DocumentSnapshot userDoc = await userDocRef.get();
+
+      if (userDoc.exists) {
+        List<dynamic> medicines = userDoc['medicines'] ?? [];
+
+        // Find the index of the medicine to update
+        int medicineIndex = medicines
+            .indexWhere((medicine) => medicine['medicineName'] == medicineName);
+
+        if (medicineIndex != -1) {
+          // Update the medicine data
+          medicines[medicineIndex] = updatedMedicineData;
+
+          // Update the user's document with the new medicines list
+          await userDocRef.update({
+            'medicines': medicines,
+          });
+          print('Medicine updated in user document');
+        } else {
+          print('Medicine not found');
+        }
+      } else {
+        print('User document not found');
+      }
+    } catch (e) {
+      print('Error updating medicine: $e');
     }
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../common/theme/app_color.dart';
-import '../../../common/widgets/snackbar/basic_snack_bar.dart';
-import '../../../services/auth_service.dart';
+import '../../../core/constants/app_color.dart';
+import '../../../core/widgets/basic_snack_bar.dart';
+import '../../../services/firebase_services.dart';
 import '../../home/home_screen.dart';
 import '../signup/signup.dart';
 
@@ -28,7 +28,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   void loginUser() async {
     if (_formKey.currentState?.validate() ?? false) {
-      String res = await AuthService().loginUser(
+      String res = await FirebaseServices().loginUser(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -90,12 +90,12 @@ class _SigninScreenState extends State<SigninScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        String res = await AuthService().sendPasswordResetEmail(
+                        String res = await FirebaseServices().sendPasswordResetEmail(
                           email: emailController.text.trim(),
                         );
                         if (res == "success") {
                           showSnackBar(context, "Password reset email sent.");
-                          Navigator.pop(context); 
+                          Navigator.pop(context);
                         } else {
                           showSnackBar(context, res);
                         }
@@ -146,7 +146,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 const SizedBox(height: 10),
                 _dividerWithOr(),
                 const SizedBox(height: 10),
-                _googleSignInButton(),
+                _googleSignIn(),
                 const SizedBox(height: 10),
                 _navigateToSignupScreen(),
               ],
@@ -236,14 +236,13 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 
-  Widget _googleSignInButton() {
+  Widget _googleSignIn() {
     return ElevatedButton.icon(
-      onPressed: () {
-        AuthService().signInWithGoogle(context);
-      },
+      onPressed: () {},
       icon: Image.asset(
-        'assets/icons/ic_google.png', 
-        height: 24,
+        'assets/icons/ic_google.png',
+        height: 25,
+        width: 25,
       ),
       label: const Text(
         'Continue with Google',
@@ -257,7 +256,6 @@ class _SigninScreenState extends State<SigninScreen> {
       ),
     );
   }
-
   Widget _forgotPasswordText() {
     return Padding(
       padding: const EdgeInsets.only(top: 5, right: 8),
@@ -292,7 +290,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 MaterialPageRoute(
                   builder: (context) => const SignupScreen(),
                 ),
-                (route) => false, 
+                (route) => false,
               );
             },
             child: const Text(

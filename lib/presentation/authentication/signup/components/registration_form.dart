@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:smart_pillbox/presentation/home/home_screen.dart';
-import 'package:smart_pillbox/services/auth_service.dart';
+import 'package:smart_pillbox/services/firebase_services.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../common/widgets/snackbar/basic_snack_bar.dart';
+import '../../../../core/widgets/basic_snack_bar.dart';
 
 class RegistrationForm extends StatefulWidget {
   final String email;
@@ -33,7 +33,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
 
       String genderString = _selectedGender ?? '';
 
-      String res = await AuthService().storeOtherDetails(
+      String res = await FirebaseServices().storeOtherDetails(
           email: widget.email,
           name: nameController.text,
           birthDate: formattedBirthDate,

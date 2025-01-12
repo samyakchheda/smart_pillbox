@@ -39,19 +39,17 @@ dependencies:
   lottie:
   firebase_core:
   firebase_auth:
-  firebase_storage:
   cloud_firestore:
   google_sign_in:
   http:
   path_provider:
   shared_preferences:
-  google_mlkit_text_recognition:
   image_picker: ^0.8.4+4
-  gallery_picker:
-  curved_navigation_bar:
-  intl:
+  intl: ^0.20.1
   flutter_svg:
   responsive_framework: ^0.2.0
+  animated_notch_bottom_bar:
+  font_awesome_flutter: ^10.0.0
 
 
 dev_dependencies:

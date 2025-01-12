@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smart_pillbox/presentation/onboarding/onboarding_screen.dart';
 import 'package:smart_pillbox/presentation/home/home_screen.dart'; // Import your home screen
 import 'package:smart_pillbox/firebase_options.dart';
-import 'common/theme/app_theme.dart';
+import 'core/constants/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
