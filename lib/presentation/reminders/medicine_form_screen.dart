@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class MedicineFormScreen extends StatefulWidget {
   final Map<String, dynamic>? existingData;
 
@@ -122,20 +122,41 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         'isActive': isNotification,
       };
 
-      if (widget.existingData != null) {
-        // Update existing record
-        final docId = widget.existingData!['id'];
-        await FirebaseFirestore.instance
-            .collection('medicines')
-            .doc(docId)
-            .update(medicineData);
-        Navigator.pop(context, {...medicineData, 'id': docId});
+      // Get the current user ID, replace this with the actual way you're identifying users
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+
+      if (userId == null) {
+        // Handle the case where the user is not authenticated
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User is not authenticated.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final docRef = FirebaseFirestore.instance.collection('users').doc(userId);
+
+      // Check if the user document exists
+      final docSnapshot = await docRef.get();
+
+      if (!docSnapshot.exists) {
+        // If the document doesn't exist, create it and initialize the 'medicines' field
+        await docRef.set({
+          'medicines': [medicineData], // Initialize medicines field with the new medicine
+        });
+        Navigator.pop(context, {...medicineData});
       } else {
-        // Create new record
-        final docRef = await FirebaseFirestore.instance
-            .collection('medicines')
-            .add(medicineData);
-        Navigator.pop(context, {...medicineData, 'id': docRef.id});
+        // If the document exists, update the medicines array
+        final medicines = List.from(docSnapshot.data()?['medicines'] ?? []);
+        medicines.add(medicineData);
+
+        await docRef.update({
+          'medicines': medicines,
+        });
+
+        Navigator.pop(context, {...medicineData});
       }
     }
   }
