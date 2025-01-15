@@ -12,7 +12,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final NotchBottomBarController _controller = NotchBottomBarController(index: 0);
+  final NotchBottomBarController _controller =
+      NotchBottomBarController(index: 0);
 
   final List<Widget> _pages = [
     const Center(
@@ -24,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
     const MedicineListScreen(),
     const UserProfileScreen(),
   ];
-
 
   @override
   Widget build(BuildContext context) {

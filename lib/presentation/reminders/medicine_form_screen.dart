@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 class MedicineFormScreen extends StatefulWidget {
   final Map<String, dynamic>? existingData;
 
@@ -18,63 +19,40 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
   final _endDateController = TextEditingController();
 
   List<String> selectedDays = [];
-  List<String> medicineTimes = [];
+  List<Timestamp> medicineTimes = [];
   String? doseFrequency;
   bool isNotification = true;
 
   final List<String> daysOfWeek = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
   ];
   final List<String> doseOptions = ['Once', 'Twice', 'Thrice', 'More'];
-
-  String? previousDoseFrequency;
 
   @override
   void initState() {
     super.initState();
     if (widget.existingData != null) {
       _medicineNameController.text = widget.existingData!['medicineName'] ?? '';
-      _startDateController.text = widget.existingData!['startDate'] ?? '';
-      _endDateController.text = widget.existingData!['endDate'] ?? '';
-      selectedDays = List<String>.from(widget.existingData!['selectedDays'] ?? []);
+      _startDateController.text = widget.existingData!['startDate'] != null
+          ? DateFormat('dd-MM-yyyy')
+              .format(widget.existingData!['startDate'].toDate())
+          : '';
+      _endDateController.text = widget.existingData!['endDate'] != null
+          ? DateFormat('dd-MM-yyyy')
+              .format(widget.existingData!['endDate'].toDate())
+          : '';
+      selectedDays =
+          List<String>.from(widget.existingData!['selectedDays'] ?? []);
       doseFrequency = widget.existingData!['doseFrequency'];
-      medicineTimes = List<String>.from(widget.existingData!['medicineTimes'] ?? []);
+      medicineTimes =
+          List<Timestamp>.from(widget.existingData!['medicineTimes'] ?? []);
       isNotification = widget.existingData!['isActive'] ?? true;
-      previousDoseFrequency = widget.existingData!['doseFrequency'];
-    }
-  }
-
-  Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      controller.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-    }
-  }
-
-  void _addMedicineTime() async {
-    if (medicineTimes.length >= _getDoseCount()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You have already added the maximum number of times.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        medicineTimes.add(pickedTime.format(context));
-      });
     }
   }
 
@@ -93,40 +71,90 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     }
   }
 
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
+    }
+  }
+
+  void _addMedicineTime() async {
+    final maxAllowedTimes = doseFrequency == 'More' ? 10 : _getDoseCount();
+
+    if (medicineTimes.length >= maxAllowedTimes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'You can only add up to $maxAllowedTimes timings for the selected dose frequency.',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (pickedTime != null) {
+      final now = DateTime.now();
+      final dateTime = DateTime(
+          now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
+      setState(() {
+        medicineTimes.add(Timestamp.fromDate(dateTime));
+      });
+    }
+  }
+
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      if (medicineTimes.length < _getDoseCount()) {
+      if (doseFrequency == null || doseFrequency!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please add all required medicine times.'),
+            content: Text('Please select a dose frequency'),
             backgroundColor: Colors.red,
           ),
         );
         return;
       }
 
-      if (previousDoseFrequency != null && _doseFrequencyIsDecreased()) {
-        bool shouldProceed = await _showDoseChangeAlert();
-        if (!shouldProceed) {
-          return;
-        }
+      final requiredDoseCount = _getDoseCount();
+      if (medicineTimes.length < requiredDoseCount) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Please add ${requiredDoseCount - medicineTimes.length} more timing(s) to match the selected dose frequency.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
       }
 
       final medicineData = {
         'medicineName': _medicineNameController.text,
-        'startDate': _startDateController.text,
-        'endDate': _endDateController.text,
+        'startDate': Timestamp.fromDate(
+          DateFormat('dd-MM-yyyy').parse(_startDateController.text),
+        ),
+        'endDate': Timestamp.fromDate(
+          DateFormat('dd-MM-yyyy').parse(_endDateController.text),
+        ),
         'selectedDays': selectedDays,
         'doseFrequency': doseFrequency,
         'medicineTimes': medicineTimes,
         'isActive': isNotification,
       };
 
-      // Get the current user ID, replace this with the actual way you're identifying users
       final userId = FirebaseAuth.instance.currentUser?.uid;
 
       if (userId == null) {
-        // Handle the case where the user is not authenticated
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('User is not authenticated.'),
@@ -137,72 +165,26 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
       }
 
       final docRef = FirebaseFirestore.instance.collection('users').doc(userId);
-
-      // Check if the user document exists
       final docSnapshot = await docRef.get();
 
       if (!docSnapshot.exists) {
-        // If the document doesn't exist, create it and initialize the 'medicines' field
         await docRef.set({
-          'medicines': [medicineData], // Initialize medicines field with the new medicine
+          'medicines': [medicineData]
         });
-        Navigator.pop(context, {...medicineData});
       } else {
-        // If the document exists, update the medicines array
         final medicines = List.from(docSnapshot.data()?['medicines'] ?? []);
-        medicines.add(medicineData);
-
-        await docRef.update({
-          'medicines': medicines,
-        });
-
-        Navigator.pop(context, {...medicineData});
+        if (widget.existingData != null) {
+          final index = medicines.indexWhere(
+              (medicine) => medicine['id'] == widget.existingData!['id']);
+          if (index != -1) medicines[index] = medicineData;
+        } else {
+          medicines.add(medicineData);
+        }
+        await docRef.update({'medicines': medicines});
       }
-    }
-  }
 
-  bool _doseFrequencyIsDecreased() {
-    if (previousDoseFrequency == null || doseFrequency == null) {
-      return false;
+      Navigator.pop(context, medicineData);
     }
-    final previousCount = _getDoseCountForFrequency(previousDoseFrequency!);
-    final newCount = _getDoseCountForFrequency(doseFrequency!);
-    return newCount < previousCount;
-  }
-
-  int _getDoseCountForFrequency(String frequency) {
-    switch (frequency) {
-      case 'Once':
-        return 1;
-      case 'Twice':
-        return 2;
-      case 'Thrice':
-        return 3;
-      case 'More':
-        return 4;
-      default:
-        return 0;
-    }
-  }
-
-  Future<bool> _showDoseChangeAlert() async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Warning'),
-        content: const Text('Are you sure you want to decrease the dose frequency?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ) ?? false;
   }
 
   @override
@@ -212,124 +194,62 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         title: const Text('Add Medicine Schedule'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Medicine Details',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _medicineNameController,
                   decoration: const InputDecoration(
                     labelText: 'Medicine Name',
-                    border: OutlineInputBorder(),
+                    hintText: 'Enter the name of the medicine',
                   ),
                   validator: (value) => value == null || value.isEmpty
                       ? 'Please enter the medicine name'
                       : null,
                 ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _startDateController,
-                        decoration: const InputDecoration(
-                          labelText: 'Start Date',
-                          border: OutlineInputBorder(),
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectDate(context, _startDateController),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select a start date'
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _endDateController,
-                        decoration: const InputDecoration(
-                          labelText: 'End Date',
-                          border: OutlineInputBorder(),
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectDate(context, _endDateController),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please select an end date'
-                            : null,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Dose Frequency',
-                  style: TextStyle(fontSize: 16),
-                ),
-                DropdownButtonFormField<String>(
-                  value: doseFrequency,
-                  items: doseOptions.map((option) {
-                    return DropdownMenuItem(
-                      value: option,
-                      child: Text(option),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      doseFrequency = value;
-                    });
-                  },
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _startDateController,
                   decoration: const InputDecoration(
-                    labelText: 'Select Dose Frequency',
-                    border: OutlineInputBorder(),
+                    labelText: 'Start Date',
+                    hintText: 'Select a start date',
                   ),
+                  readOnly: true,
+                  onTap: () => _selectDate(context, _startDateController),
                   validator: (value) => value == null || value.isEmpty
-                      ? 'Please select a dose frequency'
+                      ? 'Please select a start date'
                       : null,
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Medicine Times',
-                  style: TextStyle(fontSize: 16),
-                ),
-                for (int i = 0; i < medicineTimes.length; i++)
-                  ListTile(
-                    title: Text('Medicine Time ${i + 1}'),
-                    subtitle: Text(medicineTimes[i]),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        setState(() {
-                          medicineTimes.removeAt(i);
-                        });
-                      },
-                    ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _endDateController,
+                  decoration: const InputDecoration(
+                    labelText: 'End Date',
+                    hintText: 'Select an end date',
                   ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: _addMedicineTime,
+                  readOnly: true,
+                  onTap: () => _selectDate(context, _endDateController),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please select an end date'
+                      : null,
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Days of the Week',
-                  style: TextStyle(fontSize: 16),
-                ),
+                const SizedBox(height: 20),
+                const Text('Select Days',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 Wrap(
                   spacing: 8.0,
                   children: daysOfWeek.map((day) {
                     return ChoiceChip(
                       label: Text(day),
                       selected: selectedDays.contains(day),
-                      onSelected: (selected) {
+                      onSelected: (isSelected) {
                         setState(() {
-                          if (selected) {
+                          if (isSelected) {
                             selectedDays.add(day);
                           } else {
                             selectedDays.remove(day);
@@ -339,20 +259,89 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: const Text('Enable Notification'),
-                  value: isNotification,
-                  onChanged: (bool value) {
+                const SizedBox(height: 20),
+
+                DropdownButtonFormField<String>(
+                  value: doseFrequency,
+                  onChanged: (newValue) {
                     setState(() {
-                      isNotification = value;
+                      doseFrequency = newValue;
                     });
                   },
+                  items: doseOptions.map((option) {
+                    return DropdownMenuItem<String>(
+                      value: option,
+                      child: Text(option),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: 'Dose Frequency',
+                    hintText: 'Select the frequency of the dose',
+                  ),
+                  validator: (value) => value == null || value.isEmpty
+                      ? 'Please select a dose frequency'
+                      : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+
+                // Add Medicine Time Button
+                IconButton(
+                  onPressed: _addMedicineTime,
+                  icon: const Icon(Icons.add, size: 30),
+                  tooltip: 'Add Medicine Time',
+                ),
+                const SizedBox(height: 20),
+                const Text('Times:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: medicineTimes.length,
+                  itemBuilder: (context, index) {
+                    final time = DateFormat('hh:mm a')
+                        .format(medicineTimes[index].toDate());
+                    return ListTile(
+                      title: Text(time),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          setState(() {
+                            medicineTimes.removeAt(index);
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Alarms',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Switch(
+                      value: isNotification,
+                      onChanged: (bool value) {
+                        setState(() {
+                          isNotification = value;
+                        });
+                      },
+                    ),
+                    const Text('Notifications',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
                 ElevatedButton(
                   onPressed: _submitForm,
-                  child: Text(widget.existingData != null ? 'Update Medicine' : 'Add Medicine'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 30.0),
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: const Text('Save Medicine Schedule',
+                      style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),

@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:smart_pillbox/presentation/onboarding/onboarding_screen.dart';
-import 'package:smart_pillbox/presentation/home/home_screen.dart'; // Import your home screen
+import 'package:smart_pillbox/presentation/home/home_screen.dart';
 import 'package:smart_pillbox/firebase_options.dart';
 import 'core/constants/app_theme.dart';
 
