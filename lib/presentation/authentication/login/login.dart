@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:home/home_page.dart';
 import 'package:home/main.dart';
-import '../../../common/theme/app_color.dart';
-import '../../../common/widgets/snackbar/basic_snack_bar.dart';
-import '../../../services/auth_service.dart';
+import '../../../core/constants/app_color.dart';
+import '../../../core/widgets/basic_snack_bar.dart';
+import '../../../services/firebase_services.dart';
+import '../../home/home_screen.dart';
 import '../signup/signup.dart';
 
 class SigninScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class _SigninScreenState extends State<SigninScreen> {
 
   void loginUser() async {
     if (_formKey.currentState?.validate() ?? false) {
-      String res = await AuthService().loginUser(
+      String res = await FirebaseServices().loginUser(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -38,7 +38,7 @@ class _SigninScreenState extends State<SigninScreen> {
         setupFCM();
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
           (route) => false,
         );
       } else {
@@ -92,7 +92,8 @@ class _SigninScreenState extends State<SigninScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        String res = await AuthService().sendPasswordResetEmail(
+                        String res =
+                            await FirebaseServices().sendPasswordResetEmail(
                           email: emailController.text.trim(),
                         );
                         if (res == "success") {
@@ -148,7 +149,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 const SizedBox(height: 10),
                 _dividerWithOr(),
                 const SizedBox(height: 10),
-                _googleSignInButton(),
+                _googleSignIn(),
                 const SizedBox(height: 10),
                 _navigateToSignupScreen(),
               ],
@@ -238,14 +239,13 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 
-  Widget _googleSignInButton() {
+  Widget _googleSignIn() {
     return ElevatedButton.icon(
-      onPressed: () {
-        AuthService().signInWithGoogle(context);
-      },
+      onPressed: () {},
       icon: Image.asset(
         'assets/icons/ic_google.png',
-        height: 24,
+        height: 25,
+        width: 25,
       ),
       label: const Text(
         'Continue with Google',

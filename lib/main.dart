@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:home/core/constants/app_theme.dart';
+import 'package:home/presentation/home/home_screen.dart';
 import 'package:home/presentation/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,18 +49,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
+      // navigatorKey: navigatorKey,
       title: 'Smart Pillbox',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color(0xFFF6F6F6),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF6F6F6),
-          elevation: 0,
-          iconTheme: IconThemeData(color: Colors.black),
-        ),
-      ),
+      // theme: ThemeData(
+      //   primarySwatch: Colors.blue,
+      //   scaffoldBackgroundColor: const Color(0xFFF6F6F6),
+      //   appBarTheme: const AppBarTheme(
+      //     backgroundColor: Color(0xFFF6F6F6),
+      //     elevation: 0,
+      //     iconTheme: IconThemeData(color: Colors.black),
+      //   ),
+      // ),
+      theme: AppTheme.lightTheme,
+      // darkTheme: AppTheme.darkTheme,
+      debugShowCheckedModeBanner: false,
       home: const AuthWrapper(),
     );
   }
@@ -76,7 +80,7 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
-            return HomePage();
+            return const HomeScreen();
           } else {
             return const OnboardingScreen();
           }

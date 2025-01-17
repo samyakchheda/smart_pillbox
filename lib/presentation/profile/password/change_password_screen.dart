@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:home/services/auth_service.dart';
+import 'package:home/services/firebase_services.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -28,7 +28,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       _isLoading = true;
     });
 
-    final errorMessage = await AuthService.changePassword(
+    final errorMessage = await FirebaseServices.changePassword(
       currentPassword: _currentPasswordController.text,
       newPassword: _newPasswordController.text,
       context: context,

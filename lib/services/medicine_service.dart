@@ -51,8 +51,8 @@ Future<void> checkMedicineTimes(
 
     // Process each medicine
     for (var medicine in medicines) {
-      String medicineName = medicine['name'] ?? 'Unnamed medicine';
-      List<dynamic> times = medicine['times'] ?? [];
+      String medicineName = medicine['medicineName'] ?? 'Unnamed medicine';
+      List<dynamic> times = medicine['medicineTimes'] ?? [];
       print("[DEBUG] Processing medicine: $medicineName, times: $times");
 
       for (var timeStamp in times) {
@@ -126,7 +126,7 @@ Future<void> scheduleAlarm(
     enableVibration: true,
     playSound: true,
     fullScreenIntent: true,
-    timeoutAfter: 60000, // Auto-dismiss after 1 minute
+    timeoutAfter: 60000,
     actions: <AndroidNotificationAction>[
       AndroidNotificationAction(
         'snooze',
@@ -135,6 +135,7 @@ Future<void> scheduleAlarm(
       AndroidNotificationAction(
         'stop',
         'Stop',
+        cancelNotification: true,
       ),
     ],
   );
