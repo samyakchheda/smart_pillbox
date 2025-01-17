@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 class FirebaseServices {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -184,34 +185,47 @@ class FirebaseServices {
 
   Future<void> addMedicineToUser(Map<String, dynamic> medicineData) async {
     try {
-      String uid = FirebaseAuth.instance.currentUser!.uid;
-
+      String uid = _firebaseAuth.currentUser!.uid;
       DocumentReference userDocRef = _firestore.collection('users').doc(uid);
+
+      // Ensure the dates are in the correct format before converting
+      if (medicineData['startDate'] != null &&
+          medicineData['endDate'] != null) {
+        try {
+          medicineData['startDate'] = Timestamp.fromDate(
+            DateFormat('dd-MM-yyyy').parse(medicineData['startDate']!),
+          );
+          medicineData['endDate'] = Timestamp.fromDate(
+            DateFormat('dd-MM-yyyy').parse(medicineData['endDate']!),
+          );
+        } catch (e) {
+          print('Date format error: $e');
+          return;
+        }
+      } else {
+        print('Start Date or End Date is missing');
+        return;
+      }
+
+      // Generate a unique UUID for the medicine
+      var uuid = const Uuid();
+      String medicineId = uuid.v4();
+      medicineData['medicineId'] = medicineId; // Add unique ID
 
       // Fetch the current user document
       DocumentSnapshot userDoc = await userDocRef.get();
-
-      // Convert startDate and endDate to Timestamp
-      medicineData['startDate'] = Timestamp.fromDate(
-        DateFormat('dd-MM-yyyy').parse(medicineData['startDate']),
-      );
-      medicineData['endDate'] = Timestamp.fromDate(
-        DateFormat('dd-MM-yyyy').parse(medicineData['endDate']),
-      );
 
       if (userDoc.exists) {
         // Add the medicine to the 'medicines' field in the user's document
         await userDocRef.update({
           'medicines': FieldValue.arrayUnion([medicineData]),
         });
-
         print('Medicine added to user document');
       } else {
         // Create the user document with medicines field
         await userDocRef.set({
           'medicines': [medicineData],
         });
-
         print('User document created and medicine added');
       }
     } catch (e) {
@@ -219,52 +233,7 @@ class FirebaseServices {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchMedicines() async {
-    final userId = _firebaseAuth.currentUser?.uid;
-
-    if (userId == null) {
-      throw Exception('User is not authenticated.');
-    }
-
-    final docSnapshot = await _firestore.collection('users').doc(userId).get();
-
-    if (!docSnapshot.exists) {
-      return [];
-    }
-
-    final data = docSnapshot.data();
-    return List<Map<String, dynamic>>.from(data?['medicines'] ?? []);
-  }
-
-  Future<void> saveMedicine(Map<String, dynamic> medicineData) async {
-    final userId = _firebaseAuth.currentUser?.uid;
-
-    if (userId == null) {
-      throw Exception('User is not authenticated.');
-    }
-
-    final docRef = _firestore.collection('users').doc(userId);
-    final docSnapshot = await docRef.get();
-
-    if (!docSnapshot.exists) {
-      await docRef.set({
-        'medicines': [medicineData]
-      });
-    } else {
-      final medicines = List.from(docSnapshot.data()?['medicines'] ?? []);
-      final index = medicines
-          .indexWhere((medicine) => medicine['id'] == medicineData['id']);
-      if (index != -1) {
-        medicines[index] = medicineData;
-      } else {
-        medicines.add(medicineData);
-      }
-      await docRef.update({'medicines': medicines});
-    }
-  }
-
-  /// Deletes a specific medicine from the user's document in Firestore
-  Future<void> deleteMedicineFromUser(String medicineName) async {
+  Future<void> deleteMedicineFromUser(String medicineId) async {
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
       DocumentReference userDocRef = _firestore.collection('users').doc(uid);
@@ -273,8 +242,12 @@ class FirebaseServices {
       if (userDoc.exists) {
         List<dynamic> medicines = userDoc['medicines'] ?? [];
 
-        medicines.removeWhere(
-            (medicine) => medicine['medicineName'] == medicineName);
+        print('Medicines before deletion: $medicines');
+
+        medicines
+            .removeWhere((medicine) => medicine['medicineId'] == medicineId);
+
+        print('Medicines after deletion: $medicines');
 
         await userDocRef.update({
           'medicines': medicines,
@@ -286,31 +259,41 @@ class FirebaseServices {
       }
     } catch (e) {
       print('Error deleting medicine: $e');
+      rethrow;
     }
   }
 
-  /// Updates a specific medicine in the user's document in Firestore
   Future<void> updateMedicineForUser(
-      String medicineName, Map<String, dynamic> updatedMedicineData) async {
+      String medicineId, Map<String, dynamic> updatedMedicineData) async {
     try {
       String uid = FirebaseAuth.instance.currentUser!.uid;
       DocumentReference userDocRef = _firestore.collection('users').doc(uid);
       DocumentSnapshot userDoc = await userDocRef.get();
 
-      // Convert startDate and endDate to Timestamp
-      updatedMedicineData['startDate'] = Timestamp.fromDate(
-        DateFormat('dd-MM-yyyy').parse(updatedMedicineData['startDate']),
-      );
-      updatedMedicineData['endDate'] = Timestamp.fromDate(
-        DateFormat('dd-MM-yyyy').parse(updatedMedicineData['endDate']),
-      );
+      if (updatedMedicineData['startDate'] != null &&
+          updatedMedicineData['endDate'] != null) {
+        try {
+          updatedMedicineData['startDate'] = Timestamp.fromDate(
+            DateFormat('dd-MM-yyyy').parse(updatedMedicineData['startDate']),
+          );
+          updatedMedicineData['endDate'] = Timestamp.fromDate(
+            DateFormat('dd-MM-yyyy').parse(updatedMedicineData['endDate']),
+          );
+        } catch (e) {
+          print('Date format error: $e');
+          return;
+        }
+      } else {
+        print('Start Date or End Date is missing');
+        return;
+      }
 
       if (userDoc.exists) {
         List<dynamic> medicines = userDoc['medicines'] ?? [];
 
         // Find the index of the medicine to update
         int medicineIndex = medicines
-            .indexWhere((medicine) => medicine['medicineName'] == medicineName);
+            .indexWhere((medicine) => medicine['medicineId'] == medicineId);
 
         if (medicineIndex != -1) {
           // Update the medicine data
@@ -333,116 +316,3 @@ class FirebaseServices {
     }
   }
 }
-
-// Future<void> addMedicineToUser(Map<String, dynamic> medicineData) async {
-//   try {
-//     String uid = FirebaseAuth.instance.currentUser!.uid;
-//
-//     DocumentReference userDocRef = _firestore.collection('users').doc(uid);
-//
-//     // Fetch the current user document
-//     DocumentSnapshot userDoc = await userDocRef.get();
-//
-//     // Check if the user document exists
-//     if (userDoc.exists) {
-//       // Add the medicine to the 'medicines' field in the user's document
-//       await userDocRef.update({
-//         'medicines': FieldValue.arrayUnion(
-//             [medicineData]), // Append medicine data to the array
-//       });
-//
-//       print('Medicine added to user document');
-//     } else {
-//       print('User document not found');
-//     }
-//   } catch (e) {
-//     print('Error adding medicine: $e');
-//   }
-// }
-//
-// Future<List<Map<String, dynamic>>> fetchMedicinesForUser() async {
-//   try {
-//     String uid = FirebaseAuth.instance.currentUser!.uid;
-//
-//     // Get the user's document from the 'users' collection
-//     DocumentSnapshot userDoc =
-//     await _firestore.collection('users').doc(uid).get();
-//
-//     if (userDoc.exists) {
-//       List<dynamic> medicines = userDoc['medicines'] ?? [];
-//
-//       return medicines.map((medicine) {
-//         return {
-//           'medicineName': medicine['medicineName'] ?? 'Unknown',
-//           'startDate': medicine['startDate'] ?? '',
-//           'endDate': medicine['endDate'] ?? '',
-//           'doseFrequency': medicine['doseFrequency'] ?? 'Not specified',
-//           'medicineTimes': medicine['medicineTimes'] ?? 'Not specified',
-//           'selectedDays': medicine['selectedDays'] ?? [],
-//         };
-//       }).toList();
-//     } else {
-//       print('User document not found');
-//       return [];
-//     }
-//   } catch (e) {
-//     print('Error fetching medicines: $e');
-//     return [];
-//   }
-// }
-//
-// Future<void> deleteMedicineFromUser(String medicineName) async {
-//   try {
-//     String uid = FirebaseAuth.instance.currentUser!.uid;
-//     DocumentReference userDocRef = _firestore.collection('users').doc(uid);
-//     DocumentSnapshot userDoc = await userDocRef.get();
-//
-//     if (userDoc.exists) {
-//       List<dynamic> medicines = userDoc['medicines'] ?? [];
-//       medicines.removeWhere(
-//               (medicine) => medicine['medicineName'] == medicineName);
-//       await userDocRef.update({
-//         'medicines': medicines,
-//       });
-//       print('Medicine deleted from user document');
-//     } else {
-//       print('User document not found');
-//     }
-//   } catch (e) {
-//     print('Error deleting medicine: $e');
-//   }
-// }
-//
-// Future<void> updateMedicineForUser(
-//     String medicineName, Map<String, dynamic> updatedMedicineData) async {
-//   try {
-//     String uid = FirebaseAuth.instance.currentUser!.uid;
-//     DocumentReference userDocRef = _firestore.collection('users').doc(uid);
-//     DocumentSnapshot userDoc = await userDocRef.get();
-//
-//     if (userDoc.exists) {
-//       List<dynamic> medicines = userDoc['medicines'] ?? [];
-//
-//       // Find the index of the medicine to update
-//       int medicineIndex = medicines
-//           .indexWhere((medicine) => medicine['medicineName'] == medicineName);
-//
-//       if (medicineIndex != -1) {
-//         // Update the medicine data
-//         medicines[medicineIndex] = updatedMedicineData;
-//
-//         // Update the user's document with the new medicines list
-//         await userDocRef.update({
-//           'medicines': medicines,
-//         });
-//         print('Medicine updated in user document');
-//       } else {
-//         print('Medicine not found');
-//       }
-//     } else {
-//       print('User document not found');
-//     }
-//   } catch (e) {
-//     print('Error updating medicine: $e');
-//   }
-// }

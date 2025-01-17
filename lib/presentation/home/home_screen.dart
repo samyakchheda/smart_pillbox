@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
       ),
     ),
-    const MedicineListScreen(),
+    MedicineListScreen(),
     const UserProfileScreen(),
   ];
 

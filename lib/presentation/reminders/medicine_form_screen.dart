@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uuid/uuid.dart';
 
 class MedicineFormScreen extends StatefulWidget {
   final Map<String, dynamic>? existingData;
@@ -23,6 +24,8 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
   String? doseFrequency;
   bool isNotification = true;
 
+  List<String> enteredMedicines = [];
+
   final List<String> daysOfWeek = [
     'Monday',
     'Tuesday',
@@ -38,7 +41,10 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
   void initState() {
     super.initState();
     if (widget.existingData != null) {
-      _medicineNameController.text = widget.existingData!['medicineName'] ?? '';
+      _medicineNameController.clear();
+
+      enteredMedicines =
+          List<String>.from(widget.existingData!['medicineNames'] ?? []);
       _startDateController.text = widget.existingData!['startDate'] != null
           ? DateFormat('dd-MM-yyyy')
               .format(widget.existingData!['startDate'].toDate())
@@ -56,6 +62,35 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     }
   }
 
+  Future<void> _selectDate(
+      BuildContext context, TextEditingController controller) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate != null) {
+      controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
+    }
+  }
+
+  void _addMedicineName() {
+    final medicineName = _medicineNameController.text.trim();
+    if (medicineName.isNotEmpty && !enteredMedicines.contains(medicineName)) {
+      setState(() {
+        enteredMedicines.add(medicineName);
+        _medicineNameController.clear();
+      });
+    }
+  }
+
+  void _removeMedicine(String medicineName) {
+    setState(() {
+      enteredMedicines.remove(medicineName);
+    });
+  }
+
   int _getDoseCount() {
     switch (doseFrequency) {
       case 'Once':
@@ -71,20 +106,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     }
   }
 
-  Future<void> _selectDate(
-      BuildContext context, TextEditingController controller) async {
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-    );
-    if (pickedDate != null) {
-      controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
-    }
-  }
-
-  void _addMedicineTime() async {
+  Future<void> _addMedicineTime() async {
     final maxAllowedTimes = doseFrequency == 'More' ? 10 : _getDoseCount();
 
     if (medicineTimes.length >= maxAllowedTimes) {
@@ -113,8 +135,18 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
     }
   }
 
-  void _submitForm() async {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      if (enteredMedicines.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please enter at least one medicine'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       if (doseFrequency == null || doseFrequency!.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -138,8 +170,12 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
         return;
       }
 
+      const uuid = Uuid();
+      String uniqueId = uuid.v4();
+
       final medicineData = {
-        'medicineName': _medicineNameController.text,
+        'id': uniqueId,
+        'medicineNames': enteredMedicines,
         'startDate': Timestamp.fromDate(
           DateFormat('dd-MM-yyyy').parse(_startDateController.text),
         ),
@@ -204,13 +240,26 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                 const SizedBox(height: 10),
                 TextFormField(
                   controller: _medicineNameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Medicine Name',
                     hintText: 'Enter the name of the medicine',
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: _addMedicineName,
+                    ),
                   ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Please enter the medicine name'
-                      : null,
+                ),
+                const SizedBox(height: 5),
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 4.0,
+                  children: enteredMedicines.map((medicineName) {
+                    return Chip(
+                      label: Text(medicineName),
+                      deleteIcon: const Icon(Icons.close),
+                      onDeleted: () => _removeMedicine(medicineName),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
@@ -218,6 +267,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Start Date',
                     hintText: 'Select a start date',
+                    suffixIcon: Icon(Icons.date_range),
                   ),
                   readOnly: true,
                   onTap: () => _selectDate(context, _startDateController),
@@ -231,6 +281,7 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                   decoration: const InputDecoration(
                     labelText: 'End Date',
                     hintText: 'Select an end date',
+                    suffixIcon: Icon(Icons.date_range),
                   ),
                   readOnly: true,
                   onTap: () => _selectDate(context, _endDateController),
@@ -260,7 +311,6 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                   }).toList(),
                 ),
                 const SizedBox(height: 20),
-
                 DropdownButtonFormField<String>(
                   value: doseFrequency,
                   onChanged: (newValue) {
@@ -283,8 +333,6 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                       : null,
                 ),
                 const SizedBox(height: 20),
-
-                // Add Medicine Time Button
                 IconButton(
                   onPressed: _addMedicineTime,
                   icon: const Icon(Icons.add, size: 30),
@@ -313,7 +361,6 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                   },
                 ),
                 const SizedBox(height: 20),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -332,7 +379,6 @@ class _MedicineFormScreenState extends State<MedicineFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 20),
-
                 ElevatedButton(
                   onPressed: _submitForm,
                   style: ElevatedButton.styleFrom(

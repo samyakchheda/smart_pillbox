@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-Future<bool> showDeleteConfirmationDialog(BuildContext context, String title, String content) async {
+
+Future<bool> showDeleteConfirmationDialog(
+    BuildContext context, String title, String content) async {
   return await showDialog<bool>(
     context: context,
     builder: (BuildContext context) {

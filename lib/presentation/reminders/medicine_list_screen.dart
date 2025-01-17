@@ -2,208 +2,161 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:smart_pillbox/core/widgets/basic_alert_dialog.dart';
-import 'package:smart_pillbox/presentation/reminders/medicine_form_screen.dart';
+import 'medicine_form_screen.dart';
 
-class MedicineListScreen extends StatefulWidget {
-  const MedicineListScreen({super.key});
-
-  @override
-  _MedicineListScreenState createState() => _MedicineListScreenState();
-}
-
-class _MedicineListScreenState extends State<MedicineListScreen> {
+class MedicineListScreen extends StatelessWidget {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+  GlobalKey<ScaffoldMessengerState>();
+  MedicineListScreen({super.key});
 
-  Future<List<Map<String, dynamic>>> _fetchMedicines() async {
+  Future<void> deleteMedicine(String medicineId) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId == null) {
-      throw Exception('User is not authenticated.');
+      return;
     }
 
-    final docSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    final docRef = _firestore.collection('users').doc(userId);
+    final docSnapshot = await docRef.get();
 
     if (!docSnapshot.exists) {
-      return [];
+      return;
     }
 
-    return List<Map<String, dynamic>>.from(
-        docSnapshot.data()?['medicines'] ?? []);
+    final medicines = List.from(docSnapshot.data()?['medicines'] ?? []);
+
+    final medicineIndex =
+    medicines.indexWhere((medicine) => medicine['id'] == medicineId);
+    if (medicineIndex != -1) {
+      medicines.removeAt(medicineIndex);
+      await docRef.update({'medicines': medicines});
+    }
   }
 
-  String _formatMedicineTimes(List<dynamic> times) {
-    if (times.isEmpty) return 'No times added';
-
-    return times.map((time) {
-      if (time is Timestamp) {
-        return DateFormat('hh:mm a').format(time.toDate());
-      } else {
-        return time.toString();
-      }
-    }).join(', ');
-  }
-
-  String _formatDate(Timestamp timestamp) {
+  String formatDate(Timestamp timestamp) {
     return DateFormat('dd-MM-yyyy').format(timestamp.toDate());
-  }
-
-  void _navigateToAddMedicine() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MedicineFormScreen(),
-      ),
-    );
-    setState(() {});
-  }
-
-  Future<void> deleteMedicineFromUser(String medicineName) async {
-    try {
-      String uid = FirebaseAuth.instance.currentUser!.uid;
-      DocumentReference userDocRef = _firestore.collection('users').doc(uid);
-      DocumentSnapshot userDoc = await userDocRef.get();
-
-      if (userDoc.exists) {
-        List<dynamic> medicines = userDoc['medicines'] ?? [];
-
-        medicines.removeWhere(
-            (medicine) => medicine['medicineName'] == medicineName);
-
-        await userDocRef.update({
-          'medicines': medicines,
-        });
-
-        print('Medicine deleted from user document');
-      } else {
-        print('User document not found');
-      }
-    } catch (e) {
-      print('Error deleting medicine: $e');
-    }
-  }
-
-  Future<void> _confirmAndDeleteMedicine(
-      BuildContext context, String medicineName) async {
-    final isConfirmed = await showDeleteConfirmationDialog(
-      context,
-      'Confirm Deletion',
-      'Are you sure you want to delete this medicine?',
-    );
-
-    if (isConfirmed) {
-      await deleteMedicineFromUser(medicineName);
-      setState(() {});
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('User not authenticated'),
+        ),
+      );
+    }
+
     return Scaffold(
+      key: scaffoldMessengerKey,
       appBar: AppBar(
-        title: const Text('Medicine List'),
+        title: const Text('My Medicines'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 16.0),
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: _fetchMedicines(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(
-                child: Text('Error: ${snapshot.error}'),
-              );
-            }
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: _firestore.collection('users').doc(userId).snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            final medicines = snapshot.data ?? [];
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(
+                child: Text('No medicines found. Click "+" to add one.'));
+          }
 
-            if (medicines.isEmpty) {
-              return const Center(
-                child: Text('No medicines found. Tap "+" to add one.'),
-              );
-            }
+          var userDoc = snapshot.data;
+          List<dynamic> medicines = userDoc!['medicines'] ?? [];
 
-            return ListView.builder(
-              itemCount: medicines.length,
-              itemBuilder: (context, index) {
-                final medicine = medicines[index];
-                final startDate = medicine['startDate'] != null
-                    ? _formatDate(medicine['startDate'])
-                    : 'N/A';
-                final endDate = medicine['endDate'] != null
-                    ? _formatDate(medicine['endDate'])
-                    : 'N/A';
+          if (medicines.isEmpty) {
+            return const Center(
+                child: Text('No medicines found. Click "+" to add one.'));
+          }
 
-                return Dismissible(
-                  key: Key(medicine['medicineName']),
-                  direction: DismissDirection.endToStart,
-                  onDismissed: (direction) async {
-                    await _confirmAndDeleteMedicine(
-                        context, medicine['medicineName']);
-                  },
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  secondaryBackground: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  child: Card(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    child: ListTile(
-                      leading: const Icon(
-                        Icons.medical_services_rounded,
-                      ),
-                      title: Text(
-                        medicine['medicineName'],
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 5),
-                        child: Text(
-                          'Start Date: $startDate\n'
-                          'End Date: $endDate\n'
-                          'Times: ${_formatMedicineTimes(medicine['medicineTimes'])}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.4,
-                          ),
+          return ListView.builder(
+            itemCount: medicines.length,
+            itemBuilder: (context, index) {
+              var medicine = medicines[index];
+              String startDate = formatDate(medicine['startDate']);
+              String endDate = formatDate(medicine['endDate']);
+
+              return Dismissible(
+                key: Key(medicine['id']),
+                direction: DismissDirection.endToStart,
+                onDismissed: (direction) async {
+                  await deleteMedicine(medicine['id']);
+                  scaffoldMessengerKey.currentState?.showSnackBar(
+                    SnackBar(content: Text('${medicine['medicineNames'].first} deleted.')),
+                  );
+                },
+                confirmDismiss: (direction) async {
+                  return await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Confirm Deletion'),
+                      content: Text(
+                          'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
                         ),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MedicineFormScreen(
-                                existingData: medicine,
-                              ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text('Delete'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                child: Card(
+                  margin:
+                  const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Wrap(
+                      spacing: 8.0,
+                      children: medicine['medicineNames']
+                          ?.map<Widget>((name) => Text(
+                        name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ))
+                          .toList() ??
+                          [const Text('Unnamed')],
+                    ),
+                    subtitle: Text('Start: $startDate\nEnd: $endDate'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MedicineFormScreen(
+                              existingData: medicine,
                             ),
-                          ).then((value) {
-                            if (value != null) {
-                              setState(() {});
-                            }
-                          });
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   ),
-                );
-              },
-            );
-          },
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -212,13 +165,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             MaterialPageRoute(
               builder: (context) => const MedicineFormScreen(),
             ),
-          ).then((value) {
-            if (value != null) {
-              setState(() {});
-            }
-          });
+          );
         },
-        tooltip: 'Add New Medicine',
+        tooltip: 'Add Medicine',
         child: const Icon(Icons.add),
       ),
     );
