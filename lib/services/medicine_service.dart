@@ -50,20 +50,29 @@ Future<void> checkMedicineTimes(
       return;
     }
 
-    // Process each medicine
+    // Process all medicines
     for (var medicine in medicines) {
-      String medicineName = medicine['medicineNames'] ?? 'Unnamed medicine';
-      List<dynamic> times = medicine['medicineTimes'] ?? [];
-      print("[DEBUG] Processing medicine: $medicineName, times: $times");
+      // Ensure 'medicineNames' and 'medicineTimes' are valid lists
+      List<dynamic> medicineNames = medicine['medicineNames'] ?? [];
+      List<dynamic> medicineTimes = medicine['medicineTimes'] ?? [];
 
-      for (var timeStamp in times) {
+      if (medicineNames.isEmpty || medicineTimes.isEmpty) {
+        print("[DEBUG] Skipping medicine with no names or times.");
+        continue;
+      }
+
+      // Combine medicine names into a single string
+      String medicineNamesCombined = medicineNames.join(', ');
+      print("[DEBUG] Processing medicine: $medicineNamesCombined");
+
+      for (var timeStamp in medicineTimes) {
         if (timeStamp is Timestamp) {
           DateTime medicineTime = timeStamp.toDate();
 
           // Skip scheduling if the time is in the past
           if (medicineTime.isBefore(DateTime.now())) {
             print(
-                "[DEBUG] Skipping notification for $medicineName as the time $medicineTime is in the past.");
+                "[DEBUG] Skipping notification for $medicineNamesCombined as the time $medicineTime is in the past.");
             continue;
           }
 
@@ -74,33 +83,19 @@ Future<void> checkMedicineTimes(
           );
 
           String notificationId =
-              '$medicineName-${medicineTime.toIso8601String()}';
+              '${medicineNamesCombined}-${medicineTime.toIso8601String()}';
           print(
-              "[DEBUG] Scheduling notification for $medicineName at $medicineTime with ID: $notificationId");
-
-          // try {
-          //   // Schedule local notification
-          //   await scheduleAlarm(
-          //       flutterLocalNotificationsPlugin, tzMedicineTime, medicineName);
-          //   print(
-          //       "[DEBUG] Alarm scheduled successfully for $medicineName at $medicineTime.");
-          // } catch (e) {
-          //   print("[ERROR] Error scheduling alarm: $e");
-          // }
-
-          // Send push notification
-          // print(
-          //     "[DEBUG] Sending push notification for $medicineName at $medicineTime");
+              "[DEBUG] Scheduling notification for $medicineNamesCombined at $medicineTime with ID: $notificationId");
 
           if (isNotification) {
             try {
               await NotificationHelper().sendNotificationToBackend(
                 fcmToken,
                 "Medicine Reminder",
-                "It's time to take your medicine: $medicineName",
+                "It's time to take your medicines: $medicineNamesCombined",
               );
               print(
-                  "[DEBUG] Notification sent successfully for $medicineName.");
+                  "[DEBUG] Notification sent successfully for $medicineNamesCombined.");
             } catch (e) {
               print("[ERROR] Error sending push notification: $e");
             }
@@ -108,15 +103,16 @@ Future<void> checkMedicineTimes(
             try {
               // Schedule local notification
               await scheduleAlarm(flutterLocalNotificationsPlugin,
-                  tzMedicineTime, medicineName);
+                  tzMedicineTime, medicineNamesCombined);
               print(
-                  "[DEBUG] Alarm scheduled successfully for $medicineName at $medicineTime.");
+                  "[DEBUG] Alarm scheduled successfully for $medicineNamesCombined at $medicineTime.");
             } catch (e) {
               print("[ERROR] Error scheduling alarm: $e");
             }
           }
         } else {
-          print("[DEBUG] Invalid timestamp for $medicineName: $timeStamp");
+          print(
+              "[DEBUG] Invalid timestamp for $medicineNamesCombined: $timeStamp");
         }
       }
     }
@@ -162,7 +158,7 @@ Future<void> scheduleAlarm(
   await flutterLocalNotificationsPlugin.zonedSchedule(
     0,
     'Medicine Reminder',
-    'It\'s time to take your medicine: $medicineName!',
+    'It\'s time to take your medicines: $medicineName!',
     scheduledTime,
     platformChannelSpecifics,
     uiLocalNotificationDateInterpretation:
