@@ -15,6 +15,7 @@ class NotificationHelper {
   static const String backendUrl =
       'https://notification-api-yham.onrender.com/send_notification'; // Replace with your actual server URL
 
+  /// Initializes the notification settings and timezone.
   static Future<void> init() async {
     const AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -25,32 +26,33 @@ class NotificationHelper {
     await _notification.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (_) => AlarmScreen(
-              medicineName: response.payload ?? 'Your Medicine',
-            ),
-          ),
-          (route) => false, // Remove all other routes
-        );
+        // Automatically navigate to AlarmScreen when notification is received
+        if (response.payload != null) {
+          // Ensure payload is non-null before passing
+          navigateToAlarmScreen(response.payload!);
+        }
       },
     );
 
+    // Initialize timezone data
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Kolkata'));
 
+    // Create notification channel for Android
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'medicine_reminder',
       'Medicine Reminders',
       description: 'This channel is for medicine reminders',
       importance: Importance.high,
     );
+
     await _notification
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
   }
 
+  /// Schedules a medicine reminder notification.
   static Future<void> scheduleMedicineReminder(
     DateTime medicineTime,
     String title,
@@ -87,6 +89,7 @@ class NotificationHelper {
     }
   }
 
+  /// Sends a notification to the backend server.
   Future<void> sendNotificationToBackend(
       String deviceToken, String title, String body) async {
     try {
@@ -108,5 +111,18 @@ class NotificationHelper {
     } catch (e) {
       print('[ERROR] Error sending notification: $e');
     }
+  }
+
+  /// Navigates to the AlarmScreen with the provided payload.
+  static void navigateToAlarmScreen(String payload) {
+    // Use the navigator key to push the AlarmScreen
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => AlarmScreen(
+          medicineName: payload, // Pass the payload as needed
+        ),
+      ),
+      (route) => false, // Remove all other routes
+    );
   }
 }

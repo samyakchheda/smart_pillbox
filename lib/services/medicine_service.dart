@@ -9,6 +9,7 @@ import 'dart:typed_data';
 Future<void> checkMedicineTimes(
   String userId,
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
+  bool isNotification,
 ) async {
   try {
     print("[DEBUG] Fetching user document for userId: $userId");
@@ -51,7 +52,7 @@ Future<void> checkMedicineTimes(
 
     // Process each medicine
     for (var medicine in medicines) {
-      String medicineName = medicine['medicineName'] ?? 'Unnamed medicine';
+      String medicineName = medicine['medicineNames'] ?? 'Unnamed medicine';
       List<dynamic> times = medicine['medicineTimes'] ?? [];
       print("[DEBUG] Processing medicine: $medicineName, times: $times");
 
@@ -77,28 +78,42 @@ Future<void> checkMedicineTimes(
           print(
               "[DEBUG] Scheduling notification for $medicineName at $medicineTime with ID: $notificationId");
 
-          try {
-            // Schedule local notification
-            await scheduleAlarm(
-                flutterLocalNotificationsPlugin, tzMedicineTime, medicineName);
-            print(
-                "[DEBUG] Alarm scheduled successfully for $medicineName at $medicineTime.");
-          } catch (e) {
-            print("[ERROR] Error scheduling alarm: $e");
-          }
+          // try {
+          //   // Schedule local notification
+          //   await scheduleAlarm(
+          //       flutterLocalNotificationsPlugin, tzMedicineTime, medicineName);
+          //   print(
+          //       "[DEBUG] Alarm scheduled successfully for $medicineName at $medicineTime.");
+          // } catch (e) {
+          //   print("[ERROR] Error scheduling alarm: $e");
+          // }
 
           // Send push notification
-          print(
-              "[DEBUG] Sending push notification for $medicineName at $medicineTime");
-          try {
-            await NotificationHelper().sendNotificationToBackend(
-              fcmToken,
-              "Medicine Reminder",
-              "It's time to take your medicine: $medicineName",
-            );
-            print("[DEBUG] Notification sent successfully for $medicineName.");
-          } catch (e) {
-            print("[ERROR] Error sending push notification: $e");
+          // print(
+          //     "[DEBUG] Sending push notification for $medicineName at $medicineTime");
+
+          if (isNotification) {
+            try {
+              await NotificationHelper().sendNotificationToBackend(
+                fcmToken,
+                "Medicine Reminder",
+                "It's time to take your medicine: $medicineName",
+              );
+              print(
+                  "[DEBUG] Notification sent successfully for $medicineName.");
+            } catch (e) {
+              print("[ERROR] Error sending push notification: $e");
+            }
+          } else {
+            try {
+              // Schedule local notification
+              await scheduleAlarm(flutterLocalNotificationsPlugin,
+                  tzMedicineTime, medicineName);
+              print(
+                  "[DEBUG] Alarm scheduled successfully for $medicineName at $medicineTime.");
+            } catch (e) {
+              print("[ERROR] Error scheduling alarm: $e");
+            }
           }
         } else {
           print("[DEBUG] Invalid timestamp for $medicineName: $timeStamp");

@@ -8,7 +8,6 @@ import 'package:home/presentation/home/home_screen.dart';
 import 'package:home/presentation/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'home_page.dart';
 import 'services/notifications_service.dart';
 import 'services/permissions_helper.dart';
 
