@@ -29,8 +29,8 @@ class IntroScreen1 extends StatelessWidget {
               fontSize: 25,
               fontWeight: FontWeight.bold,
               color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white 
-                  : Colors.indigo, 
+                  ? Colors.white
+                  : Colors.indigo,
             ),
           ),
           const Padding(

@@ -10,6 +10,4 @@ class AppColors {
   static const kGreyColor = Colors.grey;
   static const kWhiteColor = Colors.white;
   static const kBlackColor = Colors.black;
-
-
 }

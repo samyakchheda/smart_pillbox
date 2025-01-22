@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home/main.dart';
 import '../../../core/constants/app_color.dart';
 import '../../../core/widgets/basic_snack_bar.dart';
 import '../../../services/firebase_services.dart';
@@ -34,6 +35,7 @@ class _SigninScreenState extends State<SigninScreen> {
       );
 
       if (res == "success") {
+        setupFCM();
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const HomeScreen()),
@@ -90,7 +92,8 @@ class _SigninScreenState extends State<SigninScreen> {
                   ElevatedButton(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
-                        String res = await FirebaseServices().sendPasswordResetEmail(
+                        String res =
+                            await FirebaseServices().sendPasswordResetEmail(
                           email: emailController.text.trim(),
                         );
                         if (res == "success") {
@@ -256,6 +259,7 @@ class _SigninScreenState extends State<SigninScreen> {
       ),
     );
   }
+
   Widget _forgotPasswordText() {
     return Padding(
       padding: const EdgeInsets.only(top: 5, right: 8),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:smart_pillbox/presentation/onboarding/introduction/intro_screen1.dart';
-import 'package:smart_pillbox/presentation/onboarding/introduction/intro_screen2.dart';
-import 'package:smart_pillbox/presentation/onboarding/introduction/intro_screen3.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../authentication/login/login.dart';
+import 'introduction/intro_screen1.dart';
+import 'introduction/intro_screen2.dart';
+import 'introduction/intro_screen3.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});

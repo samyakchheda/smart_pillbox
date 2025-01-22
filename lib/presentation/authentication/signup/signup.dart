@@ -278,11 +278,12 @@
 // }
 
 import 'package:flutter/material.dart';
-import 'package:smart_pillbox/presentation/authentication/signup/components/registration_form.dart';
 import '../../../core/constants/app_color.dart';
 import '../../../core/widgets/basic_snack_bar.dart';
+import '../../../main.dart';
 import '../../../services/firebase_services.dart';
 import '../login/login.dart';
+import 'components/registration_form.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -314,6 +315,7 @@ class _SignupScreenState extends State<SignupScreen> {
         password: _passwordController.text,
       );
       if (res == "success") {
+        setupFCM();
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (BuildContext context) =>

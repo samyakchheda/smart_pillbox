@@ -36,7 +36,8 @@ class AppTheme {
         backgroundColor: AppColors.primary,
         elevation: 1,
         textStyle: const TextStyle(
-          color: AppColors.lightBackground, // Ensures visibility on light background
+          color: AppColors
+              .lightBackground, // Ensures visibility on light background
           fontSize: 16,
           fontWeight: FontWeight.w600,
         ),
@@ -72,7 +73,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.kGreyColor.withOpacity(0.2), // Subtle dark fill
+      fillColor: AppColors.kGreyColor.withOpacity(0.2),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide(color: AppColors.kGreyColor.withOpacity(0.5)),
@@ -108,4 +109,3 @@ class AppTheme {
     ),
   );
 }
-

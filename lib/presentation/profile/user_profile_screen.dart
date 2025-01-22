@@ -150,6 +150,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'edit_profile_screen.dart';
 import 'password/change_password_screen.dart';
 import 'dart:convert';
@@ -171,6 +172,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
     _fetchUserProfile();
+    _checkNotificationPermission();
+  }
+
+  Future<void> _checkNotificationPermission() async {
+    final status = await Permission.notification.status;
+    setState(() {
+      _notificationsEnabled = status.isGranted;
+    });
   }
 
   void _fetchUserProfile() async {
@@ -210,7 +219,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
             ),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -244,9 +252,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -297,9 +303,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 12),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Card(
@@ -324,13 +328,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ListTile(
                       leading:
                           const Icon(Icons.notifications, color: Colors.black),
-                      title: const Text('Notifications'),
+                      title: const Text('Manage Notifications'),
                       trailing: Switch(
                         value: _notificationsEnabled,
-                        onChanged: (bool value) {
-                          setState(() {
-                            _notificationsEnabled = value;
-                          });
+                        onChanged: (bool value) async {
+                          // Open app settings
+                          await openAppSettings();
                         },
                       ),
                     ),

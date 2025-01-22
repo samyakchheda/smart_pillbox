@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB5VZ-KQtlO_KzGwdV0DFHlYfULBKIuVkI',
-    appId: '1:353991824699:android:4171e19d9e6982f1ba931e',
+    appId: '1:353991824699:android:ac89eefd45282a4eba931e',
     messagingSenderId: '353991824699',
     projectId: 'final-year-project-6ebae',
     storageBucket: 'final-year-project-6ebae.appspot.com',
@@ -59,25 +59,27 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBDONImHV_jh3bQU4Fs-v0oy0LxPJ6nwGI',
-    appId: '1:353991824699:ios:a1675f3fdb172eeeba931e',
+    appId: '1:353991824699:ios:b51cf71369996e5cba931e',
     messagingSenderId: '353991824699',
     projectId: 'final-year-project-6ebae',
     storageBucket: 'final-year-project-6ebae.appspot.com',
-    iosBundleId: 'com.example.smartPillbox',
+    iosClientId: '353991824699-hv9md6phhmkuprgomhog44m174tbjdvr.apps.googleusercontent.com',
+    iosBundleId: 'com.example.smart_pillbox',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyBDONImHV_jh3bQU4Fs-v0oy0LxPJ6nwGI',
-    appId: '1:353991824699:ios:a1675f3fdb172eeeba931e',
+    appId: '1:353991824699:ios:b51cf71369996e5cba931e',
     messagingSenderId: '353991824699',
     projectId: 'final-year-project-6ebae',
     storageBucket: 'final-year-project-6ebae.appspot.com',
-    iosBundleId: 'com.example.smartPillbox',
+    iosClientId: '353991824699-hv9md6phhmkuprgomhog44m174tbjdvr.apps.googleusercontent.com',
+    iosBundleId: 'com.example.smart_pillbox',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyB3SI_n2zLPLil4gjh91W5Ms1HprpGdDVo',
-    appId: '1:353991824699:web:5471bb7f5c384001ba931e',
+    appId: '1:353991824699:web:ec914a2b71297685ba931e',
     messagingSenderId: '353991824699',
     projectId: 'final-year-project-6ebae',
     authDomain: 'final-year-project-6ebae.firebaseapp.com',

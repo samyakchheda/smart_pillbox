@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:smart_pillbox/presentation/home/home_screen.dart';
-import 'package:smart_pillbox/services/firebase_services.dart';
+import 'package:home/presentation/home/home_screen.dart';
+import 'package:home/services/firebase_services.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/widgets/basic_snack_bar.dart';
@@ -20,7 +20,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
   DateTime? _selectedDate;
   String? _selectedGender;
   final List<String> _genders = ['Male', 'Female', 'Other'];
-  String? _profilePicture; 
+  String? _profilePicture;
   final ImagePicker _picker = ImagePicker();
 
   final _formKey = GlobalKey<FormState>();
@@ -50,8 +50,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
           ),
         );
       } else {
-        showSnackBar(
-            context, res); 
+        showSnackBar(context, res);
       }
     }
   }
@@ -76,7 +75,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _profilePicture = base64Encode(bytes); 
+        _profilePicture = base64Encode(bytes);
       });
     }
   }
@@ -103,7 +102,8 @@ class _RegistrationFormState extends State<RegistrationForm> {
                       backgroundColor: Colors.grey[300],
                       backgroundImage: _profilePicture != null
                           ? MemoryImage(base64Decode(_profilePicture!))
-                          : const AssetImage('assets/icons/ic_default_avatar.jpg')
+                          : const AssetImage(
+                                  'assets/icons/ic_default_avatar.jpg')
                               as ImageProvider,
                       child: _profilePicture == null
                           ? const Icon(Icons.add_a_photo,
