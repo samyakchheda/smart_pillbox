@@ -6,7 +6,8 @@ class Screen3 extends StatefulWidget {
   final Function(int, TimeOfDay) onTimeChange;
   final VoidCallback saveData;
 
-  Screen3({
+  const Screen3({
+    super.key,
     required this.isChecked,
     required this.selectedTimes,
     required this.onTimeChange,
@@ -29,14 +30,14 @@ class _Screen3State extends State<Screen3> {
         .toList();
 
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Set Time',
                 style: TextStyle(
                   fontSize: 20,
@@ -45,14 +46,14 @@ class _Screen3State extends State<Screen3> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Expanded(
             child: ListView.builder(
               itemCount: selectedIndices.length,
@@ -69,17 +70,17 @@ class _Screen3State extends State<Screen3> {
                   children: [
                     Text(
                       label,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Container(
                       height: 150, // Rectangular box height
                       decoration: BoxDecoration(
-                        color: Color.fromARGB(255, 242, 242, 242),
+                        color: const Color.fromARGB(255, 242, 242, 242),
                         border: Border.all(
                           color: Colors.grey,
                           width: 2,
@@ -127,7 +128,7 @@ class _Screen3State extends State<Screen3> {
                               });
                             },
                           ),
-                          Text(
+                          const Text(
                             ':',
                             style: TextStyle(
                               fontSize: 30,
@@ -155,7 +156,7 @@ class _Screen3State extends State<Screen3> {
                               });
                             },
                           ),
-                          Text(
+                          const Text(
                             ':',
                             style: TextStyle(
                               fontSize: 30,
@@ -201,7 +202,7 @@ class _Screen3State extends State<Screen3> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                   ],
                 );
               },
@@ -214,9 +215,9 @@ class _Screen3State extends State<Screen3> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
             ),
-            child: Text(
+            child: const Text(
               'Finish',
               style: TextStyle(color: Colors.white),
             ),
@@ -238,7 +239,7 @@ class _Screen3State extends State<Screen3> {
       child: Stack(
         children: [
           // Horizontal line positioned above the selected number
-          Positioned(
+          const Positioned(
             top: 40,
             left: 20,
             right: 20,
@@ -254,7 +255,7 @@ class _Screen3State extends State<Screen3> {
             ),
           ),
           // Horizontal line positioned below the selected number
-          Positioned(
+          const Positioned(
             bottom: 40,
             left: 20,
             right: 20,
@@ -272,7 +273,7 @@ class _Screen3State extends State<Screen3> {
           // The list wheel scroll view for selecting values
           ListWheelScrollView.useDelegate(
             itemExtent: 40,
-            physics: FixedExtentScrollPhysics(),
+            physics: const FixedExtentScrollPhysics(),
             onSelectedItemChanged: (index) {
               onChange(min + index); // Adjust index to match the display range
             },

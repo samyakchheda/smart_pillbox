@@ -5,7 +5,8 @@ class Screen1 extends StatelessWidget {
   final Function(String) onNameChange;
   final String medicineName;
 
-  Screen1({
+  const Screen1({
+    super.key,
     required this.pageController,
     required this.onNameChange,
     required this.medicineName,
@@ -72,7 +73,8 @@ class Screen1 extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
-                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
               ),
               child: const Icon(
                 Icons.arrow_forward,

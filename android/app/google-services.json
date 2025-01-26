@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "353991824699-b3ftrph2hvcvpa3e3eef6sj3v9pmmhbj.apps.googleusercontent.com",
+          "client_id": "353991824699-937lb178vn0bpi3odj25fhj1hbe7bfoq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smart_pillbox",
+            "certificate_hash": "494b4e57e0e5b531d5134fc0b4b7d52456d1090a"
+          }
+        },
+        {
+          "client_id": "353991824699-9dfdvfsm5kg2bud665bjda159iohcug7.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "353991824699-b3ftrph2hvcvpa3e3eef6sj3v9pmmhbj.apps.googleusercontent.com",
+              "client_id": "353991824699-9dfdvfsm5kg2bud665bjda159iohcug7.apps.googleusercontent.com",
               "client_type": 3
             },
             {

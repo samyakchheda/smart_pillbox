@@ -73,7 +73,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.kGreyColor.withOpacity(0.2), // Subtle dark fill
+      fillColor: AppColors.kGreyColor.withOpacity(0.2),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(25),
         borderSide: BorderSide(color: AppColors.kGreyColor.withOpacity(0.5)),

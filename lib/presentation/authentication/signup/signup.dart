@@ -278,12 +278,15 @@
 // }
 
 import 'package:flutter/material.dart';
-import 'package:home/main.dart';
-import 'package:home/presentation/authentication/signup/components/registration_form.dart';
 import '../../../core/constants/app_color.dart';
 import '../../../core/widgets/basic_snack_bar.dart';
+import '../../../main.dart';
 import '../../../services/firebase_services.dart';
 import '../login/login.dart';
+import 'components/registration_form.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -326,6 +329,38 @@ class _SignupScreenState extends State<SignupScreen> {
         showSnackBar(context, res);
       }
     }
+  }
+
+  Future<User?> signInWithGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    // Sign out any previous session
+    await googleSignIn.signOut();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final User? user = userCredential.user;
+
+      // Save email to Firestore
+      if (user != null) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': user.email,
+        }, SetOptions(merge: true));
+      }
+
+      return user;
+    }
+    return null;
   }
 
   @override
@@ -394,7 +429,20 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Widget _googleSignIn() {
     return ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: () async {
+        User? user = await signInWithGoogle();
+        if (user != null) {
+          setupFCM();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (BuildContext context) =>
+                  RegistrationForm(email: _emailController.text),
+            ),
+          );
+        } else {
+          showSnackBar(context, "error signing it with google");
+        }
+      },
       icon: Image.asset(
         'assets/icons/ic_google.png',
         height: 25,

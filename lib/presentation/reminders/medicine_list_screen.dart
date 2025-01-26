@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:home/services/scanner_service.dart';
 import 'package:intl/intl.dart';
+import '../../scanner_screen.dart';
 import 'medicine_form_screen.dart';
 
 class MedicineListScreen extends StatefulWidget {
-  MedicineListScreen({super.key});
+  const MedicineListScreen({super.key});
 
   @override
   State<MedicineListScreen> createState() => _MedicineListScreenState();
@@ -185,155 +188,169 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             ),
           ),
           Expanded(
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: _firestore.collection('users').doc(userId).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              child: StreamBuilder<DocumentSnapshot>(
+            stream: _firestore.collection('users').doc(userId).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                if (!snapshot.hasData || snapshot.data == null) {
-                  return const Center(
-                      child: Text('No medicines found. Click "+" to add one.'));
-                }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return const Center(
+                    child: Text('No medicines found. Click "+" to add one.'));
+              }
 
-                var userDoc = snapshot.data;
-                List<dynamic> medicines = userDoc!['medicines'] ?? [];
+              var userDoc = snapshot.data;
+              Map<String, dynamic> data =
+                  userDoc?.data() as Map<String, dynamic>;
+              List<dynamic> medicines = data['medicines'] ?? [];
 
-                if (medicines.isEmpty) {
-                  return const Center(
-                      child: Text('No medicines found. Click "+" to add one.'));
-                }
+              if (medicines.isEmpty) {
+                return const Center(
+                    child: Text('No medicines found. Click "+" to add one.'));
+              }
 
-                String selectedWeekday = _getWeekdayName(selectedDate);
+              String selectedWeekday = _getWeekdayName(selectedDate);
 
-                // Filter medicines for the selected weekday and date range
-                var filteredMedicines = medicines.where((medicine) {
-                  var scheduledDays =
-                      List<String>.from(medicine['selectedDays']);
-                  DateTime startDate =
-                      (medicine['startDate'] as Timestamp).toDate();
-                  DateTime endDate =
-                      (medicine['endDate'] as Timestamp).toDate();
+              // Filter medicines for the selected weekday and date range
+              var filteredMedicines = medicines.where((medicine) {
+                var scheduledDays = List<String>.from(medicine['selectedDays']);
+                DateTime startDate =
+                    (medicine['startDate'] as Timestamp).toDate();
+                DateTime endDate = (medicine['endDate'] as Timestamp).toDate();
 
-                  bool isWithinDateRange = selectedDate.isAfter(
-                          startDate.subtract(const Duration(days: 1))) &&
-                      selectedDate
-                          .isBefore(endDate.add(const Duration(days: 1)));
+                bool isWithinDateRange = selectedDate
+                        .isAfter(startDate.subtract(const Duration(days: 1))) &&
+                    selectedDate.isBefore(endDate.add(const Duration(days: 1)));
 
-                  bool isScheduledOnDay =
-                      scheduledDays.contains(selectedWeekday);
+                bool isScheduledOnDay = scheduledDays.contains(selectedWeekday);
 
-                  return isWithinDateRange && isScheduledOnDay;
-                }).toList();
+                return isWithinDateRange && isScheduledOnDay;
+              }).toList();
 
-                if (filteredMedicines.isEmpty) {
-                  return const Center(
-                      child: Text('No medicines scheduled for this day.'));
-                }
+              if (filteredMedicines.isEmpty) {
+                return const Center(
+                    child: Text('No medicines scheduled for this day.'));
+              }
 
-                return ListView.builder(
-                  itemCount: medicines.length,
-                  itemBuilder: (context, index) {
-                    var medicine = medicines[index];
-                    String startDate = formatDate(medicine['startDate']);
-                    String endDate = formatDate(medicine['endDate']);
+              return ListView.builder(
+                itemCount: medicines.length,
+                itemBuilder: (context, index) {
+                  var medicine = medicines[index];
+                  String startDate = formatDate(medicine['startDate']);
+                  String endDate = formatDate(medicine['endDate']);
 
-                    return Dismissible(
-                      key: Key(medicine['id']),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (direction) async {
-                        await deleteMedicine(medicine['id']);
-                        scaffoldMessengerKey.currentState?.showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  '${medicine['medicineNames'].first} deleted.')),
-                        );
-                      },
-                      confirmDismiss: (direction) async {
-                        return await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirm Deletion'),
+                  return Dismissible(
+                    key: Key(medicine['id']),
+                    direction: DismissDirection.endToStart,
+                    onDismissed: (direction) async {
+                      await deleteMedicine(medicine['id']);
+                      scaffoldMessengerKey.currentState?.showSnackBar(
+                        SnackBar(
                             content: Text(
-                                'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 16),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                                '${medicine['medicineNames'].first} deleted.')),
+                      );
+                    },
+                    confirmDismiss: (direction) async {
+                      return await showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Confirm Deletion'),
+                          content: Text(
+                              'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text('Delete'),
+                            ),
+                          ],
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(16),
-                          title: Wrap(
-                            spacing: 8.0,
-                            children: medicine['medicineNames']
-                                    ?.map<Widget>((name) => Text(
-                                          name,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16),
-                                        ))
-                                    .toList() ??
-                                [const Text('Unnamed')],
-                          ),
-                          subtitle: Text('Start: $startDate\nEnd: $endDate'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.edit),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => MedicineFormScreen(
-                                    existingData: medicine,
-                                  ),
+                      );
+                    },
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Wrap(
+                          spacing: 8.0,
+                          children: medicine['medicineNames']
+                                  ?.map<Widget>((name) => Text(
+                                        name,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
+                                      ))
+                                  ?.toList() ??
+                              [const Text('Unnamed')],
+                        ),
+                        subtitle: Text('Start: $startDate\nEnd: $endDate'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MedicineFormScreen(
+                                  existingData: medicine,
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-          )
+                    ),
+                  );
+                },
+              );
+            },
+          ))
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const MedicineFormScreen(),
-            ),
-          );
-        },
-        tooltip: 'Add Medicine',
-        child: const Icon(Icons.add),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: Colors.blue,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.medical_services),
+            label: 'Add Medicine',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MedicineFormScreen(),
+                ),
+              );
+            },
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.scanner),
+            label: 'Scan Document',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ScannerScreen(userId: userId),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

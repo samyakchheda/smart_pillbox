@@ -5,7 +5,8 @@ class Screen2 extends StatelessWidget {
   final Function(int) onCheckboxChange;
   final PageController pageController;
 
-  Screen2({
+  const Screen2({
+    super.key,
     required this.isChecked,
     required this.onCheckboxChange,
     required this.pageController,
@@ -14,14 +15,14 @@ class Screen2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Frequency',
                 style: TextStyle(
                   fontSize: 20,
@@ -30,25 +31,25 @@ class Screen2 extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           _buildCheckbox('Morning', 0),
           _buildCheckbox('Afternoon', 1),
           _buildCheckbox('Evening', 2),
-          Spacer(),
+          const Spacer(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               ElevatedButton(
                 onPressed: () {
                   pageController.previousPage(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                   );
                 },
@@ -57,9 +58,10 @@ class Screen2 extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.arrow_back,
                   color: Colors.white,
                   size: 30,
@@ -69,7 +71,7 @@ class Screen2 extends StatelessWidget {
                 onPressed: isChecked.contains(true)
                     ? () {
                         pageController.nextPage(
-                          duration: Duration(milliseconds: 300),
+                          duration: const Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         );
                       }
@@ -81,9 +83,10 @@ class Screen2 extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.arrow_forward,
                   color: Colors.white,
                   size: 30,
@@ -102,9 +105,9 @@ class Screen2 extends StatelessWidget {
         onCheckboxChange(index);
       },
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 300),
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        margin: EdgeInsets.only(bottom: 16),
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           border: Border.all(
             color: isChecked[index]
@@ -130,7 +133,7 @@ class Screen2 extends StatelessWidget {
             ),
             Text(
               label,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,

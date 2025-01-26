@@ -5,6 +5,9 @@ import '../../../core/widgets/basic_snack_bar.dart';
 import '../../../services/firebase_services.dart';
 import '../../home/home_screen.dart';
 import '../signup/signup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -45,6 +48,56 @@ class _SigninScreenState extends State<SigninScreen> {
         showSnackBar(context, res);
       }
     }
+  }
+
+  Future<User?> signInWithGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    // Sign out any previous session
+    await googleSignIn.signOut();
+    // Sign in the user with Google
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Get the email of the user
+      final String email = googleUser.email;
+
+      // Check if the email exists in Firestore (database)
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (userDoc.docs.isEmpty) {
+        // Email not found in Firestore, show error or prompt for signup
+        print('No user found for this email. Please sign up.');
+        return null;
+      }
+
+      try {
+        // Attempt to sign in with the credentials if email is registered
+        final UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        final User? user = userCredential.user;
+
+        if (user != null) {
+          // User successfully signed in
+          return user;
+        }
+      } on FirebaseAuthException catch (e) {
+        // Handle sign-in errors
+        print('Error signing in with Google: ${e.message}');
+      }
+    }
+
+    return null; // Return null if something goes wrong
   }
 
   void showForgotPasswordDialog(BuildContext context) {
@@ -241,7 +294,19 @@ class _SigninScreenState extends State<SigninScreen> {
 
   Widget _googleSignIn() {
     return ElevatedButton.icon(
-      onPressed: () {},
+      onPressed: () async {
+        User? user = await signInWithGoogle();
+        if (user != null) {
+          setupFCM();
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
+        } else {
+          showSnackBar(context, "Account Not Found");
+        }
+      },
       icon: Image.asset(
         'assets/icons/ic_google.png',
         height: 25,
