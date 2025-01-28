@@ -3,8 +3,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:home/services/alarm_screen.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+// import 'package:http/http.dart' as http;
+// import 'dart:convert';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -12,8 +12,8 @@ class NotificationHelper {
   static final FlutterLocalNotificationsPlugin _notification =
       FlutterLocalNotificationsPlugin();
 
-  static const String backendUrl =
-      'https://notification-api-yham.onrender.com/send_notification'; // Replace with your actual server URL
+  // static const String backendUrl =
+  //     'https://notification-api-yham.onrender.com/send_notification'; // Replace with your actual server URL
 
   /// Initializes the notification settings and timezone.
   static Future<void> init() async {
@@ -89,29 +89,29 @@ class NotificationHelper {
     }
   }
 
-  /// Sends a notification to the backend server.
-  Future<void> sendNotificationToBackend(
-      String deviceToken, String title, String body) async {
-    try {
-      final response = await http.post(
-        Uri.parse(backendUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'device_token': deviceToken,
-          'title': title,
-          'body': body,
-        }),
-      );
+  // /// Sends a notification to the backend server.
+  // Future<void> sendNotificationToBackend(
+  //     String deviceToken, String title, String body) async {
+  //   try {
+  //     final response = await http.post(
+  //       Uri.parse(backendUrl),
+  //       headers: {'Content-Type': 'application/json'},
+  //       body: json.encode({
+  //         'device_token': deviceToken,
+  //         'title': title,
+  //         'body': body,
+  //       }),
+  //     );
 
-      if (response.statusCode == 200) {
-        print('[DEBUG] Notification sent successfully');
-      } else {
-        print('[DEBUG] Failed to send notification');
-      }
-    } catch (e) {
-      print('[ERROR] Error sending notification: $e');
-    }
-  }
+  //     if (response.statusCode == 200) {
+  //       print('[DEBUG] Notification sent successfully');
+  //     } else {
+  //       print('[DEBUG] Failed to send notification');
+  //     }
+  //   } catch (e) {
+  //     print('[ERROR] Error sending notification: $e');
+  //   }
+  // }
 
   /// Navigates to the AlarmScreen with the provided payload.
   static void navigateToAlarmScreen(String payload) {

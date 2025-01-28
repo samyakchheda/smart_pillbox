@@ -89,10 +89,11 @@ Future<void> checkMedicineTimes(
 
           if (isNotification) {
             try {
-              await NotificationHelper().sendNotificationToBackend(
-                fcmToken,
+              await NotificationHelper.scheduleMedicineReminder(
+                tzMedicineTime,
                 "Medicine Reminder",
                 "It's time to take your medicines: $medicineNamesCombined",
+                notificationId: notificationId,
               );
               print(
                   "[DEBUG] Notification sent successfully for $medicineNamesCombined.");
