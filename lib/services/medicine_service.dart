@@ -4,7 +4,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:home/services/notifications_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
-import 'dart:typed_data';
 
 Future<void> checkMedicineTimes(
   String userId,
@@ -103,8 +102,10 @@ Future<void> checkMedicineTimes(
           } else {
             try {
               // Schedule local notification
-              await scheduleAlarm(flutterLocalNotificationsPlugin,
-                  tzMedicineTime, medicineNamesCombined);
+              await NotificationHelper.scheduleAlarm(
+                  flutterLocalNotificationsPlugin,
+                  tzMedicineTime,
+                  medicineNamesCombined);
               print(
                   "[DEBUG] Alarm scheduled successfully for $medicineNamesCombined at $medicineTime.");
             } catch (e) {
@@ -120,52 +121,4 @@ Future<void> checkMedicineTimes(
   } catch (error) {
     print("[ERROR] Error checking medicine times: $error");
   }
-}
-
-Future<void> scheduleAlarm(
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
-    tz.TZDateTime scheduledTime,
-    String medicineName) async {
-  AndroidNotificationDetails androidPlatformChannelSpecifics =
-      AndroidNotificationDetails(
-    'alarm_channel_id',
-    'Alarm Channel',
-    channelDescription: 'Channel for alarm notifications',
-    importance: Importance.max,
-    priority: Priority.high,
-    sound: RawResourceAndroidNotificationSound('alarm'),
-    vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
-    enableVibration: true,
-    playSound: true,
-    fullScreenIntent: true,
-    timeoutAfter: 60000,
-    actions: <AndroidNotificationAction>[
-      AndroidNotificationAction(
-        'snooze',
-        'Snooze',
-      ),
-      AndroidNotificationAction(
-        'stop',
-        'Stop',
-        cancelNotification: true,
-      ),
-    ],
-  );
-
-  NotificationDetails platformChannelSpecifics =
-      NotificationDetails(android: androidPlatformChannelSpecifics);
-
-  // Schedule the alarm using the TZDateTime
-  await flutterLocalNotificationsPlugin.zonedSchedule(
-    0,
-    'Medicine Reminder',
-    'It\'s time to take your medicines: $medicineName!',
-    scheduledTime,
-    platformChannelSpecifics,
-    uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
-    matchDateTimeComponents: DateTimeComponents.time,
-    androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    payload: medicineName,
-  );
 }

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:home/services/alarm_screen.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
+import 'dart:typed_data';
+
 // import 'package:http/http.dart' as http;
 // import 'dart:convert';
 
@@ -29,7 +30,7 @@ class NotificationHelper {
         // Automatically navigate to AlarmScreen when notification is received
         if (response.payload != null) {
           // Ensure payload is non-null before passing
-          navigateToAlarmScreen(response.payload!);
+          // navigateToAlarmScreen(response.payload!);
         }
       },
     );
@@ -89,6 +90,54 @@ class NotificationHelper {
     }
   }
 
+  static Future<void> scheduleAlarm(
+      FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
+      tz.TZDateTime scheduledTime,
+      String medicineName) async {
+    AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'alarm_channel_id',
+      'Alarm Channel',
+      channelDescription: 'Channel for alarm notifications',
+      importance: Importance.max,
+      priority: Priority.high,
+      sound: RawResourceAndroidNotificationSound('alarm'),
+      vibrationPattern: Int64List.fromList([0, 1000, 500, 1000]),
+      enableVibration: true,
+      playSound: true,
+      fullScreenIntent: true,
+      timeoutAfter: 60000,
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'snooze',
+          'Snooze',
+        ),
+        AndroidNotificationAction(
+          'stop',
+          'Stop',
+          cancelNotification: true,
+        ),
+      ],
+    );
+
+    NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    // Schedule the alarm using the TZDateTime
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0,
+      'Medicine Reminder',
+      'It\'s time to take your medicines: $medicineName!',
+      scheduledTime,
+      platformChannelSpecifics,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      payload: medicineName,
+    );
+  }
+
   // /// Sends a notification to the backend server.
   // Future<void> sendNotificationToBackend(
   //     String deviceToken, String title, String body) async {
@@ -114,15 +163,15 @@ class NotificationHelper {
   // }
 
   /// Navigates to the AlarmScreen with the provided payload.
-  static void navigateToAlarmScreen(String payload) {
-    // Use the navigator key to push the AlarmScreen
-    navigatorKey.currentState?.pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => AlarmScreen(
-          medicineName: payload, // Pass the payload as needed
-        ),
-      ),
-      (route) => false, // Remove all other routes
-    );
-  }
+  // static void navigateToAlarmScreen(String payload) {
+  //   // Use the navigator key to push the AlarmScreen
+  //   navigatorKey.currentState?.pushAndRemoveUntil(
+  //     MaterialPageRoute(
+  //       builder: (_) => AlarmScreen(
+  //         medicineName: payload, // Pass the payload as needed
+  //       ),
+  //     ),
+  //     (route) => false, // Remove all other routes
+  //   );
+  // }
 }
