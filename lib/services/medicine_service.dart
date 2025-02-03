@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:home/services/alarm_scheduler.dart';
 import 'package:home/services/notifications_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -102,10 +103,13 @@ Future<void> checkMedicineTimes(
           } else {
             try {
               // Schedule local notification
-              await NotificationHelper.scheduleAlarm(
-                  flutterLocalNotificationsPlugin,
-                  tzMedicineTime,
-                  medicineNamesCombined);
+              // await NotificationHelper.scheduleAlarm(
+              //     flutterLocalNotificationsPlugin,
+              //     tzMedicineTime,
+              //     medicineNamesCombined);
+              String payload =
+                  'Time to take your medicine:\n $medicineNamesCombined';
+              await AlarmScheduler.scheduleAlarm(tzMedicineTime, payload);
               print(
                   "[DEBUG] Alarm scheduled successfully for $medicineNamesCombined at $medicineTime.");
             } catch (e) {

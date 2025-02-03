@@ -1,7 +1,7 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:home/product_screen.dart';
 import '../profile/user_profile_screen.dart';
 import '../reminders/medicine_list_screen.dart';
 
@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     const MedicineListScreen(),
     const UserProfileScreen(),
+    ProductScreen(),
   ];
 
   @override
@@ -56,6 +57,11 @@ class _HomeScreenState extends State<HomeScreen> {
             inActiveItem: Icon(FontAwesomeIcons.user, color: Colors.black),
             activeItem: Icon(FontAwesomeIcons.user, color: Colors.white),
             itemLabel: 'Profile',
+          ),
+          BottomBarItem(
+            inActiveItem: Icon(FontAwesomeIcons.shop, color: Colors.black),
+            activeItem: Icon(FontAwesomeIcons.shop, color: Colors.white),
+            itemLabel: 'Shop',
           ),
         ],
         onTap: (index) {

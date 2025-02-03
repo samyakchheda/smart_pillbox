@@ -3,66 +3,120 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:home/core/constants/app_theme.dart';
 import 'package:home/presentation/home/home_screen.dart';
 import 'package:home/presentation/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
+import 'package:home/services/permissions_helper.dart';
+import 'package:home/services/alarm_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'services/notifications_service.dart';
-import 'services/permissions_helper.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
-// Background handler for receiving FCM messages when the app is killed
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // Initialize Firebase in the background handler (necessary for Firebase to work)
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Call the notification handler to schedule a local notification
-  await NotificationHelper.scheduleMedicineReminder(
-    DateTime.now(),
-    message.notification?.title ?? 'Medicine Reminder',
-    message.notification?.body ?? 'Time to take your medicine',
-    notificationId: message.messageId ?? 'default',
-  );
+  _showAlarmScreen(message.data['payload'] ?? '');
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize the Notification helper
-  await NotificationHelper.init();
+  // Initialize notifications
+  await _initNotifications();
 
-  // Set background message handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+Future<void> _initNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+  final InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse details) {
+      if (details.payload != null && details.payload!.startsWith('alarm_')) {
+        _showAlarmScreen(details.payload!);
+      }
+    },
+  );
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    _showAlarmScreen(message.data['payload'] ?? '');
+  });
+
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    _showAlarmScreen(message.data['payload'] ?? '');
+  });
+}
+
+void _showAlarmScreen(String payload) {
+  navigatorKey.currentState?.pushNamed('/alarm_screen', arguments: payload);
+}
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _setupNotifications();
+  }
+
+  void _setupNotifications() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _showAlarmScreen(message.data['payload'] ?? '');
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _showAlarmScreen(message.data['payload'] ?? '');
+    });
+
+    flutterLocalNotificationsPlugin.initialize(
+      InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ),
+      onDidReceiveNotificationResponse: (NotificationResponse details) {
+        if (details.payload != null && details.payload!.startsWith('alarm_')) {
+          _showAlarmScreen(details.payload!);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      // navigatorKey: navigatorKey,
+      navigatorKey: navigatorKey,
       title: 'Smart Pillbox',
-      // theme: ThemeData(
-      //   primarySwatch: Colors.blue,
-      //   scaffoldBackgroundColor: const Color(0xFFF6F6F6),
-      //   appBarTheme: const AppBarTheme(
-      //     backgroundColor: Color(0xFFF6F6F6),
-      //     elevation: 0,
-      //     iconTheme: IconThemeData(color: Colors.black),
-      //   ),
-      // ),
       theme: AppTheme.lightTheme,
-      // darkTheme: AppTheme.darkTheme,
       debugShowCheckedModeBanner: false,
-      home: const AuthWrapper(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const AuthWrapper(),
+        '/alarm_screen': (context) => AlarmScreen(
+            payload:
+                ModalRoute.of(context)?.settings.arguments as String? ?? ''),
+      },
     );
   }
 }
@@ -99,20 +153,14 @@ class AuthWrapper extends StatelessWidget {
 
 Future<void> setupFCM() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-
   try {
-    // Retrieve the FCM token
     String? token = await messaging.getToken();
     if (token != null) {
       await saveTokenToFirestore(token);
     }
-
-    // Listen for token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
       await saveTokenToFirestore(newToken);
     });
-
-    // Request permissions for notifications
     await messaging.requestPermission();
   } catch (e) {
     print("Error setting up FCM: $e");
@@ -123,18 +171,13 @@ Future<void> saveTokenToFirestore(String token) async {
   try {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
     final prefs = await SharedPreferences.getInstance();
-
     if (userId.isNotEmpty) {
-      // Save token to Firestore for the logged-in user
       await FirebaseFirestore.instance.collection('users').doc(userId).set(
         {'deviceToken': token},
         SetOptions(merge: true),
       );
-      print('Token saved to Firestore for user $userId');
     } else {
-      // Save token locally if no user is logged in
       await prefs.setString('fcm_token', token);
-      print('Token saved locally: $token');
     }
   } catch (e) {
     print('Error saving token: $e');
