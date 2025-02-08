@@ -9,99 +9,21 @@ import 'package:home/presentation/home/home_screen.dart';
 import 'package:home/presentation/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:home/services/permissions_helper.dart';
-import 'package:home/services/alarm_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  _showAlarmScreen(message.data['payload'] ?? '');
-}
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize notifications
-  await _initNotifications();
-
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
-Future<void> _initNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  final InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse details) {
-      if (details.payload != null && details.payload!.startsWith('alarm_')) {
-        _showAlarmScreen(details.payload!);
-      }
-    },
-  );
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    _showAlarmScreen(message.data['payload'] ?? '');
-  });
-
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    _showAlarmScreen(message.data['payload'] ?? '');
-  });
-}
-
-void _showAlarmScreen(String payload) {
-  navigatorKey.currentState?.pushNamed('/alarm_screen', arguments: payload);
-}
-
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _setupNotifications();
-  }
-
-  void _setupNotifications() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      _showAlarmScreen(message.data['payload'] ?? '');
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _showAlarmScreen(message.data['payload'] ?? '');
-    });
-
-    flutterLocalNotificationsPlugin.initialize(
-      InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      ),
-      onDidReceiveNotificationResponse: (NotificationResponse details) {
-        if (details.payload != null && details.payload!.startsWith('alarm_')) {
-          _showAlarmScreen(details.payload!);
-        }
-      },
-    );
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,9 +35,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       initialRoute: '/',
       routes: {
         '/': (context) => const AuthWrapper(),
-        '/alarm_screen': (context) => AlarmScreen(
-            payload:
-                ModalRoute.of(context)?.settings.arguments as String? ?? ''),
       },
     );
   }

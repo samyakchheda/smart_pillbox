@@ -67,6 +67,7 @@ dependencies:
   pdf: ^3.11.2
   flutter_show_when_locked: ^1.0.0
   flutter_foreground_task: ^8.17.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:

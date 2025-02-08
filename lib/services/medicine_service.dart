@@ -53,17 +53,21 @@ Future<void> checkMedicineTimes(
     // Process all medicines
     for (var medicine in medicines) {
       // Ensure 'medicineNames' and 'medicineTimes' are valid lists
+      String? medicineId = medicine['id']; // Retrieve medicineId
       List<dynamic> medicineNames = medicine['medicineNames'] ?? [];
       List<dynamic> medicineTimes = medicine['medicineTimes'] ?? [];
 
-      if (medicineNames.isEmpty || medicineTimes.isEmpty) {
-        print("[DEBUG] Skipping medicine with no names or times.");
+      if (medicineId == null ||
+          medicineNames.isEmpty ||
+          medicineTimes.isEmpty) {
+        print("[DEBUG] Skipping medicine with missing ID, names, or times.");
         continue;
       }
 
       // Combine medicine names into a single string
       String medicineNamesCombined = medicineNames.join(', ');
-      print("[DEBUG] Processing medicine: $medicineNamesCombined");
+      print(
+          "[DEBUG] Processing medicine: $medicineNamesCombined (ID: $medicineId)");
 
       for (var timeStamp in medicineTimes) {
         if (timeStamp is Timestamp) {
@@ -83,42 +87,39 @@ Future<void> checkMedicineTimes(
           );
 
           String notificationId =
-              '${medicineNamesCombined}-${medicineTime.toIso8601String()}';
+              '$medicineId-${medicineTime.toIso8601String()}';
           print(
-              "[DEBUG] Scheduling notification for $medicineNamesCombined at $medicineTime with ID: $notificationId");
+              "[DEBUG] Scheduling notification for $medicineNamesCombined (ID: $medicineId) at $medicineTime");
 
           if (isNotification) {
             try {
               await NotificationHelper.scheduleMedicineReminder(
                 tzMedicineTime,
                 "Medicine Reminder",
-                "It's time to take your medicines: $medicineNamesCombined",
+                "It's time to take your medicine: $medicineNamesCombined",
                 notificationId: notificationId,
               );
               print(
-                  "[DEBUG] Notification sent successfully for $medicineNamesCombined.");
+                  "[DEBUG] Notification sent successfully for $medicineNamesCombined (ID: $medicineId).");
             } catch (e) {
               print("[ERROR] Error sending push notification: $e");
             }
           } else {
             try {
-              // Schedule local notification
-              // await NotificationHelper.scheduleAlarm(
-              //     flutterLocalNotificationsPlugin,
-              //     tzMedicineTime,
-              //     medicineNamesCombined);
+              // Schedule local alarm
               String payload =
                   'Time to take your medicine:\n $medicineNamesCombined';
-              await AlarmScheduler.scheduleAlarm(tzMedicineTime, payload);
+              await AlarmScheduler.scheduleAlarm(
+                  medicineId, tzMedicineTime, payload);
               print(
-                  "[DEBUG] Alarm scheduled successfully for $medicineNamesCombined at $medicineTime.");
+                  "[DEBUG] Alarm scheduled successfully for $medicineNamesCombined (ID: $medicineId) at $medicineTime.");
             } catch (e) {
               print("[ERROR] Error scheduling alarm: $e");
             }
           }
         } else {
           print(
-              "[DEBUG] Invalid timestamp for $medicineNamesCombined: $timeStamp");
+              "[DEBUG] Invalid timestamp for $medicineNamesCombined (ID: $medicineId): $timeStamp");
         }
       }
     }
