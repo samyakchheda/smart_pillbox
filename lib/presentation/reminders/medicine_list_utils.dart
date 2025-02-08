@@ -130,7 +130,7 @@ class DateSelector extends StatelessWidget {
                 bool isFutureDate = date.isAfter(today);
 
                 return GestureDetector(
-                  onTap: isFutureDate ? null : () => onDateSelected(date),
+                  onTap: () => onDateSelected(date),
                   child: Container(
                     width: 50.0,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -250,10 +250,10 @@ class MedicineList extends StatelessWidget {
                       (medicine['endDate'] as Timestamp).toDate().toLocal();
 
                   // Ensure date comparison matches correct timezone
-                  bool isWithinDateRange = selectedDayUtc.isAfter(
-                          startDate.subtract(const Duration(days: 1))) &&
-                      selectedDayUtc
-                          .isBefore(endDate.add(const Duration(days: 1)));
+                  bool isWithinDateRange = selectedDayUtc.isAfter(startDate) &&
+                          selectedDayUtc.isBefore(endDate) ||
+                      selectedDayUtc == startDate ||
+                      selectedDayUtc == endDate;
 
                   bool isScheduledOnDay =
                       scheduledDays.contains(selectedWeekday);
