@@ -137,7 +137,7 @@ class DateSelector extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.grey.withOpacity(0.2) : null,
+                      color: isSelected ? Color(0xFFEFFFFD) : null,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -198,7 +198,8 @@ class MedicineList extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white, // White background for the whole screen
+            color: AppColors
+                .lightBackground, // White background for the whole screen
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
@@ -408,6 +409,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
     return SlideTransition(
       position: _animation,
       child: Card(
+        color: Color(0xFF85F4FF),
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -479,7 +481,7 @@ Widget buildSpeedDial(BuildContext context, String userId) {
   return SpeedDial(
     icon: Icons.add,
     activeIcon: Icons.close,
-    backgroundColor: AppColors.sky,
+    backgroundColor: Color(0xFF85F4FF),
     children: [
       SpeedDialChild(
         child: const Icon(Icons.medical_services),
