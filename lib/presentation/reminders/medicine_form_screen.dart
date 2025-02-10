@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:home/core/constants/app_color.dart';
 import 'package:home/services/medicine_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'medicine_form_utils.dart';
@@ -89,66 +88,69 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
-                color: Color(0xFF85F4FF), // Replace with your desired color
+                color: Color(0xFFE0E0E0), // Replace with your desired color
               ),
             ),
           ),
 
           // Foreground Content
           SafeArea(
-            child: Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.black),
-                        onPressed: () {
-                          if (currentStep == FormStep.pillDetails) {
-                            Navigator.pop(context);
-                          } else {
-                            setState(() {
-                              currentStep =
-                                  FormStep.values[currentStep.index - 1];
-                            });
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      const Text(
-                        'Set Medicine',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+            child: SingleChildScrollView(
+              // Move here
+              child: Column(
+                children: [
+                  // Header
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.black),
+                          onPressed: () {
+                            if (currentStep == FormStep.pillDetails) {
+                              Navigator.pop(context);
+                            } else {
+                              setState(() {
+                                currentStep =
+                                    FormStep.values[currentStep.index - 1];
+                              });
+                            }
+                          },
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 16),
+                        const Text(
+                          'Set Medicine',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(
-                      bottom: 40), // Adds space above the bottom
-                  child: SingleChildScrollView(
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 300),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 16),
-                      child: Container(
-                        height: MediaQuery.of(context).size.height * 0.7,
-                        decoration: BoxDecoration(
-                          color: Color(0xFFEFFFFD),
-                          borderRadius: BorderRadius.circular(30),
+                      child: Expanded(
+                        child: Container(
+                          height: 600,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.all(24),
+                          child: _buildStepContent(),
                         ),
-                        padding: const EdgeInsets.all(24),
-                        child: _buildStepContent(),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -254,7 +256,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 210),
 
               _buildNextButton('Next', () {
                 setState(() {
@@ -433,12 +435,13 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
             label: 'Start Date',
             onTap: () => selectDate(context, _startDateController),
           ),
+          const SizedBox(height: 24),
           DateInput(
             controller: _endDateController,
             label: 'End Date',
             onTap: () => selectDate(context, _endDateController),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 140),
           _buildNextButton('Save', handleSubmit),
         ],
       ),
@@ -453,8 +456,8 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
         label: Text(text),
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.sky,
-          foregroundColor: Colors.black,
+          backgroundColor: Color(0xFF4276FD),
+          foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

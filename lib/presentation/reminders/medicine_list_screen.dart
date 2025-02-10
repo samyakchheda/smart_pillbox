@@ -66,7 +66,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
     return Scaffold(
       key: scaffoldMessengerKey,
-      backgroundColor: Color(0xFF85F4FF),
+      backgroundColor: Colors.grey.shade400,
       body: Column(
         children: [
           DateSelector(

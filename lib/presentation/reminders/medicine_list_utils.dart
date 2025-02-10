@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:home/core/constants/app_color.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../scanner_screen.dart';
 import 'medicine_form_screen.dart';
@@ -24,15 +24,25 @@ void scrollToDate(BuildContext context, ScrollController scrollController,
       date.month == selectedDate.month &&
       date.year == selectedDate.year);
 
+  if (selectedDateIndex == -1) return; // Prevent errors if date not found
+
   double screenWidth = MediaQuery.of(context).size.width;
-  double itemWidth = 50.0;
-  double offset =
-      (selectedDateIndex * itemWidth) - (screenWidth / 2) + (itemWidth / 2);
+  double itemWidth = 54.0; // 50 width + 2 margin on each side
+
+  // Calculate target scroll offset while keeping the selected date centered
+  double maxScrollExtent = scrollController.position.maxScrollExtent;
+  double minScrollExtent = scrollController.position.minScrollExtent;
+
+  double targetOffset =
+      (selectedDateIndex * itemWidth) - (screenWidth / 3) + (itemWidth / 2);
+
+  // Ensure offset is within valid scroll bounds
+  double finalOffset = targetOffset.clamp(minScrollExtent, maxScrollExtent);
 
   if (scrollController.hasClients) {
     scrollController.animateTo(
-      offset.clamp(0.0, scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 500),
+      finalOffset,
+      duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
     );
   }
@@ -106,63 +116,128 @@ class DateSelector extends StatelessWidget {
         children: [
           // Text above the calendar with dynamic date
           Padding(
-            padding: const EdgeInsets.only(top: 30.0), // Added space from top
+            padding: const EdgeInsets.only(top: 30.0),
             child: Text(
-              DateFormat('E, d\'th\' MMM')
-                  .format(selectedDate), // Dynamic date format
+              DateFormat('E, d\'th\' MMM').format(selectedDate),
               style: const TextStyle(
-                fontSize: 22, // Increased font size
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
           ),
-          const SizedBox(height: 16), // Spacing between text and calendar
+          const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: scrollController,
             child: Row(
-              children: List.generate(dateRange.length, (index) {
-                DateTime date = dateRange[index];
-                bool isSelected = date.day == selectedDate.day &&
-                    date.month == selectedDate.month &&
-                    date.year == selectedDate.year;
-                bool isFutureDate = date.isAfter(today);
+              children: [
+                // Calendar Button
+                GestureDetector(
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate:
+                          dateRange.first, // Keep the earliest available date
+                      lastDate: DateTime(2125), // Allow selecting future dates
+                    );
 
-                return GestureDetector(
-                  onTap: () => onDateSelected(date),
+                    if (pickedDate != null) {
+                      onDateSelected(pickedDate);
+                    }
+                  },
                   child: Container(
                     width: 50.0,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                    height: 50.0,
+                    margin: const EdgeInsets.only(left: 8),
                     decoration: BoxDecoration(
-                      color: isSelected ? Color(0xFFEFFFFD) : null,
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                          15), // Adjust the radius for roundness
                     ),
-                    child: Column(
-                      children: [
-                        Text(
-                          DateFormat('E').format(date)[0],
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: isFutureDate ? Colors.grey : Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          DateFormat('d').format(date),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isFutureDate ? Colors.grey : Colors.black,
-                          ),
-                        ),
-                      ],
+                    child: const Icon(
+                      Icons.calendar_today,
+                      color: Colors.black,
+                      size: 24,
                     ),
                   ),
-                );
-              }),
+                ),
+                // Generate Date Items
+                ...List.generate(dateRange.length, (index) {
+                  DateTime date = dateRange[index];
+                  bool isSelected = date.day == selectedDate.day &&
+                      date.month == selectedDate.month &&
+                      date.year == selectedDate.year;
+                  bool isFutureDate = date.isAfter(today);
+
+                  return GestureDetector(
+                    onTap: () => onDateSelected(date),
+                    child: Container(
+                      width: 50.0,
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 6, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : null,
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            DateFormat('E').format(date)[0],
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: isFutureDate ? Colors.grey : Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            DateFormat('d').format(date),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isFutureDate ? Colors.grey : Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+
+                // Calendar Button
+                GestureDetector(
+                  onTap: () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate,
+                      firstDate:
+                          dateRange.first, // Keep the earliest available date
+                      lastDate: DateTime(2125), // Allow selecting future dates
+                    );
+
+                    if (pickedDate != null) {
+                      onDateSelected(pickedDate);
+                    }
+                  },
+                  child: Container(
+                    width: 50.0,
+                    height: 50.0,
+                    margin: const EdgeInsets.only(left: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                          15), // Adjust the radius for roundness
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -198,8 +273,7 @@ class MedicineList extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors
-                .lightBackground, // White background for the whole screen
+            color: Color(0xFFE0E0E0), // White background for the whole screen
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
@@ -304,7 +378,8 @@ class MedicineList extends StatelessWidget {
                       key: Key(medicine['id']),
                       direction: DismissDirection.endToStart,
                       onDismissed: (direction) async {
-                        await onDelete(medicine['id']);
+                        await onDelete(
+                            medicine['id']); // Ensure we pass the correct ID
                       },
                       confirmDismiss: (direction) async {
                         return await showDialog(
@@ -339,6 +414,8 @@ class MedicineList extends StatelessWidget {
                         startDate: startDate,
                         endDate: endDate,
                         onEdit: () => onEdit(medicine),
+                        onDelete: () => onDelete(
+                            medicine['id']), // Ensure correct ID is passed
                       ),
                     );
                   },
@@ -357,6 +434,7 @@ class AnimatedMedicineCard extends StatefulWidget {
   final String startDate;
   final String endDate;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   const AnimatedMedicineCard({
     Key? key,
@@ -364,6 +442,7 @@ class AnimatedMedicineCard extends StatefulWidget {
     required this.startDate,
     required this.endDate,
     required this.onEdit,
+    required this.onDelete,
   }) : super(key: key);
 
   @override
@@ -412,27 +491,22 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
     return SlideTransition(
       position: _animation,
       child: Card(
-        color: Color(0xFF85F4FF),
+        color: Colors.white,
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        elevation: 0,
+        elevation: 8,
+        shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(30),
         ),
         child: ListTile(
           contentPadding: const EdgeInsets.all(16),
           title: Row(
             children: [
-              const Icon(
-                Icons.alarm, // Alarm icon
-                color: Colors.black87, // Darker alarm icon
-                size: 24,
-              ),
-              const SizedBox(width: 8), // Space between the icon and time
               Text(
                 time, // Show the time (hh:mm)
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 20, // Increased font size for time
+                  fontSize: 30, // Increased font size for time
                 ),
               ),
               const SizedBox(width: 4), // Space between time and AM/PM
@@ -453,26 +527,71 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                       Colors.black26), // Horizontal line between time and name
               const SizedBox(
                   height: 8), // Space between line and medicine names
-              Wrap(
-                spacing: 8.0,
-                children: [
-                  const Icon(Icons.medication_rounded,
-                      color: Colors.black87, size: 24), // Medicine icon
-                  ...widget.medicine['medicineNames']
-                          ?.map<Widget>((name) => Text(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widget.medicine['medicineNames']
+                        ?.map<Widget>(
+                          (name) => Row(
+                            children: [
+                              const Icon(FontAwesomeIcons.pills,
+                                  color: Colors.black87,
+                                  size: 24), // Medicine icon
+                              const SizedBox(
+                                width: 15,
+                                height: 40,
+                              ), // Spacing between icon and text
+                              Text(
                                 name,
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 16),
-                              ))
-                          ?.toList() ??
-                      [const Text('Unnamed')],
-                ],
+                              ),
+                            ],
+                          ),
+                        )
+                        ?.toList() ??
+                    [const Text('Unnamed')], // Fallback if no medicines exist
               ),
             ],
           ),
-          trailing: IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: widget.onEdit,
+          trailing: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert), // Three dots icon
+            onSelected: (value) {
+              if (value == 'edit') {
+                widget.onEdit();
+              } else if (value == 'delete') {
+                widget.onDelete();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.edit,
+                      color: Colors.black,
+                      size: 30,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Edit'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.delete,
+                      color: Colors.black,
+                      size: 30,
+                    ),
+                    SizedBox(width: 8),
+                    Text('Delete'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -484,11 +603,16 @@ Widget buildSpeedDial(BuildContext context, String userId) {
   return SpeedDial(
     icon: Icons.add,
     activeIcon: Icons.close,
-    backgroundColor: Color(0xFF85F4FF),
+    backgroundColor: Color(0xFF4276FD), // Background color remains the same
+    foregroundColor: Colors.white, // Makes the '+' icon white
     children: [
       SpeedDialChild(
-        child: const Icon(Icons.medical_services),
-        label: 'Add Medicine',
+        child: const Icon(Icons.medical_services), // Ensure white icon
+        backgroundColor: Color(0xFF4276FD),
+        foregroundColor: Colors.white,
+        label: 'Add Medicine', labelBackgroundColor: Color(0xFF4276FD),
+        labelStyle: const TextStyle(
+            color: Colors.white, fontSize: 20), // Makes text white
         onTap: () {
           Navigator.push(
             context,
@@ -499,8 +623,13 @@ Widget buildSpeedDial(BuildContext context, String userId) {
         },
       ),
       SpeedDialChild(
-        child: const Icon(Icons.scanner),
-        label: 'Scan Document',
+        child:
+            const Icon(Icons.scanner, color: Colors.white), // Ensure white icon
+        backgroundColor: Color(0xFF4276FD),
+        foregroundColor: Colors.white,
+        label: 'Scan Document', labelBackgroundColor: Color(0xFF4276FD),
+        labelStyle: const TextStyle(
+            color: Colors.white, fontSize: 18), // Makes text white,
         onTap: () {
           Navigator.push(
             context,

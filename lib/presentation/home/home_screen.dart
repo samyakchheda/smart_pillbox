@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _pages[_controller.index],
       bottomNavigationBar: AnimatedNotchBottomBar(
         notchBottomBarController: _controller,
-        color: Color(0xFF85F4FF),
+        color: Colors.white,
         showLabel: true,
         shadowElevation: 5,
         kBottomRadius: 28.0,
@@ -45,23 +45,22 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomBarItems: const [
           BottomBarItem(
             inActiveItem: FaIcon(FontAwesomeIcons.house, color: Colors.black),
-            activeItem:
-                FaIcon(FontAwesomeIcons.house, color: Color(0xFFEFFFFD)),
+            activeItem: FaIcon(FontAwesomeIcons.house, color: Colors.white),
             itemLabel: 'Home',
           ),
           BottomBarItem(
             inActiveItem: Icon(FontAwesomeIcons.pills, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.pills, color: Color(0xFFEFFFFD)),
+            activeItem: Icon(FontAwesomeIcons.pills, color: Colors.white),
             itemLabel: 'Reminders',
           ),
           BottomBarItem(
             inActiveItem: Icon(FontAwesomeIcons.user, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.user, color: Color(0xFFEFFFFD)),
+            activeItem: Icon(FontAwesomeIcons.user, color: Colors.white),
             itemLabel: 'Profile',
           ),
           BottomBarItem(
             inActiveItem: Icon(FontAwesomeIcons.shop, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.shop, color: Color(0xFFEFFFFD)),
+            activeItem: Icon(FontAwesomeIcons.shop, color: Colors.white),
             itemLabel: 'Shop',
           ),
         ],
