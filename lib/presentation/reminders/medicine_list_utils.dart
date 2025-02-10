@@ -245,16 +245,19 @@ class MedicineList extends StatelessWidget {
                 var filteredMedicines = medicines.where((medicine) {
                   List<String> scheduledDays =
                       List<String>.from(medicine['selectedDays']);
+                  // Convert Firestore timestamp to local DateTime and set to end of the day
                   DateTime startDate =
                       (medicine['startDate'] as Timestamp).toDate().toLocal();
-                  DateTime endDate =
-                      (medicine['endDate'] as Timestamp).toDate().toLocal();
+                  DateTime endDate = (medicine['endDate'] as Timestamp)
+                      .toDate()
+                      .toLocal()
+                      .add(const Duration(hours: 23, minutes: 59, seconds: 59));
 
                   // Ensure date comparison matches correct timezone
-                  bool isWithinDateRange = selectedDayUtc.isAfter(startDate) &&
-                          selectedDayUtc.isBefore(endDate) ||
-                      selectedDayUtc == startDate ||
-                      selectedDayUtc == endDate;
+                  bool isWithinDateRange = (selectedDayUtc.isAfter(startDate) &&
+                          selectedDayUtc.isBefore(endDate)) ||
+                      selectedDayUtc.isAtSameMomentAs(startDate) ||
+                      selectedDayUtc.isAtSameMomentAs(endDate);
 
                   bool isScheduledOnDay =
                       scheduledDays.contains(selectedWeekday);

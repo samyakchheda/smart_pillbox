@@ -66,22 +66,30 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
       body: Stack(
         children: [
           // Fixed Background Image
+          // Positioned.fill(
+          //   child: Container(
+          //     decoration: const BoxDecoration(
+          //       image: DecorationImage(
+          //         image: AssetImage('assets/images/doc.jpg'), // Your image path
+          //         fit: BoxFit.cover, // Ensures full coverage
+          //         alignment: Alignment.topCenter, // Keeps image fixed at top
+          //       ),
+          //       gradient: LinearGradient(
+          //         begin: Alignment.bottomCenter,
+          //         end: Alignment.topCenter,
+          //         colors: [
+          //           Colors.lightBlueAccent, // Bottom color
+          //           Colors.transparent, // Fades into transparency
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          // Fixed Background Color
           Positioned.fill(
             child: Container(
               decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/doc.jpg'), // Your image path
-                  fit: BoxFit.cover, // Ensures full coverage
-                  alignment: Alignment.topCenter, // Keeps image fixed at top
-                ),
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [
-                    Colors.lightBlueAccent, // Bottom color
-                    Colors.transparent, // Fades into transparency
-                  ],
-                ),
+                color: Color(0xFF85F4FF), // Replace with your desired color
               ),
             ),
           ),
@@ -96,7 +104,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                   child: Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Colors.white),
+                        icon: const Icon(Icons.arrow_back, color: Colors.black),
                         onPressed: () {
                           if (currentStep == FormStep.pillDetails) {
                             Navigator.pop(context);
@@ -121,7 +129,6 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                   ),
                 ),
                 const Spacer(),
-
                 Padding(
                   padding: const EdgeInsets.only(
                       bottom: 40), // Adds space above the bottom
@@ -130,9 +137,9 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 16),
                       child: Container(
-                        height: MediaQuery.of(context).size.height * 0.5,
+                        height: MediaQuery.of(context).size.height * 0.7,
                         decoration: BoxDecoration(
-                          color: Colors.grey[100],
+                          color: Color(0xFFEFFFFD),
                           borderRadius: BorderRadius.circular(30),
                         ),
                         padding: const EdgeInsets.all(24),
@@ -298,18 +305,6 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
               });
             },
           ),
-          const SizedBox(height: 24),
-          _buildNextButton('Next', () {
-            if (doseFrequency != null && doseFrequency!.isNotEmpty) {
-              setState(() {
-                currentStep = FormStep.daysSelection;
-              });
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please select a dose frequency')),
-              );
-            }
-          }),
         ],
       ),
     );

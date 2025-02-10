@@ -599,7 +599,8 @@ Future<void> selectDate(
     context: context,
     initialDate: DateTime.now(),
     firstDate: DateTime.now(),
-    lastDate: DateTime(2100),
+    lastDate:
+        DateTime(2099, 12, 31), // Explicit last date to ensure correctness
   );
   if (pickedDate != null) {
     controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
