@@ -48,10 +48,10 @@ class AppTheme {
       ),
     ),
     cardTheme: CardTheme(
-      color: AppColors.sky,
-      elevation: 2,
+      color: AppColors.kWhiteColor,
+      elevation: 8,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(40),
       ),
     ),
   );

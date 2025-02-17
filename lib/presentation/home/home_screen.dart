@@ -1,7 +1,7 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:home/product_screen.dart';
+import 'package:home/pharmacy/pharmacy_screen.dart';
 import '../profile/user_profile_screen.dart';
 import '../reminders/medicine_list_screen.dart';
 
@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     const MedicineListScreen(),
     const UserProfileScreen(),
-    ProductScreen(),
+    PharmacyScreen(),
   ];
 
   @override

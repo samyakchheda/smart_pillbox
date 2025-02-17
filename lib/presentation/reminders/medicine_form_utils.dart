@@ -450,16 +450,15 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         ),
         TextButton(
           onPressed: () {
-            final now = DateTime.now();
             int hour = selectedHour;
             if (selectedPeriod == 'PM' && hour != 12) {
               hour += 12;
             } else if (selectedPeriod == 'AM' && hour == 12) {
               hour = 0;
             }
-            final dateTime =
-                DateTime(now.year, now.month, now.day, hour, selectedMinute);
-            widget.onTimeSelected(Timestamp.fromDate(dateTime));
+            // Use a fixed date so that only the time-of-day matters
+            final fixedDateTime = DateTime(1970, 1, 1, hour, selectedMinute);
+            widget.onTimeSelected(Timestamp.fromDate(fixedDateTime));
             Navigator.pop(context);
           },
           child: const Text("OK"),

@@ -21,11 +21,16 @@ class MainActivity: FlutterActivity() {
                     val alarmTime = call.argument<Long>("alarmTime")
                     val payload = call.argument<String>("payload")
                     val medicineId = call.argument<String>("medicineId")
-                    if (alarmTime != null && payload != null && medicineId != null) {
-                        scheduleAlarm(alarmTime, payload, medicineId)
+                    val selectedDays = call.argument<List<String>>("selectedDays")
+                    val endDate = call.argument<Long>("endDate")
+                    val startDate = call.argument<Long>("startDate")
+
+                    if (alarmTime != null && payload != null && medicineId != null &&
+                        selectedDays != null && endDate != null && startDate != null) {
+                        scheduleRecurringAlarm(alarmTime, payload, medicineId, selectedDays, startDate, endDate)
                         result.success(null)
                     } else {
-                        result.error("INVALID_ARGUMENT", "Alarm time, payload, or medicine ID is null", null)
+                        result.error("INVALID_ARGUMENT", "Missing required parameters", null)
                     }
                 }
                 "cancelAlarm" -> {
@@ -42,13 +47,24 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    private fun scheduleAlarm(alarmTime: Long, payload: String, medicineId: String) {
+    private fun scheduleRecurringAlarm(
+        initialAlarmTime: Long,
+        payload: String,
+        medicineId: String,
+        selectedDays: List<String>,
+        startDate: Long,
+        endDate: Long
+    ) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlarmReceiver::class.java).apply {
             putExtra("payload", payload)
+            putExtra("medicineId", medicineId)
+            putExtra("selectedDays", ArrayList(selectedDays))
+            putExtra("startDate", startDate)
+            putExtra("endDate", endDate)
         }
         
-        val uniqueRequestCode = medicineId.hashCode() // Use medicineId as unique ID
+        val uniqueRequestCode = medicineId.hashCode()
         
         val pendingIntent = PendingIntent.getBroadcast(
             this,
@@ -58,20 +74,21 @@ class MainActivity: FlutterActivity() {
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, initialAlarmTime, pendingIntent)
         } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, initialAlarmTime, pendingIntent)
         }
         
-        Log.d("AlarmScheduler", "Alarm scheduled for medicine ID: $medicineId at $alarmTime")
+        Log.d("AlarmScheduler", "Recurring alarm scheduled for medicine ID: $medicineId at time: $initialAlarmTime")
     }
+
 
     private fun cancelAlarm(medicineId: String) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             this, 
-            medicineId.hashCode(),  // Use medicine ID to retrieve the correct alarm
+            medicineId.hashCode(),
             intent, 
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
