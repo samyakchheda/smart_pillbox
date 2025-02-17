@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:home/services/alarm_scheduler.dart';
+import 'package:home/services/notifications_service/alarm_scheduler.dart';
 import 'medicine_form_screen.dart';
 import 'medicine_list_utils.dart';
 

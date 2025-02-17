@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:home/helpers/functions/save_user_info.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
-import '../../services/firebase_services.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -27,8 +27,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool _isLoading = false;
   bool _isNameLoading = true;
-
-  final FirebaseServices _authService = FirebaseServices();
 
   @override
   void initState() {
@@ -119,10 +117,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       _isLoading = true;
     });
     try {
-      await _authService.updateUserProfile(
+      await saveUserInfo(
         name: _nameController.text,
         gender: _genderController.text,
-        birthdate: _dobController.text,
+        birthDate: _dobController.text,
         phoneNumber: _contactController.text,
       );
       ScaffoldMessenger.of(context).showSnackBar(

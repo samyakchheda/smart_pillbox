@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:home/services/medicine_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:home/services/medicine_service/medicine_service.dart';
 import 'medicine_form_utils.dart';
 
 enum FormStep {

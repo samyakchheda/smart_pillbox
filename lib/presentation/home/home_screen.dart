@@ -1,9 +1,9 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:home/pharmacy/pharmacy_screen.dart';
+import 'package:home/presentation/reminders/medicine_list_screen.dart';
+import '../product/product_screen.dart';
 import '../profile/user_profile_screen.dart';
-import '../reminders/medicine_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     const MedicineListScreen(),
     const UserProfileScreen(),
-    PharmacyScreen(),
+    const ProductScreen(),
   ];
 
   @override
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
         shadowElevation: 5,
         kBottomRadius: 28.0,
         notchColor: Colors.black87,
-        durationInMilliSeconds: 300,
+        durationInMilliSeconds: 600,
         itemLabelStyle: const TextStyle(fontSize: 10),
         elevation: 1,
         bottomBarItems: const [

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import '../authentication/login/login.dart';
-import 'introduction/intro_screen1.dart';
-import 'introduction/intro_screen2.dart';
-import 'introduction/intro_screen3.dart';
+import '../../routes/routes.dart';
+import '../introduction/intro_screen1.dart';
+import '../introduction/intro_screen2.dart';
+import '../introduction/intro_screen3.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -37,12 +37,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.pushReplacementNamed(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const SigninScreen(),
-                      ),
-                      (route) => false,
+                      Routes.login, // Using the route from Routes class
                     );
                   },
                   child: const Padding(
@@ -58,12 +55,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _onLastPage
                     ? GestureDetector(
                         onTap: () {
-                          Navigator.pushAndRemoveUntil(
+                          Navigator.pushReplacementNamed(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const SigninScreen(),
-                            ),
-                            (route) => false,
+                            Routes.login, // Using the route from Routes class
                           );
                         },
                         child: const Padding(
