@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,9 +25,19 @@ class MedicineNameInput extends StatelessWidget {
       children: [
         TextFormField(
           controller: controller,
+          cursorColor: Colors.black, // Black cursor
           decoration: InputDecoration(
             labelText: 'Medicine Name',
-            hintText: 'Enter the name of the medicine',
+            floatingLabelBehavior:
+                FloatingLabelBehavior.never, // Label stays in place
+            filled: true,
+            fillColor: Colors.grey[200], // Light grey background
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(20), // Rounded borders
+              borderSide: BorderSide.none, // No default border
+            ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.add),
               onPressed: onAdd,
@@ -39,7 +50,12 @@ class MedicineNameInput extends StatelessWidget {
           runSpacing: 4.0,
           children: enteredMedicines.map((medicineName) {
             return Chip(
-              label: Text(medicineName),
+              label: Text(
+                medicineName,
+                style: const TextStyle(
+                    color: Colors.black), // Text color for contrast
+              ),
+              backgroundColor: Colors.grey[200], // Light grey background
               deleteIcon: const Icon(Icons.close),
               onDeleted: () => onRemove(medicineName),
             );
@@ -64,17 +80,25 @@ class DateInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: 'Select a $label',
-        suffixIcon: const Icon(Icons.date_range),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200], // Light grey background
+        borderRadius: BorderRadius.circular(12), // Rounded corners
       ),
-      readOnly: true,
-      onTap: onTap,
-      validator: (value) =>
-          value == null || value.isEmpty ? 'Please select a $label' : null,
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: const Icon(Icons.date_range),
+          border: InputBorder.none, // Removes the default border
+          contentPadding: const EdgeInsets.symmetric(
+              vertical: 15, horizontal: 20), // Padding for text
+        ),
+        readOnly: true,
+        onTap: onTap,
+        validator: (value) =>
+            value == null || value.isEmpty ? 'Please select a $label' : null,
+      ),
     );
   }
 }
@@ -114,6 +138,7 @@ class _DaySelectorState extends State<DaySelector> {
         'Sat',
         'Sun'
       ];
+      // Toggle all days based on the new isDaily value
       for (var day in allDays) {
         widget.onSelectionChanged(day, isDaily);
       }
@@ -133,62 +158,104 @@ class _DaySelectorState extends State<DaySelector> {
     ];
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
+        // Daily button added above the day list
         ElevatedButton(
           onPressed: _toggleDaily,
+          child: Text(isDaily ? 'Clear All' : 'Select All'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: isDaily ? Colors.blue : Colors.grey[300],
-            foregroundColor: isDaily ? Colors.white : Colors.black87,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            foregroundColor: Colors.white,
+            backgroundColor: AppColors.buttonColor,
           ),
-          child: Text(isDaily ? 'Daily' : 'Select Daily'),
         ),
         const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: 4,
-          shrinkWrap: true,
-          childAspectRatio: 2.5,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          physics: const NeverScrollableScrollPhysics(),
-          children: daysOfWeek.map((day) {
-            final isSelected = widget.selectedDays.contains(day);
-            return InkWell(
-              onTap: () {
-                widget.onSelectionChanged(day, !isSelected);
-                setState(() {
-                  isDaily = widget.selectedDays.length == 7;
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isSelected ? Colors.blue : Colors.grey[200],
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 1,
-                      blurRadius: 2,
-                      offset: const Offset(0, 1),
+        ClipRRect(
+          child: ShaderMask(
+            shaderCallback: (Rect bounds) {
+              return const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Colors.transparent,
+                  Colors.white,
+                  Colors.white,
+                  Colors.transparent,
+                ],
+                stops: [0.0, 0.1, 0.9, 1.0],
+              ).createShader(bounds);
+            },
+            blendMode: BlendMode.dstIn,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: daysOfWeek.map((day) {
+                  final isSelected = widget.selectedDays.contains(day);
+                  return GestureDetector(
+                    onTap: () {
+                      widget.onSelectionChanged(day, !isSelected);
+                      setState(() {
+                        isDaily = widget.selectedDays.length == 7;
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? Border.all(color: AppColors.buttonColor, width: 2)
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.2),
+                            spreadRadius: 1,
+                            blurRadius: 2,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            day,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? AppColors.buttonColor
+                                  : Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? AppColors.buttonColor
+                                  : Colors.white,
+                              border: isSelected
+                                  ? null
+                                  : Border.all(color: Colors.grey, width: 2),
+                            ),
+                            child: isSelected
+                                ? const Icon(Icons.check,
+                                    color: Colors.white, size: 16)
+                                : const Icon(Icons.check,
+                                    color: Colors.grey, size: 16),
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
+            ),
+          ),
         ),
       ],
     );
@@ -225,16 +292,25 @@ class DoseFrequencyButtonForm extends StatelessWidget {
             return ElevatedButton(
               onPressed: () => onChanged(option),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? Colors.blue : Colors.grey[300],
+                backgroundColor:
+                    isSelected ? AppColors.buttonColor : Colors.grey[300],
                 foregroundColor: isSelected ? Colors.white : Colors.black87,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 14), // Maintain padding
+                minimumSize: const Size(
+                    300, 40), // Increased width (kept height the same)
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
                 elevation: isSelected ? 4 : 2,
               ),
-              child: Text(option),
+              child: Text(
+                option,
+                style: const TextStyle(
+                  fontSize: 16, // Text size remains the same
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             );
           }).toList(),
         ),
@@ -266,54 +342,85 @@ class DoseFrequencySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text(
-          'Times per day',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          height: 120,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: ListWheelScrollView.useDelegate(
-            itemExtent: 40,
-            physics: const FixedExtentScrollPhysics(),
-            perspective: 0.005,
-            diameterRatio: 1.2,
-            onSelectedItemChanged: (index) {
-              final selectedFrequency = (index + 1).toString();
-              onChanged(selectedFrequency);
-            },
-            childDelegate: ListWheelChildBuilderDelegate(
-              builder: (context, index) {
-                String frequency = (index + 1).toString();
-                bool isSelected = value == frequency;
+    return Center(
+      // Ensures everything is centered on the screen
+      child: Column(
+        mainAxisSize: MainAxisSize.min, // Keeps the column size minimal
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                height: 140, // Maintain scrolling height
+                width: 60, // Constrain width to focus on digits
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 44,
+                  physics: const FixedExtentScrollPhysics(),
+                  perspective: 0.005,
+                  diameterRatio: 1.3,
+                  onSelectedItemChanged: (index) {
+                    final selectedFrequency = (index + 1).toString();
+                    onChanged(selectedFrequency);
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      String frequency = (index + 1).toString();
+                      bool isSelected = value == frequency;
 
-                return Center(
-                  child: Text(
-                    frequency,
-                    style: TextStyle(
-                      fontSize: isSelected ? 26 : 22,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.blue : Colors.grey[700],
-                    ),
+                      return Center(
+                        child: TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 200),
+                          tween: Tween<double>(
+                              begin: 0.9, end: isSelected ? 1.2 : 1.0),
+                          builder: (context, scale, child) {
+                            return Transform.scale(
+                              scale: scale,
+                              child: Text(
+                                frequency,
+                                style: TextStyle(
+                                  fontSize: isSelected ? 28 : 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected
+                                      ? AppColors.buttonColor
+                                      : Colors.grey[600],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    childCount: 5,
                   ),
-                );
-              },
-              childCount: 10,
-            ),
+                ),
+              ),
+              const SizedBox(width: 10), // Space between number & text
+              const Text(
+                "per day",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.buttonColor, // Fixed text color
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
+// Uncomment this if you are not using an existing Timestamp type (e.g. from firebase)
+// class Timestamp {
+//   final DateTime dateTime;
+//   Timestamp(this.dateTime);
+//   factory Timestamp.fromDate(DateTime dateTime) => Timestamp(dateTime);
+//   DateTime toDate() => dateTime;
+// }
+
+/// Custom time picker widget using ListWheelScrollView for hour, minute, and AM/PM selection.
 class CustomTimePicker extends StatefulWidget {
   final Function(Timestamp) onTimeSelected;
 
@@ -331,211 +438,270 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Select Time'),
-      content: SizedBox(
-        height: 180,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Hours Wheel
-            Expanded(
-              child: ListWheelScrollView.useDelegate(
-                itemExtent: 40,
-                perspective: 0.01,
-                diameterRatio: 1.2,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedHour = (index + 1);
-                  });
-                },
-                childDelegate: ListWheelChildBuilderDelegate(
-                  builder: (context, index) {
-                    final isSelected = (index + 1) == selectedHour;
-                    return Center(
-                      child: Text(
-                        '${index + 1}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: 12,
-                ),
-              ),
-            ),
-
-            const Text(":", style: TextStyle(fontSize: 24)),
-
-            // Minutes Wheel
-            Expanded(
-              child: ListWheelScrollView.useDelegate(
-                itemExtent: 40,
-                perspective: 0.01,
-                diameterRatio: 1.2,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedMinute = index;
-                  });
-                },
-                childDelegate: ListWheelChildBuilderDelegate(
-                  builder: (context, index) {
-                    final isSelected = index == selectedMinute;
-                    return Center(
-                      child: Text(
-                        '${index.toString().padLeft(2, '0')}',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: 60,
-                ),
-              ),
-            ),
-
-            const Text(":", style: TextStyle(fontSize: 24)),
-
-            // AM/PM Wheel
-            Expanded(
-              child: ListWheelScrollView.useDelegate(
-                itemExtent: 40,
-                perspective: 0.01,
-                diameterRatio: 1.2,
-                physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (index) {
-                  setState(() {
-                    selectedPeriod = index == 0 ? 'AM' : 'PM';
-                  });
-                },
-                childDelegate: ListWheelChildBuilderDelegate(
-                  builder: (context, index) {
-                    final isSelected = (index == 0 && selectedPeriod == 'AM') ||
-                        (index == 1 && selectedPeriod == 'PM');
-                    return Center(
-                      child: Text(
-                        index == 0 ? 'AM' : 'PM',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
-                          color: isSelected ? Colors.black : Colors.grey,
-                        ),
-                      ),
-                    );
-                  },
-                  childCount: 2,
-                ),
-              ),
-            ),
-          ],
+    return Theme(
+      data: ThemeData.light().copyWith(
+        dialogBackgroundColor: Colors.white, // Background color set to white
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(color: Colors.black), // Title color
+          bodyLarge: TextStyle(color: Colors.black), // General text color
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.black, // Button text color
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text("Cancel"),
+      child: AlertDialog(
+        title: const Text(
+          'Select Time',
+          style: TextStyle(color: Colors.black), // Title text color
         ),
-        TextButton(
-          onPressed: () {
-            int hour = selectedHour;
-            if (selectedPeriod == 'PM' && hour != 12) {
-              hour += 12;
-            } else if (selectedPeriod == 'AM' && hour == 12) {
-              hour = 0;
-            }
-            // Use a fixed date so that only the time-of-day matters
-            final fixedDateTime = DateTime(1970, 1, 1, hour, selectedMinute);
-            widget.onTimeSelected(Timestamp.fromDate(fixedDateTime));
-            Navigator.pop(context);
-          },
-          child: const Text("OK"),
+        content: SizedBox(
+          height: 180,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Hours Wheel
+              Expanded(
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 40,
+                  perspective: 0.01,
+                  diameterRatio: 1.2,
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      selectedHour = index + 1;
+                    });
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      final isSelected = (index + 1) == selectedHour;
+                      return Center(
+                        child: Text(
+                          '${index + 1}',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected ? Colors.black : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: 12,
+                  ),
+                ),
+              ),
+              const Text(":",
+                  style: TextStyle(fontSize: 24, color: Colors.black)),
+              // Minutes Wheel
+              Expanded(
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 40,
+                  perspective: 0.01,
+                  diameterRatio: 1.2,
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      selectedMinute = index;
+                    });
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      final isSelected = index == selectedMinute;
+                      return Center(
+                        child: Text(
+                          index.toString().padLeft(2, '0'),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected ? Colors.black : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: 60,
+                  ),
+                ),
+              ),
+              // AM/PM Wheel
+              Expanded(
+                child: ListWheelScrollView.useDelegate(
+                  itemExtent: 40,
+                  perspective: 0.01,
+                  diameterRatio: 1.2,
+                  physics: const FixedExtentScrollPhysics(),
+                  onSelectedItemChanged: (index) {
+                    setState(() {
+                      selectedPeriod = index == 0 ? 'AM' : 'PM';
+                    });
+                  },
+                  childDelegate: ListWheelChildBuilderDelegate(
+                    builder: (context, index) {
+                      final isSelected =
+                          (index == 0 && selectedPeriod == 'AM') ||
+                              (index == 1 && selectedPeriod == 'PM');
+                      return Center(
+                        child: Text(
+                          index == 0 ? 'AM' : 'PM',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected ? Colors.black : Colors.grey,
+                          ),
+                        ),
+                      );
+                    },
+                    childCount: 2,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel", style: TextStyle(color: Colors.black)),
+          ),
+          TextButton(
+            onPressed: () {
+              int hour = selectedHour;
+              if (selectedPeriod == 'PM' && hour != 12) {
+                hour += 12;
+              } else if (selectedPeriod == 'AM' && hour == 12) {
+                hour = 0;
+              }
+              // Use a fixed date so that only the time-of-day matters.
+              final fixedDateTime = DateTime(1970, 1, 1, hour, selectedMinute);
+              widget.onTimeSelected(Timestamp.fromDate(fixedDateTime));
+              Navigator.pop(context);
+            },
+            child: const Text("OK", style: TextStyle(color: Colors.black)),
+          ),
+        ],
+      ),
     );
   }
 }
 
+/// Widget that shows a table of intakes (rows) with a label and a time-selection button.
 class MedicineTimeSelector extends StatelessWidget {
-  final List<Timestamp> medicineTimes;
+  /// A list where each index represents an intake’s selected time.
+  /// If a time hasn’t been set for an intake, its value is null.
+  final List<Timestamp?> medicineTimes;
   final int numberOfDoses;
-  final Function(Timestamp) onAddTime;
-  final Function(int) onRemoveTime;
+  final Function(Timestamp) onTimeSelected;
 
   const MedicineTimeSelector({
     Key? key,
     required this.medicineTimes,
     required this.numberOfDoses,
-    required this.onAddTime,
-    required this.onRemoveTime,
+    required this.onTimeSelected,
   }) : super(key: key);
 
-  void _pickTime(BuildContext context) {
-    if (medicineTimes.length < numberOfDoses) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return CustomTimePicker(
-            onTimeSelected: (timestamp) {
-              onAddTime(timestamp);
-            },
-          );
-        },
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Maximum number of doses reached')),
-      );
-    }
+  void _pickTime(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return CustomTimePicker(
+          onTimeSelected: (timestamp) {
+            onTimeSelected(timestamp);
+          },
+        );
+      },
+    );
+  }
+
+  /// Format the timestamp to a readable string (e.g., "5:08 PM").
+  String _formatTimestamp(Timestamp timestamp) {
+    final dateTime = timestamp.toDate();
+    return DateFormat.jm().format(dateTime);
+  }
+
+  /// Returns a label for the intake row (e.g., "1st Intake", "2nd Intake", etc.).
+  String _getIntakeLabel(int index) {
+    if (index == 0) return "1st Intake";
+    if (index == 1) return "2nd Intake";
+    if (index == 2) return "3rd Intake";
+    return "${index + 1}th Intake";
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ElevatedButton(
-          onPressed: () => _pickTime(context),
-          child: Text(
-              "Add Medicine Time (${medicineTimes.length}/$numberOfDoses)"),
-        ),
-        const SizedBox(height: 10),
-        ...medicineTimes.asMap().entries.map((entry) {
-          final int index = entry.key;
-          final Timestamp timestamp = entry.value;
-          final String formattedTime =
-              DateFormat('hh:mm a').format(timestamp.toDate());
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white, // Set background color
+        borderRadius: BorderRadius.circular(12), // Curved borders
+        border:
+            Border.all(color: Colors.grey.shade300, width: 2), // Outer border
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+            12), // Ensures the table follows the rounded shape
+        child: Table(
+          border: TableBorder(
+            horizontalInside: BorderSide(
+                color: Colors.grey.shade300, width: 1), // Only horizontal lines
+          ),
+          columnWidths: const {
+            0: FixedColumnWidth(120),
+            1: FlexColumnWidth(),
+          },
+          children: List.generate(numberOfDoses, (index) {
+            final Timestamp? time =
+                index < medicineTimes.length ? medicineTimes[index] : null;
+            final buttonText =
+                time != null ? _formatTimestamp(time) : "Select time";
 
-          return ListTile(
-            title: Text(formattedTime),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () => onRemoveTime(index),
-            ),
-          );
-        }).toList(),
-      ],
+            return TableRow(
+              children: [
+                // Intake Label Cell
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Center(
+                    child: Text(
+                      _getIntakeLabel(index),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+
+                // Button Cell
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () => _pickTime(context, index),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.buttonColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      buttonText,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
     );
   }
 }
 
-class NotificationToggle extends StatelessWidget {
+class AlarmNotificationToggle extends StatelessWidget {
   final bool isNotification;
   final ValueChanged<bool> onChanged;
 
-  const NotificationToggle({
+  const AlarmNotificationToggle({
     Key? key,
     required this.isNotification,
     required this.onChanged,
@@ -546,13 +712,59 @@ class NotificationToggle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('Alarms', style: TextStyle(fontWeight: FontWeight.bold)),
-        Switch(
-          value: isNotification,
-          onChanged: onChanged,
+        const Text(
+          'Alarms',
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        const Text('Notifications',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        GestureDetector(
+          onTap: () => onChanged(!isNotification),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: 60,
+            height: 30,
+            decoration: BoxDecoration(
+              color: isNotification ? Colors.grey[300] : AppColors.buttonColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              children: [
+                // Moving Circle with Icon Inside
+                AnimatedAlign(
+                  duration: const Duration(milliseconds: 300),
+                  alignment: isNotification
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    width: 26,
+                    height: 26,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
+                    ),
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(scale: animation, child: child),
+                        child: Icon(
+                          isNotification ? Icons.notifications : Icons.alarm,
+                          key: ValueKey<bool>(isNotification),
+                          color: AppColors.buttonColor,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const Text(
+          'Notifications',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -598,9 +810,42 @@ Future<void> selectDate(
     context: context,
     initialDate: DateTime.now(),
     firstDate: DateTime.now(),
-    lastDate:
-        DateTime(2099, 12, 31), // Explicit last date to ensure correctness
+    lastDate: DateTime(2099, 12, 31),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          dialogBackgroundColor: Colors.white, // Background color set to white
+          primaryColor: AppColors.buttonColor, // Adjust primary color
+          colorScheme: const ColorScheme.light(
+            primary: AppColors.buttonColor, // Highlight color
+            onPrimary: Colors.white, // Button text color
+            onSurface: Colors.black, // Default text color
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.buttonColor, // Button text color
+            ),
+          ),
+          inputDecorationTheme: const InputDecorationTheme(
+            labelStyle:
+                const TextStyle(color: Colors.black), // Default label color
+            floatingLabelStyle:
+                const TextStyle(color: Colors.black), // Floating label color
+            focusedBorder: OutlineInputBorder(
+              // Ensures no purple border
+              borderSide: BorderSide(color: Colors.black),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide:
+                  BorderSide(color: Colors.grey), // Default border color
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
   );
+
   if (pickedDate != null) {
     controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
   }

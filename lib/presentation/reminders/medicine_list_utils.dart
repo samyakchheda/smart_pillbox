@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:home/presentation/scanner/scanner_screen.dart';
@@ -490,108 +491,128 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
 
     return SlideTransition(
       position: _animation,
-      child: Card(
-        color: Colors.white,
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        elevation: 8,
-        shadowColor: Colors.black54,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(16),
-          title: Row(
-            children: [
-              Text(
-                time, // Show the time (hh:mm)
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30, // Increased font size for time
-                ),
-              ),
-              const SizedBox(width: 4), // Space between time and AM/PM
-              Text(
-                amPm, // Show AM/PM
-                style: const TextStyle(
-                  fontSize: 12, // Reduced font size for AM/PM
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Divider(
-                  color:
-                      Colors.black26), // Horizontal line between time and name
-              const SizedBox(
-                  height: 8), // Space between line and medicine names
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: widget.medicine['medicineNames']
-                        ?.map<Widget>(
-                          (name) => Row(
-                            children: [
-                              const Icon(FontAwesomeIcons.pills,
-                                  color: Colors.black87,
-                                  size: 24), // Medicine icon
-                              const SizedBox(
-                                width: 15,
-                                height: 40,
-                              ), // Spacing between icon and text
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                            ],
-                          ),
-                        )
-                        ?.toList() ??
-                    [const Text('Unnamed')], // Fallback if no medicines exist
-              ),
-            ],
-          ),
-          trailing: PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert), // Three dots icon
-            onSelected: (value) {
-              if (value == 'edit') {
-                widget.onEdit();
-              } else if (value == 'delete') {
-                widget.onDelete();
-              }
+      child: GestureDetector(
+        onLongPress: () async {
+          // Trigger vibration/haptic feedback
+          HapticFeedback.vibrate();
+          // Show a confirmation dialog on long press
+          bool? confirmDelete = await showDialog<bool>(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Delete Item?'),
+                content:
+                    const Text('Do you want to delete this medicine entry?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Delete'),
+                  ),
+                ],
+              );
             },
-            itemBuilder: (BuildContext context) => [
-              const PopupMenuItem<String>(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.edit,
-                      color: Colors.black,
-                      size: 30,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Edit'),
-                  ],
+          );
+          if (confirmDelete == true) {
+            widget.onDelete();
+          }
+        },
+        child: Card(
+          color: Colors.white,
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          elevation: 8,
+          shadowColor: Colors.black54,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            title: Row(
+              children: [
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 30,
+                  ),
                 ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.delete,
-                      color: Colors.black,
-                      size: 30,
-                    ),
-                    SizedBox(width: 8),
-                    Text('Delete'),
-                  ],
+                const SizedBox(width: 4),
+                Text(
+                  amPm,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(color: Colors.black26),
+                const SizedBox(height: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: widget.medicine['medicineNames']
+                          ?.map<Widget>(
+                            (name) => Row(
+                              children: [
+                                const Icon(
+                                  FontAwesomeIcons.pills,
+                                  color: Colors.black87,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 15, height: 40),
+                                Text(
+                                  name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          ?.toList() ??
+                      [const Text('Unnamed')],
+                ),
+              ],
+            ),
+            trailing: PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'edit') {
+                  widget.onEdit();
+                } else if (value == 'delete') {
+                  widget.onDelete();
+                }
+              },
+              itemBuilder: (BuildContext context) => [
+                const PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, color: Colors.black, size: 30),
+                      SizedBox(width: 8),
+                      Text('Edit'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.black, size: 30),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

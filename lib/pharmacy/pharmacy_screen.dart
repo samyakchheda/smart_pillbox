@@ -8,12 +8,8 @@ class PharmacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pharmacy Finder',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: FutureBuilder<Position>(
+    return Scaffold(
+      body: FutureBuilder<Position>(
         future: LocationService.getCurrentLocation(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -33,7 +29,6 @@ class PharmacyScreen extends StatelessWidget {
           }
         },
       ),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

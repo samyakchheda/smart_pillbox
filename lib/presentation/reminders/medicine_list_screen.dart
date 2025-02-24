@@ -106,7 +106,10 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
           ),
         ],
       ),
-      floatingActionButton: buildSpeedDial(context, userId),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0),
+        child: buildSpeedDial(context, userId),
+      ),
     );
   }
 }

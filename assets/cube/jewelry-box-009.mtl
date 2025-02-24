@@ -1,0 +1,17 @@
+newmtl jewelry-box-009
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ni 1.450000
+d 1.000000
+illum 2
+
+# Diffuse (color) map
+map_Kd textures/jewelry-box-009_col-metalness-4k.png
+
+# Normal map
+map_Bump textures/jewelry-box-009_nrm-metalness-4k.png
+
+# Roughness/Spec map (sometimes used in place of map_Ns)
+map_Ns textures/jewelry-box-009_roughness-metalness-4k.png

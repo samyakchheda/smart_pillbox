@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:home/services/notifications_service/alarm_scheduler.dart';
 import 'package:home/services/notifications_service/notifications_service.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -8,7 +7,6 @@ import 'package:timezone/timezone.dart' as tz;
 
 Future<void> checkMedicineTimes(
   String userId,
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin,
   bool isNotification,
 ) async {
   try {
@@ -76,6 +74,8 @@ Future<void> checkMedicineTimes(
       print(
           "[DEBUG] Processing medicine: $medicineNamesCombined (ID: $medicineId)");
 
+      int timeIndex = 0; // Counter for unique ID per loop
+
       for (var timeStamp in medicineTimes) {
         if (timeStamp is Timestamp) {
           // The stored time might be using a default date (like 1970-01-01)
@@ -104,6 +104,8 @@ Future<void> checkMedicineTimes(
           final tz.TZDateTime tzCandidateTime =
               tz.TZDateTime.from(candidateTime, tz.local);
 
+          String uniqueMedicineId = '$medicineId-$timeIndex';
+
           String notificationId =
               '$medicineId-${candidateTime.toIso8601String()}';
           print(
@@ -128,7 +130,7 @@ Future<void> checkMedicineTimes(
               String payload =
                   'Time to take your medicine:\n $medicineNamesCombined';
               await AlarmScheduler.scheduleAlarm(
-                medicineId,
+                uniqueMedicineId,
                 tzCandidateTime,
                 payload,
                 List<String>.from(selectedDays),

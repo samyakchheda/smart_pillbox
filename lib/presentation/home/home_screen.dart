@@ -1,8 +1,10 @@
-import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:home/theme/app_colors.dart';
+import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
+import 'package:home/pharmacy/pharmacy_screen.dart';
+import 'package:home/presentation/home/rotation.dart';
 import 'package:home/presentation/reminders/medicine_list_screen.dart';
-import '../product/product_screen.dart';
 import '../profile/user_profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -13,63 +15,61 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final NotchBottomBarController _controller =
-      NotchBottomBarController(index: 0);
+  int _currentIndex = 0;
 
   final List<Widget> _pages = [
-    const Center(
-      child: Text(
-        'Hello user',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-      ),
-    ),
+    const Center(child: AutoRotateCubeWithFuture()),
     const MedicineListScreen(),
     const UserProfileScreen(),
-    const ProductScreen(),
+    const PharmacyScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_controller.index],
-      bottomNavigationBar: AnimatedNotchBottomBar(
-        notchBottomBarController: _controller,
-        color: Colors.white,
-        showLabel: true,
-        shadowElevation: 5,
-        kBottomRadius: 28.0,
-        notchColor: Colors.black87,
-        durationInMilliSeconds: 600,
-        itemLabelStyle: const TextStyle(fontSize: 10),
-        elevation: 1,
-        bottomBarItems: const [
-          BottomBarItem(
-            inActiveItem: FaIcon(FontAwesomeIcons.house, color: Colors.black),
-            activeItem: FaIcon(FontAwesomeIcons.house, color: Colors.white),
-            itemLabel: 'Home',
-          ),
-          BottomBarItem(
-            inActiveItem: Icon(FontAwesomeIcons.pills, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.pills, color: Colors.white),
-            itemLabel: 'Reminders',
-          ),
-          BottomBarItem(
-            inActiveItem: Icon(FontAwesomeIcons.user, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.user, color: Colors.white),
-            itemLabel: 'Profile',
-          ),
-          BottomBarItem(
-            inActiveItem: Icon(FontAwesomeIcons.shop, color: Colors.black),
-            activeItem: Icon(FontAwesomeIcons.shop, color: Colors.white),
-            itemLabel: 'Shop',
+      extendBody: true,
+      body: Stack(
+        children: [
+          _pages[_currentIndex],
+
+          // Floating Navigation Bar without extra blur
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12.0), // Adjust as needed
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(100), // Match bar shape
+                child: ResponsiveNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  backgroundBlur: 0.0, // Semi-transparent
+                  selectedIndex: _currentIndex,
+                  onTabChange: (index) => setState(() => _currentIndex = index),
+                  activeIconColor: Colors.white,
+                  inactiveIconColor: Colors.white,
+                  animationDuration: Duration(minutes: 0),
+                  navigationBarButtons: const [
+                    NavigationBarButton(
+                        textColor: Colors.white,
+                        icon: FontAwesomeIcons.house,
+                        text: "Home"),
+                    NavigationBarButton(
+                        textColor: Colors.white,
+                        icon: FontAwesomeIcons.pills,
+                        text: "Reminders"),
+                    NavigationBarButton(
+                        textColor: Colors.white,
+                        icon: FontAwesomeIcons.user,
+                        text: "Profile"),
+                    NavigationBarButton(
+                        textColor: Colors.white,
+                        icon: FontAwesomeIcons.shop,
+                        text: "Shop"),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
-        onTap: (index) {
-          setState(() {
-            _controller.jumpTo(index);
-          });
-        },
-        kIconSize: 24.0,
       ),
     );
   }
