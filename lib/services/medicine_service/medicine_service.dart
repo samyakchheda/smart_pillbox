@@ -74,8 +74,6 @@ Future<void> checkMedicineTimes(
       print(
           "[DEBUG] Processing medicine: $medicineNamesCombined (ID: $medicineId)");
 
-      int timeIndex = 0; // Counter for unique ID per loop
-
       for (var timeStamp in medicineTimes) {
         if (timeStamp is Timestamp) {
           // The stored time might be using a default date (like 1970-01-01)
@@ -104,8 +102,6 @@ Future<void> checkMedicineTimes(
           final tz.TZDateTime tzCandidateTime =
               tz.TZDateTime.from(candidateTime, tz.local);
 
-          String uniqueMedicineId = '$medicineId-$timeIndex';
-
           String notificationId =
               '$medicineId-${candidateTime.toIso8601String()}';
           print(
@@ -130,7 +126,7 @@ Future<void> checkMedicineTimes(
               String payload =
                   'Time to take your medicine:\n $medicineNamesCombined';
               await AlarmScheduler.scheduleAlarm(
-                uniqueMedicineId,
+                medicineId,
                 tzCandidateTime,
                 payload,
                 List<String>.from(selectedDays),

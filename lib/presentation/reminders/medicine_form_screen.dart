@@ -50,14 +50,25 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
   @override
   void initState() {
     super.initState();
+    // If existingData contains medicine names, load them immediately.
+    if (widget.existingData != null &&
+        widget.existingData!.containsKey('enteredMedicines')) {
+      enteredMedicines =
+          List<String>.from(widget.existingData!['enteredMedicines']);
+    }
+    // Then initialize other form data (if any)
     initializeFormData(
         widget.existingData, _startDateController, _endDateController, (data) {
       setState(() {
-        enteredMedicines = data['enteredMedicines'];
-        selectedDays = data['selectedDays'];
+        // Use the already-set enteredMedicines if available; otherwise, update it from the callback.
+        enteredMedicines = (data['enteredMedicines'] != null &&
+                (data['enteredMedicines'] as List).isNotEmpty)
+            ? List<String>.from(data['enteredMedicines'])
+            : enteredMedicines;
+        selectedDays = data['selectedDays'] ?? [];
         doseFrequency = data['doseFrequency'];
-        medicineTimes = data['medicineTimes'];
-        isNotification = data['isNotification'];
+        medicineTimes = data['medicineTimes'] ?? [];
+        isNotification = data['isNotification'] ?? true;
       });
     });
   }

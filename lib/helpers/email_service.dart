@@ -7,7 +7,7 @@ class EmailService {
     // SMTP server settings
     String username = 'smartdose.care@gmail.com';
     String password = 'ozqh lfvf wmfz gbua';
-    
+
     final smtpServer = gmail(username, password);
 
     // Create the email

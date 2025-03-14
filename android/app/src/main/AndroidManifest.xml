@@ -36,6 +36,14 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
+        <!-- Shake Gesture Sensitivity Settings -->
+        <meta-data
+            android:name="dev.fluttercommunity.shake_gesture_android.SHAKE_FORCE"
+            android:value="10" />
+        <meta-data
+            android:name="dev.fluttercommunity.shake_gesture_android.MIN_NUM_SHAKES"
+            android:value="10" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

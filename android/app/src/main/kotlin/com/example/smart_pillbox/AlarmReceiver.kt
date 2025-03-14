@@ -186,10 +186,14 @@ class AlarmReceiver : BroadcastReceiver() {
     /**
      * Calculates the next alarm time based on the current time, selected days, and the original startDate (intended time-of-day).
      */
-    private fun calculateNextAlarmTime(currentTime: Long, selectedDays: List<String>, startDate: Long): Long? {
+    private fun calculateNextAlarmTime(
+        currentTime: Long,
+        selectedDays: List<String>,
+        startDate: Long
+    ): Long? {
         val calendar = Calendar.getInstance()
         // Start from the later of currentTime or startDate.
-        calendar.timeInMillis = if (currentTime < startDate) startDate else currentTime
+        calendar.timeInMillis = maxOf(currentTime, startDate)
 
         // Retrieve the intended hour and minute from startDate.
         val startCalendar = Calendar.getInstance().apply { timeInMillis = startDate }
@@ -208,26 +212,30 @@ class AlarmReceiver : BroadcastReceiver() {
         )
 
         val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
-        var daysUntilNext: Int? = null
 
         // Loop through the next 7 days (including today) to find a matching day.
         for (i in 0..7) {
             val checkDay = (currentDay - 1 + i) % 7 + 1
             val dayName = dayMap.entries.find { it.value == checkDay }?.key
             if (dayName != null && selectedDays.any { it.equals(dayName, ignoreCase = true) }) {
-                calendar.add(Calendar.DAY_OF_YEAR, i)
+                // Set the calendar to the intended time on the matching day.
                 calendar.set(Calendar.HOUR_OF_DAY, intendedHour)
                 calendar.set(Calendar.MINUTE, intendedMinute)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
+
+                // If the calculated time is in the future, return it.
                 if (calendar.timeInMillis > currentTime) {
-                    daysUntilNext = i
-                    break
-                } else {
-                    calendar.timeInMillis = currentTime
+                    return calendar.timeInMillis
                 }
+
+                // If the calculated time is in the past, move to the next week.
+                calendar.add(Calendar.DAY_OF_YEAR, 7)
+                return calendar.timeInMillis
             }
         }
-        return daysUntilNext?.let { calendar.timeInMillis }
+
+        // No valid day found.
+        return null
     }
 }

@@ -1,36 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/pharmacy_model.dart';
-import '../services/pharmacy_service.dart';
 import 'message_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final Position userLocation;
+  final List<dynamic> pharmacies;
+  final MapController mapController;
 
-  HomeScreen({Key? key, required this.userLocation}) : super(key: key);
+  const HomeScreen({
+    Key? key,
+    required this.pharmacies,
+    required this.mapController,
+  }) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final PharmacyService _pharmacyService = PharmacyService();
-  List<Pharmacy> _pharmacies = [];
-  late MapController _mapController;
+  List<dynamic> _pharmacies = [];
   TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _animation;
+
   @override
   void initState() {
     super.initState();
 
     // Initialize Animation Controller
     _animationController = AnimationController(
-      vsync: this, // This class must mixin with TickerProviderStateMixin
-      duration: Duration(milliseconds: 500),
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
     );
 
     // Initialize Animation
@@ -41,44 +43,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     _animationController.forward(); // Start the animation
 
-    _initMap();
+    _initData();
   }
 
-  void _initMap() {
-    _mapController = MapController(
-      initPosition: GeoPoint(
-          latitude: widget.userLocation.latitude,
-          longitude: widget.userLocation.longitude),
-    );
-    _fetchNearbyPharmacies();
+  void _initData() {
+    setState(() {
+      _pharmacies = widget.pharmacies;
+    });
+    _addPharmacyMarkers();
   }
 
-  void _fetchNearbyPharmacies() async {
+  void _addPharmacyMarkers({int retryCount = 0}) async {
     try {
-      final pharmacies =
-          await _pharmacyService.getNearbyPharmacies(widget.userLocation);
-      setState(() {
-        _pharmacies = pharmacies;
-      });
-      _addPharmacyMarkers();
+      for (var pharmacy in _pharmacies) {
+        await widget.mapController.addMarker(
+          GeoPoint(latitude: pharmacy.lat, longitude: pharmacy.lon),
+          markerIcon: MarkerIcon(
+            icon: const Icon(Icons.location_on, color: Colors.red, size: 48),
+          ),
+        );
+      }
     } catch (e) {
-      print('Error fetching pharmacies: $e');
-    }
-  }
-
-  void _addPharmacyMarkers() {
-    for (var pharmacy in _pharmacies) {
-      _mapController.addMarker(
-        GeoPoint(latitude: pharmacy.lat, longitude: pharmacy.lon),
-        markerIcon: MarkerIcon(
-          icon: Icon(Icons.location_on, color: Colors.red, size: 48),
-        ),
-      );
+      if (retryCount < 5) {
+        // Retry up to 5 times
+        await Future.delayed(
+            const Duration(milliseconds: 500)); // Wait before retrying
+        _addPharmacyMarkers(
+            retryCount: retryCount + 1); // Retry with increased count
+      } else {
+        print("Failed to add markers after multiple attempts: $e");
+      }
     }
   }
 
   void _searchPharmacy(String query) {
-    final filteredPharmacies = _pharmacies
+    final filteredPharmacies = widget.pharmacies
         .where((pharmacy) =>
             pharmacy.name.toLowerCase().contains(query.toLowerCase()))
         .toList();
@@ -125,14 +124,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Widget _buildAppBar() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -146,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               color: Colors.blue[800],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -170,28 +169,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: OSMFlutter(
-        controller: _mapController,
+        controller: widget.mapController,
         osmOption: OSMOption(
           enableRotationByGesture: true,
           userTrackingOption: UserTrackingOption(
             enableTracking: false,
             unFollowUser: true,
           ),
-
-          zoomOption: ZoomOption(
+          zoomOption: const ZoomOption(
             initZoom: 17,
             minZoomLevel: 3,
             maxZoomLevel: 19,
             stepZoom: 1.0,
           ),
-          // userLocationMarker: UserLocationMaker(
-          //   personMarker: MarkerIcon(
-          //     icon: Icon(Icons.location_on, color: Colors.blue, size: 150),
-          //   ),
-          //   directionArrowMarker: MarkerIcon(
-          //     icon: Icon(Icons.navigation, size: 150, color: Colors.blue),
-          //   ),
-          // ),
         ),
       ),
     );
@@ -208,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
@@ -217,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     color: Colors.grey.withOpacity(0.5),
                     spreadRadius: 5,
                     blurRadius: 7,
-                    offset: Offset(0, 3),
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
@@ -227,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   final pharmacy = _pharmacies[index];
                   return Slidable(
                     endActionPane: ActionPane(
-                      motion: ScrollMotion(),
+                      motion: const ScrollMotion(),
                       children: [
                         SlidableAction(
                           onPressed: (context) =>
@@ -255,10 +245,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       subtitle: Text(pharmacy.phoneNumber),
                       leading: CircleAvatar(
                         backgroundColor: Colors.blue[800],
-                        child: Icon(Icons.local_pharmacy, color: Colors.white),
+                        child: const Icon(Icons.local_pharmacy,
+                            color: Colors.white),
                       ),
                       onTap: () {
-                        _mapController.moveTo(
+                        widget.mapController.moveTo(
                           GeoPoint(
                             latitude: pharmacy.lat,
                             longitude: pharmacy.lon,
