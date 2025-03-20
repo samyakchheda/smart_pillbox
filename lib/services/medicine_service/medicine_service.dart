@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:home/services/notifications_service/alarm_scheduler.dart';
 import 'package:home/services/notifications_service/notifications_service.dart';
 import 'package:timezone/data/latest.dart' as tz;

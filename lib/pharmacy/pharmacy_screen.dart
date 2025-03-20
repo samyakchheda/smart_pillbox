@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
 import 'screens/home_screen.dart';
 import 'package:home/main.dart'; // Import to access userLocation and pharmacyData
 

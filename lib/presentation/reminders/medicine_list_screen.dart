@@ -107,7 +107,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               // Expanded Content Section (Ensures Proper Layout)
               Expanded(
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: const Color(0xFFE0E0E0), // Soft blending effect
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),

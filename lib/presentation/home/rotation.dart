@@ -73,20 +73,8 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture> {
                       children: [
                         // Small rectangle card for the 3D model
                         Container(
-                          margin: const EdgeInsets.only(
-                              top: 16, left: 16, right: 16),
-                          height: 150,
-                          // decoration: BoxDecoration(
-                          //   color: Colors.white,
-                          //   borderRadius: BorderRadius.circular(16),
-                          //   boxShadow: [
-                          //     BoxShadow(
-                          //       color: Colors.black.withOpacity(0.1),
-                          //       blurRadius: 8,
-                          //       offset: const Offset(0, 2),
-                          //     ),
-                          //   ],
-                          // ),
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          height: 120,
                           child: cube.Cube(
                             onSceneCreated: (cube.Scene scene) {
                               final obj = cube.Object(
@@ -310,7 +298,7 @@ Widget _buildIssueCard() {
             const SizedBox(height: 10),
             Expanded(
               child: const Text(
-                "Facing some issues?",
+                "Facing some issues with the box?",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 softWrap: true,

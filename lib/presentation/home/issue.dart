@@ -43,102 +43,88 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
         children: [
           // Gradient Background
           Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.grey,
-                  AppColors.buttonColor,
-                ], // Deep Blue Gradient
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
+            decoration: const BoxDecoration(color: const Color(0xFFE0E0E0)),
           ),
 
           // Glassmorphism Card
           Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2), // Transparent White
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white, // Changed to solid white
+                  borderRadius: BorderRadius.circular(20),
+                  border:
+                      Border.all(color: Colors.grey.shade300), // Subtle border
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1), // Light shadow
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Describe Your Issue",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Describe Your Issue",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.black, // Changed to black
+                      ),
+                    ),
+                    const SizedBox(height: 12),
 
-                        // Input Field (Transparent with Shadow)
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                    // Input Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100, // Light grey background
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: TextField(
+                        controller: _issueController,
+                        maxLines: 5,
+                        style: const TextStyle(
+                            color: Colors.black), // Changed to black
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.all(12),
+                          border: InputBorder.none,
+                          hintText: "Enter your issue here...",
+                          hintStyle: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Send Button
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _sendEmail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              AppColors.buttonColor, // Primary color
+                          foregroundColor: Colors.white, // Text color
+                          shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: TextField(
-                            controller: _issueController,
-                            maxLines: 5,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
-                              contentPadding: EdgeInsets.all(12),
-                              border: InputBorder.none,
-                              hintText: "Enter your issue here...",
-                              hintStyle: TextStyle(color: Colors.white70),
-                            ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 14),
+                        ),
+                        child: const Text(
+                          "Send Issue",
+                          style: TextStyle(
+                            fontSize: 16,
                           ),
                         ),
-
-                        const SizedBox(height: 20),
-
-                        // Animated Send Button
-                        Center(
-                          child: GestureDetector(
-                            onTap: _sendEmail,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 14),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.white.withOpacity(0.3),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white.withOpacity(0.2),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                "Send Issue",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:home/theme/app_colors.dart';
 
 class FindingDeviceScreen extends StatefulWidget {
   @override
@@ -28,11 +28,11 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFE0E0E0),
       appBar: AppBar(
         title: const Text("Finding Device"),
         centerTitle: true,
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(0xFFE0E0E0),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -54,7 +54,7 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
           const SizedBox(height: 30),
           const Text(
             "Searching for device...",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(fontSize: 18),
           ),
           const SizedBox(height: 30),
           Row(
@@ -62,10 +62,10 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
             children: [
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.buttonColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                 ),
                 onPressed: () {
@@ -77,10 +77,10 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
               const SizedBox(width: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: AppColors.buttonColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(24),
                   ),
                 ),
                 onPressed: () {
