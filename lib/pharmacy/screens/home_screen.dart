@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../theme/app_colors.dart';
 import '../models/pharmacy_model.dart';
 import 'message_screen.dart';
 
@@ -21,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   List<dynamic> _pharmacies = [];
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -66,10 +68,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } catch (e) {
       if (retryCount < 5) {
         // Retry up to 5 times
-        await Future.delayed(
-            const Duration(milliseconds: 500)); // Wait before retrying
-        _addPharmacyMarkers(
-            retryCount: retryCount + 1); // Retry with increased count
+        await Future.delayed(const Duration(milliseconds: 500));
+        _addPharmacyMarkers(retryCount: retryCount + 1);
       } else {
         print("Failed to add markers after multiple attempts: $e");
       }
@@ -100,65 +100,76 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(),
-            Expanded(
-              child: Column(
-                children: [
-                  Expanded(
-                    child: _buildMap(),
-                  ),
-                  Expanded(
-                    child: _buildPharmacyList(),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
+      body: Stack(
         children: [
-          Text(
-            'Nearby Pharmacies',
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.blue[800],
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search for a pharmacy',
-              prefixIcon: Icon(Icons.search, color: Colors.blue[800]),
-              filled: true,
-              fillColor: Colors.grey[200],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-                borderSide: BorderSide.none,
+          // Full-Screen Gradient Background
+          Container(
+            height: 250,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.buttonColor,
+                  Colors.grey.shade400,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            onChanged: _searchPharmacy,
+          ),
+
+          // Main content with overlapping white background
+          Column(
+            children: [
+              // Header with Gradient (Fixed Height)
+              Container(
+                height: 150,
+                alignment: Alignment.center,
+                child: Text(
+                  'Nearby Pharmacies',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+
+              // Expanded section with fixed map and scrollable list
+              Expanded(
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Fixed map container
+                      Container(
+                        margin: const EdgeInsets.all(16),
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: _buildMap(),
+                      ),
+                      // Scrollable pharmacy list
+                      Expanded(child: _buildPharmacyList()),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -211,55 +222,85 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-              child: ListView.builder(
-                itemCount: _pharmacies.length,
-                itemBuilder: (context, index) {
-                  final pharmacy = _pharmacies[index];
-                  return Slidable(
-                    endActionPane: ActionPane(
-                      motion: const ScrollMotion(),
-                      children: [
-                        SlidableAction(
-                          onPressed: (context) =>
-                              _openMessageScreen(pharmacy, 'WhatsApp'),
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          icon: Icons.chat_outlined,
-                          label: 'WhatsApp',
+              child: Column(
+                children: [
+                  // Search box (fixed at the top of the list)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16, left: 8, right: 8),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search for a pharmacy',
+                        prefixIcon: Icon(Icons.search, color: Colors.blue[800]),
+                        filled: true,
+                        fillColor: Colors.grey[200],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                          borderSide: BorderSide.none,
                         ),
-                        SlidableAction(
-                          onPressed: (context) =>
-                              _openMessageScreen(pharmacy, 'SMS'),
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          icon: Icons.sms,
-                          label: 'SMS',
-                        ),
-                      ],
+                      ),
+                      onChanged: _searchPharmacy,
                     ),
-                    child: ListTile(
-                      title: Text(
-                        pharmacy.name,
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(pharmacy.phoneNumber),
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.blue[800],
-                        child: const Icon(Icons.local_pharmacy,
-                            color: Colors.white),
-                      ),
-                      onTap: () {
-                        widget.mapController.moveTo(
-                          GeoPoint(
-                            latitude: pharmacy.lat,
-                            longitude: pharmacy.lon,
-                          ),
-                          animate: true,
-                        );
+                  ),
+                  // Expanded scrollable list for pharmacies
+                  Expanded(
+                    child: ListView.builder(
+                      // Calculate the total number of items (list items + dividers)
+                      itemCount: _pharmacies.length * 2 - 1,
+                      itemBuilder: (context, index) {
+                        if (index.isOdd) {
+                          // For odd indices, return a Divider widget.
+                          return const Divider(
+                            height: 1,
+                            color: Colors.grey,
+                          );
+                        } else {
+                          // For even indices, calculate the real index in the pharmacies list.
+                          final realIndex = index ~/ 2;
+                          final pharmacy = _pharmacies[realIndex];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.blue[800],
+                              child: const Icon(Icons.local_pharmacy,
+                                  color: Colors.white),
+                            ),
+                            title: Text(
+                              pharmacy.name,
+                              style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(pharmacy.phoneNumber),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(FontAwesomeIcons.whatsapp,
+                                      color: Colors.green),
+                                  onPressed: () =>
+                                      _openMessageScreen(pharmacy, 'WhatsApp'),
+                                ),
+                                IconButton(
+                                  icon:
+                                      const Icon(Icons.sms, color: Colors.blue),
+                                  onPressed: () =>
+                                      _openMessageScreen(pharmacy, 'SMS'),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              widget.mapController.moveTo(
+                                GeoPoint(
+                                    latitude: pharmacy.lat,
+                                    longitude: pharmacy.lon),
+                                animate: true,
+                              );
+                            },
+                          );
+                        }
                       },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
           ),

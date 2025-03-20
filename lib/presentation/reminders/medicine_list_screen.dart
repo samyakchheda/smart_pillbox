@@ -108,8 +108,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color:
-                        Colors.white.withOpacity(0.9), // Soft blending effect
+                    color: const Color(0xFFE0E0E0), // Soft blending effect
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),

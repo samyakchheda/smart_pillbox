@@ -7,8 +7,8 @@ import android.content.Intent
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
-import java.util.Calendar
 
 class AlarmReceiver : BroadcastReceiver() {
 
@@ -17,38 +17,51 @@ class AlarmReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        Log.d("AlarmReceiver", "Alarm triggered with intent: ${intent.action}, extras: ${intent.extras?.keySet()}")
 
-        // Handle stop and snooze actions
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val medicineId = intent.getStringExtra("medicineId") ?: "unknown"
+        val payload = intent.getStringExtra("payload") ?: "Medicine Reminder"
+        val alarmTime = intent.getLongExtra("alarmTime", -1L)
+
         when (intent.action) {
             "STOP_ALARM" -> {
-                stopAlarm(context, notificationManager)
+                stopAlarm(context, notificationManager, medicineId, intent.getLongExtra("alarmTime", -1L))
+                Log.d("AlarmReceiver", "Alarm stopped for medicine ID: $medicineId")
                 return
             }
             "SNOOZE_ALARM" -> {
-                snoozeAlarm(context, notificationManager)
+                snoozeAlarm(context, notificationManager, medicineId, intent.getLongExtra("alarmTime", -1L))
+                Log.d("AlarmReceiver", "Alarm snoozed for medicine ID: $medicineId")
                 return
             }
         }
 
-        // Create the notification channel (for Android O and above)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel(notificationManager)
         }
 
-        // Launch the AlarmActivity
         val alarmIntent = Intent(context, AlarmActivity::class.java).apply {
-            putExtra("payload", intent.getStringExtra("payload"))
+            putExtra("payload", payload)
+            putExtra("medicineId", medicineId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        context.startActivity(alarmIntent)
+        try {
+            context.startActivity(alarmIntent)
+            Log.d("AlarmReceiver", "Started AlarmActivity for medicine ID: $medicineId")
+        } catch (e: Exception) {
+            Log.e("AlarmReceiver", "Failed to start AlarmActivity: ${e.message}")
+        }
 
-        // Build stop and snooze PendingIntents for the notification actions
         val stopIntent = Intent(context, AlarmReceiver::class.java).apply {
             action = "STOP_ALARM"
+            putExtra("medicineId", medicineId)
+            putExtra("alarmTime", alarmTime) // Add alarmTime to stopIntent
         }
         val snoozeIntent = Intent(context, AlarmReceiver::class.java).apply {
             action = "SNOOZE_ALARM"
+            putExtra("medicineId", medicineId)
+            putExtra("alarmTime", alarmTime) // Add alarmTime to snoozeIntent
         }
 
         val stopPendingIntent = PendingIntent.getBroadcast(
@@ -74,7 +87,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val builder = NotificationCompat.Builder(context, "medicine_reminder")
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("Medicine Reminder")
-            .setContentText("It's time to take your medicine!")
+            .setContentText("It's time to take your medicine: $payload")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(fullScreenPendingIntent, true)
@@ -83,27 +96,11 @@ class AlarmReceiver : BroadcastReceiver() {
             .addAction(R.drawable.ic_stop, "Stop", stopPendingIntent)
             .addAction(R.drawable.ic_snooze, "Snooze (5 min)", snoozePendingIntent)
 
-        notificationManager.notify(1, builder.build())
-
-        // --- Reschedule the next recurring alarm (if recurring info is provided) ---
-        // Reschedule the next alarm if recurring info is provided
-        val selectedDays = intent.getStringArrayListExtra("selectedDays")
-        val endDate = intent.getLongExtra("endDate", -1L)
-        val medicineId = intent.getStringExtra("medicineId")
-        val startDate = intent.getLongExtra("startDate", -1L)
-
-        if (selectedDays != null && endDate != -1L && medicineId != null && startDate != -1L) {
-            val currentTime = System.currentTimeMillis()
-            val nextAlarmTime = calculateNextAlarmTime(currentTime, selectedDays, startDate)
-            if (nextAlarmTime != null && nextAlarmTime < endDate) {
-                scheduleNextRecurringAlarm(context, nextAlarmTime, intent)
-            }
-        }
+        val notificationId = (medicineId + alarmTime.toString()).hashCode()
+        notificationManager.notify(notificationId, builder.build())
+        Log.d("AlarmReceiver", "Notification posted for medicine ID: $medicineId at time: $alarmTime (notificationId: $notificationId)")
     }
 
-    /**
-     * Creates the notification channel for the alarm.
-     */
     private fun createNotificationChannel(notificationManager: NotificationManager) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val attributes = AudioAttributes.Builder()
@@ -120,28 +117,27 @@ class AlarmReceiver : BroadcastReceiver() {
                 enableLights(true)
             }
             notificationManager.createNotificationChannel(channel)
+            Log.d("AlarmReceiver", "Notification channel created")
         }
     }
 
-    /**
-     * Stops the alarm sound and cancels the notification.
-     */
-    private fun stopAlarm(context: Context, notificationManager: NotificationManager) {
+    private fun stopAlarm(context: Context, notificationManager: NotificationManager, medicineId: String, alarmTime: Long) {
         mediaPlayer?.apply {
             stop()
             release()
         }
         mediaPlayer = null
-        notificationManager.cancel(1)
+        val notificationId = (medicineId + alarmTime.toString()).hashCode() // Use same ID as notify
+        notificationManager.cancel(notificationId)
+        Log.d("AlarmReceiver", "Notification canceled for medicine ID: $medicineId (notificationId: $notificationId)")
     }
 
-    /**
-     * Snoozes the alarm for 5 minutes.
-     */
-    private fun snoozeAlarm(context: Context, notificationManager: NotificationManager) {
-        stopAlarm(context, notificationManager)
+    private fun snoozeAlarm(context: Context, notificationManager: NotificationManager, medicineId: String, alarmTime: Long) {
+        stopAlarm(context, notificationManager, medicineId, alarmTime) // Pass alarmTime to stopAlarm
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val snoozeIntent = Intent(context, AlarmReceiver::class.java)
+        val snoozeIntent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("medicineId", medicineId)
+        }
         val pendingSnoozeIntent = PendingIntent.getBroadcast(
             context,
             2,
@@ -154,88 +150,6 @@ class AlarmReceiver : BroadcastReceiver() {
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, snoozeTime, pendingSnoozeIntent)
         }
-    }
-
-    /**
-     * Schedules the next recurring alarm.
-     */
-    private fun scheduleNextRecurringAlarm(context: Context, nextAlarmTime: Long, originalIntent: Intent) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val newIntent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("payload", originalIntent.getStringExtra("payload"))
-            putExtra("medicineId", originalIntent.getStringExtra("medicineId"))
-            putExtra("selectedDays", originalIntent.getStringArrayListExtra("selectedDays"))
-            putExtra("startDate", originalIntent.getLongExtra("startDate", -1L))
-            putExtra("endDate", originalIntent.getLongExtra("endDate", -1L))
-        }
-        val medicineId = originalIntent.getStringExtra("medicineId") ?: ""
-        val uniqueRequestCode = medicineId.hashCode()
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            uniqueRequestCode,
-            newIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextAlarmTime, pendingIntent)
-        } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextAlarmTime, pendingIntent)
-        }
-    }
-
-    /**
-     * Calculates the next alarm time based on the current time, selected days, and the original startDate (intended time-of-day).
-     */
-    private fun calculateNextAlarmTime(
-        currentTime: Long,
-        selectedDays: List<String>,
-        startDate: Long
-    ): Long? {
-        val calendar = Calendar.getInstance()
-        // Start from the later of currentTime or startDate.
-        calendar.timeInMillis = maxOf(currentTime, startDate)
-
-        // Retrieve the intended hour and minute from startDate.
-        val startCalendar = Calendar.getInstance().apply { timeInMillis = startDate }
-        val intendedHour = startCalendar.get(Calendar.HOUR_OF_DAY)
-        val intendedMinute = startCalendar.get(Calendar.MINUTE)
-
-        // Day map with abbreviated names matching Flutter.
-        val dayMap = mapOf(
-            "Sun" to Calendar.SUNDAY,
-            "Mon" to Calendar.MONDAY,
-            "Tue" to Calendar.TUESDAY,
-            "Wed" to Calendar.WEDNESDAY,
-            "Thu" to Calendar.THURSDAY,
-            "Fri" to Calendar.FRIDAY,
-            "Sat" to Calendar.SATURDAY
-        )
-
-        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
-
-        // Loop through the next 7 days (including today) to find a matching day.
-        for (i in 0..7) {
-            val checkDay = (currentDay - 1 + i) % 7 + 1
-            val dayName = dayMap.entries.find { it.value == checkDay }?.key
-            if (dayName != null && selectedDays.any { it.equals(dayName, ignoreCase = true) }) {
-                // Set the calendar to the intended time on the matching day.
-                calendar.set(Calendar.HOUR_OF_DAY, intendedHour)
-                calendar.set(Calendar.MINUTE, intendedMinute)
-                calendar.set(Calendar.SECOND, 0)
-                calendar.set(Calendar.MILLISECOND, 0)
-
-                // If the calculated time is in the future, return it.
-                if (calendar.timeInMillis > currentTime) {
-                    return calendar.timeInMillis
-                }
-
-                // If the calculated time is in the past, move to the next week.
-                calendar.add(Calendar.DAY_OF_YEAR, 7)
-                return calendar.timeInMillis
-            }
-        }
-
-        // No valid day found.
-        return null
+        Log.d("AlarmReceiver", "Snooze alarm scheduled for medicine ID: $medicineId at: $snoozeTime")
     }
 }

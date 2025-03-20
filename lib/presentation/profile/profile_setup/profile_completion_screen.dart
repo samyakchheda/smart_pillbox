@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-
 import '../../../routes/routes.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
@@ -15,7 +14,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 9, milliseconds: 500), () {
       Navigator.pushReplacementNamed(context, Routes.home); // Adjust route name
     });
   }

@@ -8,9 +8,10 @@ import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:home/ai/chat_screen.dart';
-import 'package:home/helpers/functions/permissions_manager.dart';
+import 'package:home/helpers/functions/permissions_manager.dart'; // Handles notification and alarm permissions
 import 'package:home/pharmacy/services/location_service.dart';
 import 'package:home/pharmacy/services/pharmacy_service.dart';
+import 'package:home/presentation/caretaker/home/home_screen.dart';
 import 'package:home/presentation/home/home_screen.dart';
 import 'package:home/presentation/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
@@ -29,16 +30,53 @@ import 'package:path_provider/path_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-Position? userLocation; // Store user location globally
-List<dynamic>? pharmacyData; // Store pharmacy data globally
-MapController mapController =
-    MapController(initPosition: GeoPoint(latitude: 0, longitude: 0));
+Position? userLocation; // Global user location
+List<dynamic>? pharmacyData; // Global pharmacy data
+MapController mapController = MapController(
+  initPosition: GeoPoint(latitude: 0, longitude: 0),
+);
 
-// Example function to be called periodically.
+/// Example function to be called periodically.
 void callMedicineCheck() {
-  const String userId = "WZK4k6u2SrYzBIKprwzFd3yaULh2";
+  const String userId = "PwcfmPlHCSTjzK7bstylA6XrMFH3";
   const bool isNotification = false;
   checkMedicineTimes(userId, isNotification);
+}
+
+/// Requests location permission and fetches user location & nearby pharmacies.
+/// This function is called at app startup before runApp.
+Future<void> _initializeLocationAndPharmacies() async {
+  // Check and request location permission.
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      print("Location permission denied.");
+      return;
+    }
+  } else if (permission == LocationPermission.deniedForever) {
+    print(
+        "Location permission permanently denied. Please enable it in settings.");
+    return;
+  }
+
+  // Once permission is granted, fetch the location.
+  try {
+    userLocation = await LocationService.getCurrentLocation();
+    if (userLocation != null) {
+      mapController = MapController(
+        initPosition: GeoPoint(
+          latitude: userLocation!.latitude,
+          longitude: userLocation!.longitude,
+        ),
+      );
+      pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
+      print(
+          "Location fetched: ${userLocation!.latitude}, ${userLocation!.longitude}");
+    }
+  } catch (e) {
+    print("Error fetching location or pharmacies: $e");
+  }
 }
 
 void main() async {
@@ -49,14 +87,11 @@ void main() async {
   const apiKey = 'AIzaSyD3psw8M8hiX2mnwGoXxc-0-ZvBxPa0IYY';
   Gemini.init(apiKey: apiKey);
 
-  // Create a Cron instance and schedule a job.
+  // Create a Cron instance and schedule a job (e.g., at midnight).
   final cron = Cron();
-  // Example: schedule a job at midnight (adjust your cron expression as needed).
   cron.schedule(Schedule.parse('0 0 * * *'), () {
     callMedicineCheck();
   });
-
-  _fetchUserLocationAndPharmacies();
 
   // Wrap the app with BetterFeedback and our custom ShakeFeedbackWrapper.
   runApp(
@@ -66,24 +101,6 @@ void main() async {
       ),
     ),
   );
-}
-
-Future<void> _fetchUserLocationAndPharmacies() async {
-  try {
-    userLocation = await LocationService.getCurrentLocation();
-    if (userLocation != null) {
-      mapController = MapController(
-        initPosition: GeoPoint(
-          latitude: userLocation!.latitude, // Null check (!)
-          longitude: userLocation!.longitude,
-        ),
-      );
-
-      pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
-    }
-  } catch (e) {
-    print("Error fetching location or pharmacies: $e");
-  }
 }
 
 class MyApp extends StatelessWidget {
@@ -99,62 +116,84 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       onGenerateRoute: Routes.generateRoute,
+      // The main route now points to our AuthWrapper.
       routes: {
-        '/': (context) => const MainWrapper(),
+        '/': (context) => const AuthWrapper(),
       },
     );
   }
 }
 
-class MainWrapper extends StatelessWidget {
-  const MainWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingDraggableWidget(
-      // The main screen content behind the floating button.
-      mainScreenWidget: const AuthWrapper(),
-      // Floating button widget.
-      floatingWidget: GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ChatScreen()),
-          );
-        },
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: const BoxDecoration(
-            color: AppColors.buttonColor,
-            shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
-          ),
-          child:
-              const Icon(FontAwesomeIcons.robot, color: Colors.white, size: 28),
-        ),
-      ),
-      autoAlign: true,
-      floatingWidgetWidth: 55,
-      floatingWidgetHeight: 55,
-      speed: 0.5,
-    );
-  }
-}
-
+/// AuthWrapper decides which screen to display based on authentication.
+/// It still requests notification and alarm permissions.
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
+  Future<bool> isCaretaker(String email) async {
+    final querySnapshot = await firestore.FirebaseFirestore.instance
+        .collection('caretakers')
+        .where('email', isEqualTo: email)
+        .get();
+    return querySnapshot.docs.isNotEmpty;
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Request other necessary permissions.
     requestPermissions(context);
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
-            return const HomeScreen();
+            final user = snapshot.data!;
+            return FutureBuilder<bool>(
+              future: isCaretaker(user.email!),
+              builder: (context, caretakerSnapshot) {
+                // Show caretaker or normal home screen based on user type.
+                Widget homeScreen = caretakerSnapshot.data == true
+                    ? const CareTakerHomeScreen()
+                    : const HomeScreen();
+                // Wrap the home screen with the floating draggable widget.
+                return FloatingDraggableWidget(
+                  dx: MediaQuery.of(context).size.width -
+                      55, // Stick to the right edge
+                  dy: MediaQuery.of(context).size.height *
+                      0.65, // Position slightly below the top
+                  mainScreenWidget: homeScreen,
+                  floatingWidget: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ChatScreen()),
+                      );
+                    },
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: const BoxDecoration(
+                        color: AppColors.buttonColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: Colors.black26, blurRadius: 5),
+                        ],
+                      ),
+                      child: const Icon(FontAwesomeIcons.robot,
+                          color: Colors.white, size: 28),
+                    ),
+                  ),
+                  autoAlign:
+                      false, // Disable auto-align to keep it where we place it
+                  floatingWidgetWidth: 55,
+                  floatingWidgetHeight: 55,
+                  speed: 0.5,
+                );
+              },
+            );
           } else {
+            // If the user is not logged in, show the onboarding screen.
             return const OnboardingScreen();
           }
         } else {
@@ -164,10 +203,11 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 
+  /// Requests notification and alarm permissions.
   void requestPermissions(BuildContext context) async {
     await requestNotificationPermission();
     await requestAlarmPermission(context);
-    setupFCM();
+    await _initializeLocationAndPharmacies();
   }
 }
 
@@ -175,10 +215,12 @@ Future<void> setupFCM() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   try {
     String? token = await messaging.getToken();
+    print("FCM token retrieved: $token");
     if (token != null) {
       await saveTokenToFirestore(token);
     }
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+      print("FCM token refreshed: $newToken");
       await saveTokenToFirestore(newToken);
     });
     await messaging.requestPermission();
@@ -189,18 +231,42 @@ Future<void> setupFCM() async {
 
 Future<void> saveTokenToFirestore(String token) async {
   try {
-    String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final user = FirebaseAuth.instance.currentUser;
     final prefs = await SharedPreferences.getInstance();
-    if (userId.isNotEmpty) {
-      await firestore.FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .set(
-        {'deviceToken': token},
-        firestore.SetOptions(merge: true),
-      );
+
+    if (user != null) {
+      final userId = user.uid;
+      final normalizedEmail = user.email?.trim().toLowerCase() ?? '';
+
+      // Check if the user's email exists in the "caretakers" collection.
+      final caretakerQuery = await firestore.FirebaseFirestore.instance
+          .collection('caretakers')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
+
+      if (caretakerQuery.docs.isNotEmpty) {
+        final caretakerDocId = caretakerQuery.docs.first.id;
+        await firestore.FirebaseFirestore.instance
+            .collection('caretakers')
+            .doc(caretakerDocId)
+            .set({
+          'deviceToken': token,
+          'name': user.displayName ?? '',
+          'email': user.email ?? '',
+        }, firestore.SetOptions(merge: true));
+        print("Caretaker token updated for: $normalizedEmail");
+      } else {
+        await firestore.FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .set({
+          'deviceToken': token,
+        }, firestore.SetOptions(merge: true));
+        print("User token updated for: ${user.email}");
+      }
     } else {
       await prefs.setString('fcm_token', token);
+      print("Token stored locally in SharedPreferences");
     }
   } catch (e) {
     print('Error saving token: $e');
@@ -217,8 +283,8 @@ Future<String> writeScreenshotToFile(Uint8List screenshotBytes) async {
 }
 
 /// ShakeFeedbackWrapper uses the shake_gesture package to detect shakes
-/// and triggers the BetterFeedback dialog when a shake is detected.
-/// Once feedback is submitted, an email is pre-composed with the screenshot attached.
+/// and triggers the BetterFeedback dialog. Once feedback is submitted,
+/// an email is pre-composed with the screenshot attached.
 class ShakeFeedbackWrapper extends StatelessWidget {
   final Widget child;
   const ShakeFeedbackWrapper({super.key, required this.child});
@@ -229,22 +295,18 @@ class ShakeFeedbackWrapper extends StatelessWidget {
       onShake: () {
         BetterFeedback.of(context).show((UserFeedback feedback) async {
           String? screenshotPath;
-          // If a screenshot is available, write it to a temporary file.
           if (feedback.screenshot != null && feedback.screenshot!.isNotEmpty) {
             screenshotPath = await writeScreenshotToFile(feedback.screenshot!);
           }
-
-          // Since textual feedback isn't supported, we use a default message.
           final email = Email(
             body: "User submitted feedback with a screenshot attached.",
             subject: 'User Feedback',
             recipients: [
               'smartdose.care@gmail.com'
-            ], // Change to your support email.
+            ], // Update to your support email.
             attachmentPaths: screenshotPath != null ? [screenshotPath] : null,
             isHTML: false,
           );
-
           try {
             await FlutterEmailSender.send(email);
           } catch (error) {

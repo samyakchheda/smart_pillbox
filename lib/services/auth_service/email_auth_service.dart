@@ -6,7 +6,6 @@ class EmailAuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// 🔹 **Sign Up with Email & Password**
   Future<String> signUpUser({
     required String email,
     required String password,
@@ -39,8 +38,19 @@ class EmailAuthService {
           .set(newUser.toJson());
 
       return "success";
+    } on FirebaseAuthException catch (e) {
+      // Handle Firebase authentication errors
+      if (e.code == 'email-already-in-use') {
+        return "This email is already in use.";
+      } else if (e.code == 'weak-password') {
+        return "Password is too weak. Try a stronger password.";
+      } else if (e.code == 'invalid-email') {
+        return "Invalid email format.";
+      } else {
+        return "FirebaseAuth Error: ${e.message}";
+      }
     } catch (e) {
-      return "Error: \${e.toString()}";
+      return "Error: ${e.toString()}"; // ✅ Returns the actual error message
     }
   }
 

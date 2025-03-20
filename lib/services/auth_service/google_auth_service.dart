@@ -12,7 +12,7 @@ class GoogleAuthService {
   /// 🔹 **Google Sign-In**
   Future<User?> signInWithGoogle() async {
     try {
-      await _googleSignIn.signOut(); // Ensure fresh session
+      await _googleSignIn.signOut(); // Ensure a fresh session
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null; // User canceled sign-in
 
@@ -30,23 +30,39 @@ class GoogleAuthService {
 
       if (user == null) return null;
 
-      // 🔹 Check if user exists in Firestore
-      final DocumentSnapshot userDoc =
-          await _firestore.collection('users').doc(user.uid).get();
+      // Normalize the email to avoid case or whitespace issues
+      final normalizedEmail = user.email?.trim().toLowerCase() ?? '';
 
-      if (!userDoc.exists) {
-        // 🔹 Store new user details
-        final newUser = UserModel(
-          uid: user.uid,
-          email: user.email ?? '',
-          name: user.displayName ?? '',
-          // profilePicture: user.photoURL ?? '',
-          gender: '',
-          birthDate: '',
-          phoneNumber: '',
-        );
+      // 🔹 Check if the user is a caretaker by querying the "caretakers" collection
+      final QuerySnapshot caretakerQuery = await _firestore
+          .collection('caretakers')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
 
-        await UserService().saveUserDetails(newUser);
+      if (caretakerQuery.docs.isNotEmpty) {
+        // The email exists in the caretakers collection.
+        print("User is a caretaker: $normalizedEmail");
+        // Optionally, you can update the caretaker document here if needed.
+      } else {
+        // The user is not a caretaker.
+        // Check if the user exists in the 'users' collection and add if not.
+        final DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
+
+        if (!userDoc.exists) {
+          // 🔹 Store new user details for a normal user
+          final newUser = UserModel(
+            uid: user.uid,
+            email: user.email ?? '',
+            name: user.displayName ?? '',
+            // profilePicture: user.photoURL ?? '',
+            gender: '',
+            birthDate: '',
+            phoneNumber: '',
+          );
+
+          await UserService().saveUserDetails(newUser);
+        }
       }
 
       return user;

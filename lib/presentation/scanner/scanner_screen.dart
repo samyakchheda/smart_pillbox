@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/scanner_service/scanner_service.dart';
 import 'image_detail_screen.dart';
 
@@ -36,11 +34,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
     _fetchScannedDocuments();
   }
 
-  void _deleteDocument(
-      String documentId, String localPath, String thumbnailPath) async {
-    await File(localPath).delete();
-    await File(thumbnailPath).delete();
-    await _documentService.deleteDocument(widget.userId, documentId);
+  void _deleteDocument(String documentId, String cloudinaryUrl) async {
+    await _documentService.deleteDocument(
+        widget.userId, documentId, cloudinaryUrl);
     _fetchScannedDocuments();
   }
 
@@ -49,7 +45,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _startScanning,
-        child: const Text("+", style: TextStyle(fontSize: 25)),
+        child: const Icon(Icons.add, size: 30),
       ),
       appBar: AppBar(
         title: const Text('Document Scanner'),
@@ -68,10 +64,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                         direction: DismissDirection.endToStart,
                         onDismissed: (direction) {
                           _deleteDocument(
-                            document['id'],
-                            document['local_path'],
-                            document['thumbnail_path'],
-                          );
+                              document['id'], document['cloudinary_url']);
                         },
                         background: Container(
                           color: Colors.red,
@@ -83,43 +76,35 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             ),
                           ),
                         ),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
+                        child: Card(
                           margin: const EdgeInsets.all(8),
-                          child: Card(
-                            elevation: 4,
-                            child: ListTile(
-                              leading: document['thumbnail_path'] != null
-                                  ? Image.file(
-                                      File(document['thumbnail_path']),
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (context, error, stackTrace) =>
-                                              const Icon(Icons.error,
-                                                  color: Colors.red),
-                                    )
-                                  : const Icon(Icons.image, size: 50),
-                              title: Text('Document ${index + 1}'),
-                              trailing: const Icon(Icons.arrow_forward),
-                              onTap: () {
-                                // Check if uploaded_at is null and provide a default value
-                                final uploadedAt =
-                                    document['uploaded_at'] ?? Timestamp.now();
-                                // Navigate to full image screen
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ImageDetailScreen(
-                                      imagePath: document['local_path'],
-                                      thumbnailPath: document['thumbnail_path'],
-                                      uploadedAt: uploadedAt,
-                                    ),
+                          elevation: 4,
+                          child: ListTile(
+                            leading: document['cloudinary_url'] != null
+                                ? Image.network(
+                                    document['cloudinary_url'],
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(Icons.error,
+                                                color: Colors.red),
+                                  )
+                                : const Icon(Icons.image, size: 50),
+                            title: Text('Document ${index + 1}'),
+                            trailing: const Icon(Icons.arrow_forward),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ImageDetailScreen(
+                                    documentId: document['id'],
+                                    userId: widget.userId,
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       );

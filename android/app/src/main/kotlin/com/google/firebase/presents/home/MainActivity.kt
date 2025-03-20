@@ -10,7 +10,7 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity: FlutterActivity() {
+class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.example.smart_pillbox/alarm"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -62,37 +62,40 @@ class MainActivity: FlutterActivity() {
             putExtra("selectedDays", ArrayList(selectedDays))
             putExtra("startDate", startDate)
             putExtra("endDate", endDate)
+            putExtra("alarmTime", initialAlarmTime) // Pass original alarm time for reference
         }
-        
-        val uniqueRequestCode = medicineId.hashCode()
-        
+
+        // Use a unique requestCode combining medicineId and alarmTime
+        val requestCode = (medicineId + initialAlarmTime.toString()).hashCode()
+
         val pendingIntent = PendingIntent.getBroadcast(
             this,
-            uniqueRequestCode,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        Log.d("AlarmScheduler", "Scheduling alarm for medicine ID: $medicineId at time: $initialAlarmTime (requestCode: $requestCode)")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, initialAlarmTime, pendingIntent)
         } else {
             alarmManager.setExact(AlarmManager.RTC_WAKEUP, initialAlarmTime, pendingIntent)
         }
-        
-        Log.d("AlarmScheduler", "Recurring alarm scheduled for medicine ID: $medicineId at time: $initialAlarmTime")
-    }
 
+        Log.d("AlarmScheduler", "Alarm scheduled successfully for medicine ID: $medicineId at time: $initialAlarmTime")
+    }
 
     private fun cancelAlarm(medicineId: String) {
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
-            this, 
+            this,
             medicineId.hashCode(),
-            intent, 
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         alarmManager.cancel(pendingIntent)
         pendingIntent.cancel()
         Log.d("AlarmScheduler", "Alarm canceled for medicine ID: $medicineId")

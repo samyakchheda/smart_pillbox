@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:home/main.dart';
 import '../../../../routes/routes.dart';
 import '../../../../services/auth_service/auth_service.dart';
 import '../../../../theme/app_colors.dart';
@@ -61,10 +63,33 @@ class _LoginFormState extends State<LoginForm> {
 
     if (res == "success") {
       mySnackBar(context, "Login successful!", isError: false);
-      Navigator.pushReplacementNamed(context, Routes.home);
+
+      // Get the current user from FirebaseAuth.
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        final normalizedEmail = user.email!.trim().toLowerCase();
+
+        // Query the 'caretakers' collection using the normalized email.
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: normalizedEmail)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          // If a caretaker document exists, route to the caretaker screen.
+          Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+        } else {
+          // Otherwise, route to the normal home screen.
+          Navigator.pushReplacementNamed(context, Routes.home);
+        }
+      } else {
+        // Fallback if user data is not available.
+        Navigator.pushReplacementNamed(context, Routes.home);
+      }
     } else {
       mySnackBar(context, res, isError: true);
     }
+    setupFCM();
   }
 
   Future<void> signInWithGoogle() async {
@@ -78,12 +103,24 @@ class _LoginFormState extends State<LoginForm> {
       _isLoading = false;
     });
 
-    if (user != null) {
+    if (user != null && user.email != null) {
       mySnackBar(context, "Google Sign-In successful!", isError: false);
-      Navigator.pushReplacementNamed(context, Routes.home);
+
+      final normalizedEmail = user.email!.trim().toLowerCase();
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('caretakers')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+      } else {
+        Navigator.pushReplacementNamed(context, Routes.home);
+      }
     } else {
       mySnackBar(context, 'Google Sign-In failed', isError: true);
     }
+    setupFCM();
   }
 
   @override

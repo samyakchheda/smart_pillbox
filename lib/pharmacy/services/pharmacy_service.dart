@@ -6,7 +6,7 @@ import '../models/pharmacy_model.dart';
 class PharmacyService {
   static const String _baseUrl = 'https://google-map-places.p.rapidapi.com';
   static const String _apiKey =
-      '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
+      '740392cb4amsh77a7f25bdf77fb6p1c7346jsnf94b51aee5af';
 
   Future<List<Pharmacy>> getNearbyPharmacies(Position position) async {
     final response = await http.get(

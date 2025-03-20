@@ -1,13 +1,15 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../helpers/image_helper.dart';
-import '../../../helpers/functions/save_user_info.dart';
-import '../../../widgets/my_elevated_button.dart';
-import '../../../theme/app_colors.dart';
-import '../../../theme/app_fonts.dart';
-import '../../../routes/routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:home/services/api/cloudinary_service.dart';
+import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_fonts.dart';
+import 'package:home/widgets/my_snack_bar.dart';
 
 class ProfilePictureScreen extends StatefulWidget {
   const ProfilePictureScreen({super.key});
@@ -17,71 +19,74 @@ class ProfilePictureScreen extends StatefulWidget {
 }
 
 class _ProfilePictureScreenState extends State<ProfilePictureScreen> {
-  File? _imageFile;
+  File? _image;
+  String? _photoUrl;
+  bool _isUploading = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _loadProfileImage();
+    _fetchProfilePicture();
   }
 
-  /// Load the saved profile picture from local storage
-  Future<void> _loadProfileImage() async {
-    final image = await ImageHelper.loadProfileImage();
-    if (image != null && mounted) {
-      setState(() => _imageFile = image);
+  void _fetchProfilePicture() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (user.photoURL != null) {
+        setState(() => _photoUrl = user.photoURL);
+      } else {
+        var userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (userDoc.exists && userDoc.data()?['profile_picture'] != null) {
+          setState(() => _photoUrl = userDoc['profile_picture']);
+        }
+      }
     }
   }
 
-  /// Pick an image from camera/gallery and save it
   Future<void> _pickImage(ImageSource source) async {
-    final image = await ImageHelper.pickImage(source);
-    if (image != null && mounted) {
-      setState(() => _imageFile = image);
-      await _saveUserInfo();
-      _navigateToProfileCompletion();
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() => _isUploading = true);
+      File? compressedImage = await _compressImage(File(pickedFile.path));
+      if (compressedImage != null) {
+        String? imageUrl = await CloudinaryService.uploadImage(compressedImage);
+        if (imageUrl != null) {
+          _saveProfilePicture(imageUrl);
+        } else {
+          mySnackBar(context, "Image upload failed!", isError: true);
+        }
+      }
+      setState(() => _isUploading = false);
     }
   }
 
-  /// Save user details to Firestore
-  Future<void> _saveUserInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('name') ?? "";
-    final birthDate = prefs.getString('birthDate') ?? "";
-    final gender = prefs.getString('gender') ?? "";
-    final phoneNumber = prefs.getString('phoneNumber') ?? "";
+  Future<File?> _compressImage(File file) async {
+    final dir = await getTemporaryDirectory();
+    final targetPath =
+        path.join(dir.path, "${DateTime.now().millisecondsSinceEpoch}.jpg");
 
-    if (name.isEmpty ||
-        birthDate.isEmpty ||
-        gender.isEmpty ||
-        phoneNumber.isEmpty) {
-      print("❌ Missing user details in SharedPreferences");
-      return;
-    }
+    var result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 50,
+      minWidth: 800,
+      minHeight: 800,
+    );
 
-    try {
-      await saveUserInfo(
-        name: name,
-        birthDate: birthDate,
-        gender: gender,
-        phoneNumber: phoneNumber,
-      );
-    } catch (e) {
-      print("❌ Error saving user info: $e");
-    }
+    return result != null ? File(result.path) : null;
   }
 
-  /// Navigate to Profile Completion Screen
-  void _navigateToProfileCompletion() {
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, Routes.profileCompletion);
-    }
-  }
-
-  /// Skip profile picture step
-  Future<void> _skipProfilePicture() async {
-    await _saveUserInfo();
-    _navigateToProfileCompletion();
+  void _saveProfilePicture(String imageUrl) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .update({'profile_picture': imageUrl});
+    setState(() => _photoUrl = imageUrl);
   }
 
   @override
@@ -89,63 +94,66 @@ class _ProfilePictureScreenState extends State<ProfilePictureScreen> {
     return Scaffold(
       backgroundColor: AppColors.darkBackground,
       appBar: AppBar(
-        backgroundColor: AppColors.darkBackground,
+        title: const Text("Set Profile Picture", style: AppFonts.headline),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pushReplacementNamed(context, '/profileCompletion'),
+            child: const Text("Skip",
+                style: TextStyle(color: AppColors.kBlackColor)),
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text("Set Your Profile Picture", style: AppFonts.headline),
-            const SizedBox(height: 10),
-            const Text(
-              "Personalize your SmartDose experience! You can update this later.",
-              textAlign: TextAlign.center,
-              style: AppFonts.bodyText,
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 85,
+                  backgroundColor: AppColors.lightBackground,
+                  backgroundImage: _photoUrl != null
+                      ? NetworkImage(_photoUrl!) as ImageProvider
+                      : (_image != null ? FileImage(_image!) : null),
+                  child: (_photoUrl == null && _image == null)
+                      ? const Icon(Icons.person,
+                          size: 80, color: AppColors.darkBackground)
+                      : null,
+                ),
+                if (_isUploading)
+                  const Positioned(
+                    bottom: 5,
+                    right: 5,
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
             ),
-            const SizedBox(height: 30),
-            GestureDetector(
-              onTap: () => _pickImage(ImageSource.gallery),
-              child: CircleAvatar(
-                radius: 60,
-                backgroundColor: AppColors.cardBackground,
-                backgroundImage:
-                    _imageFile != null ? FileImage(_imageFile!) : null,
-                child: _imageFile == null
-                    ? const Icon(Icons.add_a_photo,
-                        size: 40, color: AppColors.iconDisabled)
-                    : null,
+          ),
+          const SizedBox(height: 40),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FloatingActionButton(
+                heroTag: "gallery",
+                backgroundColor: Colors.blue,
+                onPressed: () => _pickImage(ImageSource.gallery),
+                child: const Icon(Icons.photo_library, color: Colors.white),
               ),
-            ),
-            const SizedBox(height: 20),
-            MyElevatedButton(
-              text: "Take a Photo",
-              icon: const Icon(Icons.camera_alt, color: AppColors.buttonText),
-              backgroundColor: AppColors.buttonColor,
-              borderRadius: 30,
-              onPressed: () => _pickImage(ImageSource.camera),
-            ),
-            const SizedBox(height: 10),
-            MyElevatedButton(
-              text: "Choose from Gallery",
-              icon:
-                  const Icon(Icons.photo_library, color: AppColors.buttonText),
-              backgroundColor: AppColors.iconPrimary,
-              borderRadius: 30,
-              onPressed: () => _pickImage(ImageSource.gallery),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: _skipProfilePicture,
-              child: const Text("Skip for now", style: AppFonts.caption),
-            ),
-          ],
-        ),
+              const SizedBox(width: 20),
+              FloatingActionButton(
+                heroTag: "camera",
+                backgroundColor: Colors.blue,
+                onPressed: () => _pickImage(ImageSource.camera),
+                child: const Icon(Icons.camera_alt, color: Colors.white),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

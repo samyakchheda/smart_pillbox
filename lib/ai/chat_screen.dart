@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home/theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import './widgets/message_composer.dart';
@@ -44,7 +45,6 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  /// ✅ **Handles Sending Messages (Text or Image)**
   void _sendMessage({String? text, File? file}) async {
     if ((text == null || text.trim().isEmpty) && file == null) return;
 
@@ -62,7 +62,6 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  /// ✅ **Handles Uploading Image & Description**
   Future<void> _uploadImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? pickedFile =
@@ -75,7 +74,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  /// ✅ **Shows Dialog to Enter Image Description**
   Future<String> _showDescriptionDialog() async {
     TextEditingController descriptionController = TextEditingController();
 
@@ -105,7 +103,6 @@ class _ChatScreenState extends State<ChatScreen> {
         "";
   }
 
-  /// ✅ **Handles Audio Recording Start**
   Future<void> _startRecording() async {
     if (!_isGeneratingResponse && !_isRecording) {
       await _audioService.startRecording();
@@ -113,7 +110,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  /// ✅ **Handles Audio Recording Stop & Transcription**
   Future<void> _stopRecording() async {
     if (_isRecording) {
       String transcribedText = await _audioService.stopRecording();
@@ -125,7 +121,6 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  /// ✅ **Handles Chat Navigation & Management**
   void _startNewChat() {
     _chatService.startNewChat();
     setState(() => _messages = _chatService.messages);
@@ -151,67 +146,93 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[500], // Grey background for the whole screen
-      appBar: AppBar(
-        title: const Text('SmartDose ChatBot'),
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            color: Colors.grey, // Maintain consistent color
-          ),
-        ),
-      ),
       drawer: Sidebar(
         onNewChat: _startNewChat,
         savedChats: _chatService.savedChats,
         onChatSelected: _selectChat,
         onChatDeleted: _deleteChat,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white, // White background for chat screen
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(40), // Rounded top-left corner
-            topRight: Radius.circular(40), // Rounded top-right corner
-          ),
-        ),
-        margin:
-            const EdgeInsets.only(top: 10), // Adds spacing for rounded effect
-        child: Column(
-          children: [
-            Expanded(
-              child: MessageList(
-                messages: _messages,
+      body: Stack(
+        children: [
+          Container(
+            height: 250,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.buttonColor,
+                  Colors.grey.shade400,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
             ),
-            if (_isTyping) const TypingIndicator(),
-            MessageComposer(
-              onSendMessage: _sendMessage,
-              onImagePicked: _uploadImage,
-              onRecordingStarted: _startRecording,
-              onRecordingStopped: _stopRecording,
-              isGeneratingResponse: _isGeneratingResponse,
-              onStopResponseGeneration: _stopResponseGeneration,
-            ),
-          ],
-        ),
+          ),
+          Column(
+            children: [
+              Container(
+                height: 150,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Builder(
+                      builder: (context) => IconButton(
+                        icon: const Icon(Icons.menu, color: Colors.black),
+                        onPressed: () {
+                          Scaffold.of(context).openDrawer();
+                        },
+                      ),
+                    ),
+                    const Text(
+                      'ChatBot',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.black),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: MessageList(
+                          messages: _messages,
+                        ),
+                      ),
+                      if (_isTyping) const TypingIndicator(),
+                      MessageComposer(
+                        onSendMessage: _sendMessage,
+                        onImagePicked: _uploadImage,
+                        onRecordingStarted: _startRecording,
+                        onRecordingStopped: _stopRecording,
+                        isGeneratingResponse: _isGeneratingResponse,
+                        onStopResponseGeneration: _stopResponseGeneration,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

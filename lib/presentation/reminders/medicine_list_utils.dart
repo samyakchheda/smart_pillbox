@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
@@ -265,167 +266,173 @@ class MedicineList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent, // Make the background transparent
-      body: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(40),
-          topRight: Radius.circular(40),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Color(0xFFE0E0E0), // White background for the whole screen
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+    // Fetch the current user's email from FirebaseAuth.
+    final String currentUserEmail =
+        FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase() ?? '';
+
+    // First, check if there's a caretaker document for the current user's email.
+    return FutureBuilder<QuerySnapshot>(
+      future: firestore
+          .collection('caretakers')
+          .where('email', isEqualTo: currentUserEmail)
+          .get(),
+      builder: (context, caretakerSnapshot) {
+        if (caretakerSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        // If caretaker doc exists, treat this user as a caretaker.
+        if (caretakerSnapshot.hasData &&
+            caretakerSnapshot.data!.docs.isNotEmpty) {
+          final caretakerDoc = caretakerSnapshot.data!.docs.first;
+          final caretakerData = caretakerDoc.data() as Map<String, dynamic>;
+          final String patientEmail = caretakerData['patient'] ?? '';
+          if (patientEmail.isEmpty) {
+            return const Center(
+                child: Text('Patient email not found in caretaker data.'));
+          }
+          // Query the "users" collection for the patient document using patientEmail.
+          return StreamBuilder<QuerySnapshot>(
+            stream: firestore
+                .collection('users')
+                .where('email', isEqualTo: patientEmail.trim().toLowerCase())
+                .snapshots(),
+            builder: (context, patientSnapshot) {
+              if (patientSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!patientSnapshot.hasData ||
+                  patientSnapshot.data!.docs.isEmpty) {
+                return const Center(
+                    child: Text('No medicines found for patient.'));
+              }
+              final patientDoc = patientSnapshot.data!.docs.first;
+              Map<String, dynamic> data =
+                  patientDoc.data() as Map<String, dynamic>;
+              List<dynamic> medicines = data['medicines'] ?? [];
+
+              return buildMedicineList(context, medicines);
+            },
+          );
+        } else {
+          // No caretaker document found – use the normal user's document.
+          return StreamBuilder<DocumentSnapshot>(
+            stream: firestore.collection('users').doc(userId).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data == null) {
+                return const Center(
+                    child: Text('No medicines found. Click "+" to add one.'));
+              }
+              Map<String, dynamic> data =
+                  snapshot.data!.data() as Map<String, dynamic>;
+              List<dynamic> medicines = data['medicines'] ?? [];
+
+              return buildMedicineList(context, medicines);
+            },
+          );
+        }
+      },
+    );
+  }
+
+  Widget buildMedicineList(BuildContext context, List<dynamic> medicines) {
+    if (medicines.isEmpty) {
+      return const Center(
+          child: Text('No medicines found. Click "+" to add one.'));
+    }
+
+    // Ensure selectedDate uses the same timezone by converting to UTC.
+    DateTime selectedDayUtc = DateTime.utc(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
+    String selectedWeekday = DateFormat('EEE').format(selectedDate);
+
+    var filteredMedicines = medicines.where((medicine) {
+      List<String> scheduledDays = List<String>.from(medicine['selectedDays']);
+      DateTime startDate =
+          (medicine['startDate'] as Timestamp).toDate().toLocal();
+      DateTime endDate = (medicine['endDate'] as Timestamp)
+          .toDate()
+          .toLocal()
+          .add(const Duration(hours: 23, minutes: 59, seconds: 59));
+
+      bool isWithinDateRange = (selectedDayUtc.isAfter(startDate) &&
+              selectedDayUtc.isBefore(endDate)) ||
+          selectedDayUtc.isAtSameMomentAs(startDate) ||
+          selectedDayUtc.isAtSameMomentAs(endDate);
+      bool isScheduledOnDay = scheduledDays.contains(selectedWeekday);
+      return isWithinDateRange && isScheduledOnDay;
+    }).toList();
+
+    if (filteredMedicines.isEmpty) {
+      return const Center(child: Text('No medicines scheduled for this day.'));
+    }
+
+    // Sorting based on next medicine time.
+    filteredMedicines.sort((a, b) {
+      List<Timestamp> timesA = List<Timestamp>.from(a['medicineTimes']);
+      List<Timestamp> timesB = List<Timestamp>.from(b['medicineTimes']);
+      DateTime now = DateTime.now().toLocal();
+      DateTime nextTimeA = timesA.map((ts) => ts.toDate().toLocal()).firstWhere(
+          (time) => time.isAfter(now),
+          orElse: () => DateTime(9999));
+      DateTime nextTimeB = timesB.map((ts) => ts.toDate().toLocal()).firstWhere(
+          (time) => time.isAfter(now),
+          orElse: () => DateTime(9999));
+      return nextTimeA.compareTo(nextTimeB);
+    });
+
+    return ListView.builder(
+      itemCount: filteredMedicines.length,
+      itemBuilder: (context, index) {
+        var medicine = filteredMedicines[index];
+        String startDate = formatDate(medicine['startDate']);
+        String endDate = formatDate(medicine['endDate']);
+        return Dismissible(
+          key: Key(medicine['id']),
+          direction: DismissDirection.endToStart,
+          onDismissed: (direction) async {
+            await onDelete(medicine['id']);
+          },
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Confirm Deletion'),
+                content: Text(
+                    'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: const Text('Delete'),
+                  ),
+                ],
               ),
-            ],
+            );
+          },
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(0), // Padding for the content inside
-            child: StreamBuilder<DocumentSnapshot>(
-              stream: firestore.collection('users').doc(userId).snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data == null) {
-                  return const Center(
-                      child: Text('No medicines found. Click "+" to add one.'));
-                }
-
-                var userDoc = snapshot.data;
-                Map<String, dynamic> data =
-                    userDoc?.data() as Map<String, dynamic>;
-                List<dynamic> medicines = data['medicines'] ?? [];
-
-                if (medicines.isEmpty) {
-                  return const Center(
-                      child: Text('No medicines found. Click "+" to add one.'));
-                }
-
-                // Ensure selectedDate uses the same timezone
-                DateTime selectedDayUtc = DateTime.utc(
-                  selectedDate.year,
-                  selectedDate.month,
-                  selectedDate.day,
-                );
-
-                String selectedWeekday =
-                    DateFormat('EEE').format(selectedDate); // "Sat" format
-
-                var filteredMedicines = medicines.where((medicine) {
-                  List<String> scheduledDays =
-                      List<String>.from(medicine['selectedDays']);
-                  // Convert Firestore timestamp to local DateTime and set to end of the day
-                  DateTime startDate =
-                      (medicine['startDate'] as Timestamp).toDate().toLocal();
-                  DateTime endDate = (medicine['endDate'] as Timestamp)
-                      .toDate()
-                      .toLocal()
-                      .add(const Duration(hours: 23, minutes: 59, seconds: 59));
-
-                  // Ensure date comparison matches correct timezone
-                  bool isWithinDateRange = (selectedDayUtc.isAfter(startDate) &&
-                          selectedDayUtc.isBefore(endDate)) ||
-                      selectedDayUtc.isAtSameMomentAs(startDate) ||
-                      selectedDayUtc.isAtSameMomentAs(endDate);
-
-                  bool isScheduledOnDay =
-                      scheduledDays.contains(selectedWeekday);
-
-                  return isWithinDateRange && isScheduledOnDay;
-                }).toList();
-
-                if (filteredMedicines.isEmpty) {
-                  return const Center(
-                      child: Text('No medicines scheduled for this day.'));
-                }
-
-                // Sorting based on next medicine time
-                filteredMedicines.sort((a, b) {
-                  List<Timestamp> timesA =
-                      List<Timestamp>.from(a['medicineTimes']);
-                  List<Timestamp> timesB =
-                      List<Timestamp>.from(b['medicineTimes']);
-
-                  DateTime now =
-                      DateTime.now().toLocal(); // Ensure correct timezone
-
-                  DateTime? nextTimeA = timesA
-                      .map((timestamp) => timestamp.toDate().toLocal())
-                      .firstWhere((time) => time.isAfter(now),
-                          orElse: () => DateTime(9999));
-
-                  DateTime? nextTimeB = timesB
-                      .map((timestamp) => timestamp.toDate().toLocal())
-                      .firstWhere((time) => time.isAfter(now),
-                          orElse: () => DateTime(9999));
-
-                  return nextTimeA.compareTo(nextTimeB);
-                });
-
-                return ListView.builder(
-                  itemCount: filteredMedicines.length,
-                  itemBuilder: (context, index) {
-                    var medicine = filteredMedicines[index];
-                    String startDate = formatDate(medicine['startDate']);
-                    String endDate = formatDate(medicine['endDate']);
-
-                    return Dismissible(
-                      key: Key(medicine['id']),
-                      direction: DismissDirection.endToStart,
-                      onDismissed: (direction) async {
-                        await onDelete(
-                            medicine['id']); // Ensure we pass the correct ID
-                      },
-                      confirmDismiss: (direction) async {
-                        return await showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Confirm Deletion'),
-                            content: Text(
-                                'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(true),
-                                child: const Text('Delete'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      background: Container(
-                        color: Colors.red,
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: const Icon(Icons.delete, color: Colors.white),
-                      ),
-                      child: AnimatedMedicineCard(
-                        medicine: medicine,
-                        startDate: startDate,
-                        endDate: endDate,
-                        onEdit: () => onEdit(medicine),
-                        onDelete: () => onDelete(
-                            medicine['id']), // Ensure correct ID is passed
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+          child: AnimatedMedicineCard(
+            medicine: medicine,
+            startDate: startDate,
+            endDate: endDate,
+            onEdit: () => onEdit(medicine),
+            onDelete: () => onDelete(medicine['id']),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

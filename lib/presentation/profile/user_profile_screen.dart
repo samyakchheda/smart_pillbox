@@ -5,11 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:home/presentation/authentication/password/change_password_screen.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:app_settings/app_settings.dart';
-import 'edit_profile_screen.dart';
 import 'dart:convert';
 
 enum ProfileOption {
@@ -27,6 +25,9 @@ enum ProfileOption {
   buzzer,
   smartDiagnosis,
   connection,
+  logout,
+  deleteAcc,
+  addCareTaker
 }
 
 class UserProfileScreen extends StatefulWidget {
@@ -288,13 +289,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         return _buildPage("Send Feedback");
       case ProfileOption.support:
         return _buildPage("Customer Support");
+      case ProfileOption.logout:
+        return _buildPage("Logout of the account");
+      case ProfileOption.deleteAcc:
+        return _buildPage("Account deleted");
+      case ProfileOption.addCareTaker:
+        return _caretaker();
       default:
         return Column(
           children: [
             _buildGeneralSettings(),
             _buildPreferences(),
+            _buildSmartPillboxSettings(),
             _buildMoreSettings(),
-            _buildSmartPillboxSettings()
           ],
         );
     }
@@ -311,6 +318,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           onTap: () => _onOptionSelected(ProfileOption.changeEmail)),
       _buildListTile(Icons.location_on, "Saved Addresses",
           onTap: () => _onOptionSelected(ProfileOption.savedAddresses)),
+      _buildListTile(Icons.person_add, "Caretaker/Family Member",
+          onTap: () => _onOptionSelected(ProfileOption.addCareTaker)),
     ]);
   }
 
@@ -342,6 +351,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           onTap: () => _onOptionSelected(ProfileOption.feedback)),
       _buildListTile(Icons.support_agent, "Customer Support",
           onTap: () => _onOptionSelected(ProfileOption.support)),
+      _buildListTile(Icons.logout, "Log Out",
+          onTap: () => _onOptionSelected(ProfileOption.logout)),
+      _buildListTile(Icons.delete, "Delete Account",
+          onTap: () => _onOptionSelected(ProfileOption.deleteAcc)),
     ]);
   }
 
@@ -350,7 +363,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return _buildSettingsCard("Smart Pillbox", [
       _buildListTile(Icons.restart_alt, "Reset", onTap: () {}),
       _buildListTile(Icons.volume_up, "Buzzer", onTap: () {}),
-      _buildListTile(FontAwesomeIcons.diagnoses, "Smart Diagnosis",
+      _buildListTile(FontAwesomeIcons.personDotsFromLine, "Smart Diagnosis",
           onTap: () {}),
     ]);
   }
@@ -402,31 +415,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         ),
       ],
     );
-  }
-
-  String _getSelectedOptionTitle() {
-    switch (_selectedOption) {
-      case ProfileOption.editProfile:
-        return "Edit Profile";
-      case ProfileOption.changePassword:
-        return "Change Password";
-      case ProfileOption.changeEmail:
-        return "Change Email";
-      case ProfileOption.savedAddresses:
-        return "Saved Addresses";
-      case ProfileOption.notifications:
-        return "Notification Settings";
-      case ProfileOption.darkMode:
-        return "App Theme";
-      case ProfileOption.about:
-        return "About";
-      case ProfileOption.feedback:
-        return "Send Feedback";
-      case ProfileOption.support:
-        return "Customer Support";
-      default:
-        return "Profile Settings";
-    }
   }
 
   // ListTile for each setting item
@@ -1001,6 +989,196 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _caretaker() {
+    final TextEditingController _emailController = TextEditingController();
+
+    // Add caretaker email and update Firestore.
+    Future<void> _addCaretakerEmail() async {
+      String email = _emailController.text.trim();
+      if (email.isNotEmpty) {
+        User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          // Prevent adding current user's email as caretaker.
+          if (email.toLowerCase() == currentUser.email?.trim().toLowerCase()) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("You cannot add your own email as caretaker."),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+          // Check for duplicate caretaker email.
+          DocumentSnapshot userDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .get();
+          Map<String, dynamic> data =
+              userDoc.data() as Map<String, dynamic>? ?? {};
+          List<dynamic> caretakerEmails = data['caretakers'] ?? [];
+          if (caretakerEmails.contains(email.toLowerCase())) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Caretaker email already added."),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+          // Update current user's "caretakers" array.
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .update({
+            'caretakers': FieldValue.arrayUnion([email.toLowerCase()])
+          });
+          // In the "caretakers" collection, auto-generate a document ID.
+          // Store caretaker email and link it with the patient's (current user's) email.
+          await FirebaseFirestore.instance.collection('caretakers').add({
+            'email': email.toLowerCase(),
+            'patient': currentUser.email?.trim().toLowerCase() ?? '',
+          });
+          _emailController.clear();
+        }
+      }
+    }
+
+    // Remove caretaker email and update Firestore.
+    Future<void> _removeCaretakerEmail(String email) async {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .update({
+          'caretakers': FieldValue.arrayRemove([email.toLowerCase()])
+        });
+        // Query and delete matching caretaker document(s) from the "caretakers" collection.
+        QuerySnapshot query = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: email.toLowerCase())
+            .where('patient',
+                isEqualTo: currentUser.email?.trim().toLowerCase() ?? '')
+            .get();
+        for (var doc in query.docs) {
+          await doc.reference.delete();
+        }
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row with back button and title.
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => setState(() {
+                  _selectedOption = ProfileOption.main;
+                }),
+              ),
+              Text(
+                "Caretakers",
+                style: GoogleFonts.poppins(
+                    fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // New Caretaker Email Field.
+          TextField(
+            controller: _emailController,
+            decoration: const InputDecoration(
+              labelText: "Add Caretaker Email",
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 20),
+          // Add Button.
+          Center(
+            child: ElevatedButton(
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
+              onPressed: () async {
+                await _addCaretakerEmail();
+                setState(() {}); // Refresh UI after addition.
+              },
+              child: Text(
+                "Add Caretaker",
+                style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
+          // Title for the list.
+          Text(
+            "Caretaker Emails:",
+            style:
+                GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          // Fetch and display caretaker emails from current user's document.
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc(FirebaseAuth.instance.currentUser?.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (!snapshot.hasData || snapshot.data?.data() == null) {
+                return Center(
+                  child: Text(
+                    "No caretakers added",
+                    style:
+                        GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                  ),
+                );
+              }
+              Map<String, dynamic> data =
+                  snapshot.data!.data() as Map<String, dynamic>;
+              List<dynamic> caretakerEmails = data['caretakers'] ?? [];
+              if (caretakerEmails.isEmpty) {
+                return Center(
+                  child: Text(
+                    "No caretakers added",
+                    style:
+                        GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
+                  ),
+                );
+              }
+              return Column(
+                children: caretakerEmails.map((email) {
+                  return Card(
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 5),
+                    child: ListTile(
+                      leading: const Icon(Icons.email, color: Colors.blue),
+                      title: Text(email.toString(),
+                          style: GoogleFonts.poppins(fontSize: 16)),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          await _removeCaretakerEmail(email.toString());
+                          setState(() {}); // Refresh UI after deletion.
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

@@ -20,7 +20,7 @@ class IntroScreen2 extends StatelessWidget {
         children: [
           const SizedBox(height: 50),
           Center(
-            child: Lottie.asset("assets/animations/Progress_Tracker.json"),
+            child: Lottie.asset("assets/animations/progress_tracker.json"),
           ),
           const SizedBox(height: 15),
           Text(

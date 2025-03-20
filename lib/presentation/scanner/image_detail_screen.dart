@@ -1,140 +1,81 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:home/ai/services/image_service.dart';
-import 'package:home/presentation/reminders/medicine_form_screen.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
 
 class ImageDetailScreen extends StatefulWidget {
-  final String imagePath;
-  final String thumbnailPath;
-  final Timestamp uploadedAt;
+  final String documentId;
+  final String userId;
 
   const ImageDetailScreen({
     super.key,
-    required this.imagePath,
-    required this.thumbnailPath,
-    required this.uploadedAt,
+    required this.documentId,
+    required this.userId,
   });
 
   @override
-  State<ImageDetailScreen> createState() => _ImageDetailScreenState();
+  _ImageDetailScreenState createState() => _ImageDetailScreenState();
 }
 
 class _ImageDetailScreenState extends State<ImageDetailScreen> {
-  List<String> _medicineNames = [];
-  bool _isLoading = true;
-  final Set<String> _addedMedicines = {};
+  String? imageUrl;
+  Timestamp? uploadedAt;
 
   @override
   void initState() {
     super.initState();
-    _loadMedicineNames();
+    _fetchDocumentDetails();
   }
 
-  Future<void> _loadMedicineNames() async {
-    final imageFile = File(widget.imagePath);
-    final imageService = ImageService();
-    const description =
-        "Extract the medicine names from this prescription image and only list them. Do not include any medicine names that have been cancelled or scratched out with a pen. Only list the active medicines.";
-    String? result =
-        await imageService.processImageWithGemini(imageFile, description);
-    String rawData = result ?? "No medicine names found.";
-    // Parse the medicine names (assuming comma or newline separation)
-    final names = rawData
-        .split(RegExp(r'[\n,]+'))
-        .map((name) => name.trim())
-        .where((name) => name.isNotEmpty)
-        .toList();
-    setState(() {
-      _medicineNames = names;
-      _isLoading = false;
-    });
+  Future<void> _fetchDocumentDetails() async {
+    try {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .collection('scanned_documents')
+          .doc(widget.documentId)
+          .get();
+
+      if (docSnapshot.exists) {
+        setState(() {
+          imageUrl = docSnapshot['cloudinary_url'];
+          uploadedAt = docSnapshot['uploaded_at'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching document details: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate =
-        DateFormat('dd-MM-yyyy').format(widget.uploadedAt.toDate());
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Document Details'),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Display full image
-              Image.file(
-                File(widget.imagePath),
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height * 0.6,
+      appBar: AppBar(title: const Text('Document Details')),
+      body: imageUrl == null
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Image.network(
+                    imageUrl!,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: MediaQuery.of(context).size.height * 0.6,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.error, color: Colors.red, size: 50),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Uploaded on: ${uploadedAt != null ? DateFormat('dd-MM-yyyy').format(uploadedAt!.toDate()) : 'Unknown'}',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Uploaded on: $formattedDate',
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(height: 16),
-              _isLoading
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 8),
-                        Text("Fetching medicines..."),
-                      ],
-                    )
-                  : _medicineNames.isEmpty
-                      ? const Text(
-                          "No medicine names found.",
-                          style: TextStyle(fontSize: 16),
-                        )
-                      : DataTable(
-                          columns: const [
-                            DataColumn(label: Text('Medicine')),
-                            DataColumn(label: Text('Action')),
-                          ],
-                          rows: _medicineNames.map((medicine) {
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(medicine)),
-                                DataCell(
-                                  _addedMedicines.contains(medicine)
-                                      ? const Icon(Icons.check,
-                                          color: Colors.green)
-                                      : ElevatedButton(
-                                          onPressed: () {
-                                            setState(() {
-                                              _addedMedicines.add(medicine);
-                                            });
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    MedicineFormScreen(
-                                                  existingData: {
-                                                    'enteredMedicines': [
-                                                      medicine
-                                                    ]
-                                                  },
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          child: const Text('Add Medicine'),
-                                        ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

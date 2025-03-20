@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home/theme/app_colors.dart';
 
 class Sidebar extends StatelessWidget {
   final VoidCallback onNewChat;
@@ -22,12 +23,19 @@ class Sidebar extends StatelessWidget {
         children: [
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor,
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.buttonColor,
+                  Colors.grey.shade400
+                ], // Replace with your gradient colors
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
             child: const Text(
-              'Smart Pillbox',
+              'SmartDose',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black,
                 fontSize: 24,
               ),
             ),

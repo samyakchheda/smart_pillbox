@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:home/main.dart';
 import '../../../../routes/routes.dart';
 import '../../../../services/auth_service/auth_service.dart';
 import '../../../../theme/app_colors.dart';
@@ -33,7 +35,7 @@ class _SignupFormState extends State<SignupForm> {
     super.dispose();
   }
 
-  void signUpUser() async {
+  Future<void> signUpUser() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -46,10 +48,30 @@ class _SignupFormState extends State<SignupForm> {
     setState(() => _isLoading = false);
 
     if (res == "success") {
-      Navigator.pushReplacementNamed(context, Routes.userinfo);
+      // After successful sign-up, fetch the current user.
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        // Normalize email (trim & lowercase)
+        final normalizedEmail = user.email!.trim().toLowerCase();
+        // Query the caretakers collection for a matching email.
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: normalizedEmail)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          // Email found in caretakers: navigate to caretaker route.
+          Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+        } else {
+          // Otherwise, navigate to the normal user information screen.
+          Navigator.pushReplacementNamed(context, Routes.userinfoscreen);
+        }
+      } else {
+        Navigator.pushReplacementNamed(context, Routes.userinfoscreen);
+      }
     } else {
       mySnackBar(context, res, isError: true);
     }
+    setupFCM();
   }
 
   Future<void> signInWithGoogle() async {
@@ -59,11 +81,25 @@ class _SignupFormState extends State<SignupForm> {
 
     setState(() => _isLoading = false);
 
-    if (user != null) {
-      Navigator.pushReplacementNamed(context, Routes.home);
+    if (user != null && user.email != null) {
+      // Normalize email (trim & lowercase)
+      final normalizedEmail = user.email!.trim().toLowerCase();
+      // Query the caretakers collection for a matching email.
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('caretakers')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        // Email exists in caretakers: navigate to caretaker route.
+        Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+      } else {
+        // Otherwise, navigate to the normal home route.
+        Navigator.pushReplacementNamed(context, Routes.home);
+      }
     } else {
       mySnackBar(context, 'Google Sign-In failed', isError: true);
     }
+    setupFCM();
   }
 
   @override
