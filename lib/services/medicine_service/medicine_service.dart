@@ -55,10 +55,6 @@ Future<void> checkMedicineTimes(
         print("[DEBUG] FCM token from caretaker: $fcmToken");
       }
     }
-    if (fcmToken == null) {
-      print("[DEBUG] No caretaker FCM token found for userId: $userId");
-      return;
-    }
     // --- End of New Logic ---
 
     // Process all medicines
@@ -160,54 +156,58 @@ Future<void> checkMedicineTimes(
         }
       }
 
-      // Second loop: For each scheduled time, wait 1 hour after the scheduled time,
-      // then check if the medicine was taken, and send a notification accordingly.
-      for (var timeStamp in medicineTimes) {
-        DateTime scheduledTime;
-        if (timeStamp is Timestamp) {
-          DateTime medicineTime = timeStamp.toDate();
-          scheduledTime = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-            medicineTime.hour,
-            medicineTime.minute,
-            medicineTime.second,
-            medicineTime.millisecond,
-            medicineTime.microsecond,
-          );
-        } else if (timeStamp is int) {
-          scheduledTime = DateTime.fromMillisecondsSinceEpoch(timeStamp);
-        } else {
-          print(
-              "[DEBUG] Invalid time format for $medicineNamesCombined (ID: $medicineId): $timeStamp");
-          continue;
-        }
+      // Second loop: Check medicine status only if caretaker email (and thus fcmToken) is found.
+      if (fcmToken != null) {
+        for (var timeStamp in medicineTimes) {
+          DateTime scheduledTime;
+          if (timeStamp is Timestamp) {
+            DateTime medicineTime = timeStamp.toDate();
+            scheduledTime = DateTime(
+              startDate.year,
+              startDate.month,
+              startDate.day,
+              medicineTime.hour,
+              medicineTime.minute,
+              medicineTime.second,
+              medicineTime.millisecond,
+              medicineTime.microsecond,
+            );
+          } else if (timeStamp is int) {
+            scheduledTime = DateTime.fromMillisecondsSinceEpoch(timeStamp);
+          } else {
+            print(
+                "[DEBUG] Invalid time format for $medicineNamesCombined (ID: $medicineId): $timeStamp");
+            continue;
+          }
 
-        DateTime checkTime = scheduledTime.add(Duration(minutes: 2));
-        Duration waitTime = checkTime.difference(DateTime.now());
+          DateTime checkTime = scheduledTime.add(Duration(minutes: 2));
+          Duration waitTime = checkTime.difference(DateTime.now());
 
-        if (waitTime.isNegative) {
-          // If we're already past the check time, perform the check immediately.
-          await checkMedicineStatus(
-            medicineId,
-            fcmToken,
-            medicineNamesCombined,
-            taken,
-            scheduledTime,
-          );
-        } else {
-          // Schedule the check to run exactly 1 hour after the scheduled time.
-          Future.delayed(waitTime, () async {
+          if (waitTime.isNegative) {
+            // If we're already past the check time, perform the check immediately.
             await checkMedicineStatus(
               medicineId,
-              fcmToken!,
+              fcmToken,
               medicineNamesCombined,
               taken,
               scheduledTime,
             );
-          });
+          } else {
+            // Schedule the check to run after the remaining wait time.
+            Future.delayed(waitTime, () async {
+              await checkMedicineStatus(
+                medicineId,
+                fcmToken!,
+                medicineNamesCombined,
+                taken,
+                scheduledTime,
+              );
+            });
+          }
         }
+      } else {
+        print(
+            "[DEBUG] Caretaker email not found; skipping medicine status checks for $medicineNamesCombined (ID: $medicineId).");
       }
     }
   } catch (error) {

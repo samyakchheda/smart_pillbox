@@ -264,6 +264,38 @@ class MedicineList extends StatelessWidget {
     required this.onEdit,
   }) : super(key: key);
 
+  // Helper function to get the next scheduled time on the selected date.
+  DateTime getNextScheduledTime(
+      List<Timestamp> times, DateTime selectedDate, DateTime now) {
+    // Map each Timestamp to a DateTime on the selected day.
+    List<DateTime> scheduledTimes = times.map((ts) {
+      final DateTime dt = ts.toDate().toLocal();
+      return DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        dt.hour,
+        dt.minute,
+        dt.second,
+      );
+    }).toList();
+
+    // If the selected date is today, try to pick a time that is still in the future.
+    if (selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day) {
+      List<DateTime> upcoming =
+          scheduledTimes.where((time) => time.isAfter(now)).toList();
+      if (upcoming.isNotEmpty) {
+        upcoming.sort((a, b) => a.compareTo(b));
+        return upcoming.first;
+      }
+    }
+    // Otherwise (or if all times today have passed), return the earliest time of the day.
+    scheduledTimes.sort((a, b) => a.compareTo(b));
+    return scheduledTimes.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     // Fetch the current user's email from FirebaseAuth.
@@ -372,17 +404,15 @@ class MedicineList extends StatelessWidget {
       return const Center(child: Text('No medicines scheduled for this day.'));
     }
 
-    // Sorting based on next medicine time.
+    // Sorting based on next scheduled medicine time for the selected day.
+    DateTime now = DateTime.now().toLocal();
     filteredMedicines.sort((a, b) {
       List<Timestamp> timesA = List<Timestamp>.from(a['medicineTimes']);
       List<Timestamp> timesB = List<Timestamp>.from(b['medicineTimes']);
-      DateTime now = DateTime.now().toLocal();
-      DateTime nextTimeA = timesA.map((ts) => ts.toDate().toLocal()).firstWhere(
-          (time) => time.isAfter(now),
-          orElse: () => DateTime(9999));
-      DateTime nextTimeB = timesB.map((ts) => ts.toDate().toLocal()).firstWhere(
-          (time) => time.isAfter(now),
-          orElse: () => DateTime(9999));
+
+      DateTime nextTimeA = getNextScheduledTime(timesA, selectedDate, now);
+      DateTime nextTimeB = getNextScheduledTime(timesB, selectedDate, now);
+
       return nextTimeA.compareTo(nextTimeB);
     });
 

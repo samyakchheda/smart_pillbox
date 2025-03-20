@@ -998,12 +998,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
     // Add caretaker email and update Firestore.
     Future<void> _addCaretakerEmail() async {
-      String email = _emailController.text.trim();
+      String email = _emailController.text.trim().toLowerCase();
       if (email.isNotEmpty) {
         User? currentUser = FirebaseAuth.instance.currentUser;
         if (currentUser != null) {
           // Prevent adding current user's email as caretaker.
-          if (email.toLowerCase() == currentUser.email?.trim().toLowerCase()) {
+          if (email == currentUser.email?.trim().toLowerCase()) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("You cannot add your own email as caretaker."),
@@ -1012,7 +1012,24 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             );
             return;
           }
-          // Check for duplicate caretaker email.
+
+          // Check if the caretaker email is already registered as a user.
+          QuerySnapshot userQuery = await FirebaseFirestore.instance
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .get();
+          if (userQuery.docs.isNotEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    "Cannot add caretaker: email is already registered as a user."),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
+          // Check for duplicate caretaker email in current user's document.
           DocumentSnapshot userDoc = await FirebaseFirestore.instance
               .collection('users')
               .doc(currentUser.uid)
@@ -1020,7 +1037,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Map<String, dynamic> data =
               userDoc.data() as Map<String, dynamic>? ?? {};
           List<dynamic> caretakerEmails = data['caretakers'] ?? [];
-          if (caretakerEmails.contains(email.toLowerCase())) {
+          if (caretakerEmails.contains(email)) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Caretaker email already added."),
@@ -1029,19 +1046,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             );
             return;
           }
+
           // Update current user's "caretakers" array.
           await FirebaseFirestore.instance
               .collection('users')
               .doc(currentUser.uid)
               .update({
-            'caretakers': FieldValue.arrayUnion([email.toLowerCase()])
+            'caretakers': FieldValue.arrayUnion([email])
           });
+
           // In the "caretakers" collection, auto-generate a document ID.
           // Store caretaker email and link it with the patient's (current user's) email.
           await FirebaseFirestore.instance.collection('caretakers').add({
-            'email': email.toLowerCase(),
+            'email': email,
             'patient': currentUser.email?.trim().toLowerCase() ?? '',
+            'deviceToken': "",
           });
+
           _emailController.clear();
         }
       }

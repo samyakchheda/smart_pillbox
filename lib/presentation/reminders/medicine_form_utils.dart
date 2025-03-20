@@ -4,7 +4,11 @@ import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
-class MedicineNameInput extends StatelessWidget {
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class MedicineNameInput extends StatefulWidget {
   final TextEditingController controller;
   final List<String> enteredMedicines;
   final VoidCallback onAdd;
@@ -19,45 +23,132 @@ class MedicineNameInput extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _MedicineNameInputState createState() => _MedicineNameInputState();
+}
+
+class _MedicineNameInputState extends State<MedicineNameInput> {
+  List<String> suggestions = [];
+  bool isLoading = false;
+
+  // Fetch suggestions from the API based on user input.
+  Future<void> _fetchSuggestions(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        suggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    final url =
+        'https://samyak000-medicine-names.hf.space/api/autocomplete?query=${Uri.encodeComponent(query)}';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> result = json.decode(response.body);
+        if (result.containsKey("suggestions")) {
+          // Extract product_name from each suggestion.
+          setState(() {
+            suggestions = List<String>.from(result["suggestions"]
+                .map((suggestion) => suggestion["product_name"]));
+          });
+        } else {
+          print("Unexpected API response format");
+        }
+      } else {
+        print("Error fetching suggestions: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching suggestions: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _onChanged(String value) {
+    _fetchSuggestions(value);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
-          controller: controller,
-          cursorColor: Colors.black, // Black cursor
+          controller: widget.controller,
+          cursorColor: Colors.black,
           decoration: InputDecoration(
             labelText: 'Medicine Name',
-            floatingLabelBehavior:
-                FloatingLabelBehavior.never, // Label stays in place
+            floatingLabelBehavior: FloatingLabelBehavior.never,
             filled: true,
-            fillColor: Colors.grey[200], // Light grey background
+            fillColor: Colors.grey[200],
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(20), // Rounded borders
-              borderSide: BorderSide.none, // No default border
+              borderRadius: BorderRadius.circular(20),
+              borderSide: BorderSide.none,
             ),
             suffixIcon: IconButton(
               icon: const Icon(Icons.add),
-              onPressed: onAdd,
+              onPressed: () {
+                widget.onAdd();
+                setState(() {
+                  suggestions = [];
+                });
+              },
             ),
           ),
+          onChanged: _onChanged,
         ),
+        if (isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8.0),
+            child: LinearProgressIndicator(),
+          ),
+        if (suggestions.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.only(top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: suggestions.length,
+              itemBuilder: (context, index) {
+                final suggestion = suggestions[index];
+                return ListTile(
+                  title: Text(suggestion),
+                  onTap: () {
+                    widget.controller.text = suggestion;
+                    setState(() {
+                      suggestions = [];
+                    });
+                  },
+                );
+              },
+            ),
+          ),
         const SizedBox(height: 5),
         Wrap(
           spacing: 8.0,
           runSpacing: 4.0,
-          children: enteredMedicines.map((medicineName) {
+          children: widget.enteredMedicines.map((medicineName) {
             return Chip(
               label: Text(
                 medicineName,
-                style: const TextStyle(
-                    color: Colors.black), // Text color for contrast
+                style: const TextStyle(color: Colors.black),
               ),
-              backgroundColor: Colors.grey[200], // Light grey background
+              backgroundColor: Colors.grey[200],
               deleteIcon: const Icon(Icons.close),
-              onDeleted: () => onRemove(medicineName),
+              onDeleted: () => widget.onRemove(medicineName),
             );
           }).toList(),
         ),
