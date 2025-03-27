@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:home/theme/app_colors.dart';
 import '../../services/scanner_service/scanner_service.dart';
 import 'image_detail_screen.dart';
 
@@ -46,9 +47,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _startScanning,
         child: const Icon(Icons.add, size: 30),
+        backgroundColor: AppColors.buttonColor,
+        foregroundColor: Colors.white,
       ),
       appBar: AppBar(
-        title: const Text('Document Scanner'),
+        title: const Text('Prescrtiption Scanner'),
+        backgroundColor: Color(0xFFE0E0E0),
       ),
       body: Column(
         children: [
@@ -77,6 +81,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                           ),
                         ),
                         child: Card(
+                          color: Colors.white,
                           margin: const EdgeInsets.all(8),
                           elevation: 4,
                           child: ListTile(

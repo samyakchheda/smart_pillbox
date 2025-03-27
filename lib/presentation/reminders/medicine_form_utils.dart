@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 class MedicineNameInput extends StatefulWidget {
@@ -1038,6 +1036,23 @@ Map<String, dynamic> createMedicineData(
   const uuid = Uuid();
   String uniqueId = uuid.v4();
 
+  // Parse the start and end dates.
+  DateTime start = DateFormat('dd-MM-yyyy').parse(startDate);
+  DateTime end = DateFormat('dd-MM-yyyy').parse(endDate);
+
+// Initialize the status map.
+  Map<String, String> statusMap = {};
+
+// Loop from start to end (inclusive) and add a key-value pair for each date.
+  for (DateTime date = start;
+      !date.isAfter(end);
+      date = date.add(const Duration(days: 1))) {
+    // Format the date as needed. For example, using 'dd-MM-yyyy'.
+    String formattedDate = DateFormat('dd-MM-yyyy').format(date);
+    // Set a default value. You can change "not taken" to false or any value you need.
+    statusMap[formattedDate] = 'not taken';
+  }
+
   return {
     'id': uniqueId,
     'medicineNames': enteredMedicines,
@@ -1051,6 +1066,7 @@ Map<String, dynamic> createMedicineData(
     'doseFrequency': doseFrequency,
     'medicineTimes': medicineTimes,
     'isActive': isNotification,
+    'status': statusMap,
   };
 }
 

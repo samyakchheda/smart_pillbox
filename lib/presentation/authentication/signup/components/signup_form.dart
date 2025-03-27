@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/main.dart';
+import 'package:home/services/auth_service/email_auth_service.dart';
+import 'package:home/services/auth_service/facebook_auth_service.dart';
+import 'package:home/services/auth_service/google_auth_service.dart';
 import '../../../../routes/routes.dart';
-import '../../../../services/auth_service/auth_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_fonts.dart';
 import '../../../../helpers/validators.dart';
@@ -35,14 +37,15 @@ class _SignupFormState extends State<SignupForm> {
     super.dispose();
   }
 
+  /// Sign up using email and password with caretaker integration.
   Future<void> signUpUser() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    String res = await AuthService().signUpUser(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+    String res = await EmailAuthService().signUp(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
     );
 
     setState(() => _isLoading = false);
@@ -51,18 +54,15 @@ class _SignupFormState extends State<SignupForm> {
       // After successful sign-up, fetch the current user.
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.email != null) {
-        // Normalize email (trim & lowercase)
         final normalizedEmail = user.email!.trim().toLowerCase();
-        // Query the caretakers collection for a matching email.
+        // Check if the email exists in the caretakers collection.
         final querySnapshot = await FirebaseFirestore.instance
             .collection('caretakers')
             .where('email', isEqualTo: normalizedEmail)
             .get();
         if (querySnapshot.docs.isNotEmpty) {
-          // Email found in caretakers: navigate to caretaker route.
           Navigator.pushReplacementNamed(context, Routes.caretakerHome);
         } else {
-          // Otherwise, navigate to the normal user information screen.
           Navigator.pushReplacementNamed(context, Routes.userinfoscreen);
         }
       } else {
@@ -74,30 +74,84 @@ class _SignupFormState extends State<SignupForm> {
     setupFCM();
   }
 
+  /// Google Sign-Up with caretaker integration.
+  /// Google Sign-Up with caretaker integration.
   Future<void> signInWithGoogle() async {
     setState(() => _isLoading = true);
 
-    User? user = await AuthService().signInWithGoogle();
+    // Call GoogleAuthService().loginWithGoogle() which returns a String error or null on success.
+    String? result = await GoogleAuthService().signUpWithGoogle();
 
     setState(() => _isLoading = false);
 
-    if (user != null && user.email != null) {
-      // Normalize email (trim & lowercase)
-      final normalizedEmail = user.email!.trim().toLowerCase();
-      // Query the caretakers collection for a matching email.
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('caretakers')
-          .where('email', isEqualTo: normalizedEmail)
-          .get();
-      if (querySnapshot.docs.isNotEmpty) {
-        // Email exists in caretakers: navigate to caretaker route.
-        Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+    if (result == null) {
+      // Login was successful. Retrieve the current user.
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        final normalizedEmail = user.email!.trim().toLowerCase();
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: normalizedEmail)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+        } else {
+          Navigator.pushReplacementNamed(context, Routes.userinfoscreen);
+        }
       } else {
-        // Otherwise, navigate to the normal home route.
-        Navigator.pushReplacementNamed(context, Routes.home);
+        mySnackBar(context, 'Google Sign-In failed: No user found',
+            isError: true);
       }
     } else {
-      mySnackBar(context, 'Google Sign-In failed', isError: true);
+      // There was an error during Google login.
+      mySnackBar(context, result, isError: true);
+    }
+    setupFCM();
+  }
+
+  /// Facebook Sign-Up with caretaker integration.
+  Future<void> signInWithFacebook() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final fbAuthService = FacebookAuthService();
+      // The Facebook service should return user data or credentials.
+      final userData = await fbAuthService.signInWithFacebook();
+
+      if (userData == null) {
+        setState(() => _isLoading = false);
+        mySnackBar(context, "Facebook sign-in failed. Try again.",
+            isError: true);
+        return;
+      }
+
+      // Authenticate with Firebase using the Facebook access token.
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(
+        FacebookAuthProvider.credential(userData['accessToken']),
+      );
+
+      User? user = userCredential.user;
+      if (user != null && user.email != null) {
+        final normalizedEmail = user.email!.trim().toLowerCase();
+        // Check if the user's email exists in the caretakers collection.
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: normalizedEmail)
+            .get();
+        if (querySnapshot.docs.isNotEmpty) {
+          Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+        } else {
+          Navigator.pushReplacementNamed(context, Routes.userinfoscreen);
+        }
+      } else {
+        mySnackBar(context, "Failed to sign in with Firebase.", isError: true);
+      }
+    } catch (e) {
+      mySnackBar(context, "Facebook sign-in error: ${e.toString()}",
+          isError: true);
+    } finally {
+      setState(() => _isLoading = false);
     }
     setupFCM();
   }
@@ -143,9 +197,7 @@ class _SignupFormState extends State<SignupForm> {
                 validator: Validators.validatePassword,
                 fillColor: AppColors.cardBackground,
                 keyboardType: TextInputType.visiblePassword,
-                autofillHints: const [
-                  AutofillHints.newPassword
-                ], // Correct hint for new passwords
+                autofillHints: const [AutofillHints.newPassword],
               ),
               const SizedBox(height: 20),
               MyTextField(
@@ -158,18 +210,14 @@ class _SignupFormState extends State<SignupForm> {
                     : "Passwords do not match!",
                 fillColor: AppColors.cardBackground,
                 keyboardType: TextInputType.visiblePassword,
-                autofillHints: const [
-                  AutofillHints.newPassword
-                ], // Corrected autofill hint
+                autofillHints: const [AutofillHints.newPassword],
               ),
               const SizedBox(height: 10),
               Row(
                 children: [
                   Checkbox(
                     value: _isChecked,
-                    onChanged: (value) {
-                      setState(() => _isChecked = value!);
-                    },
+                    onChanged: (value) => setState(() => _isChecked = value!),
                   ),
                   Expanded(
                     child: GestureDetector(
@@ -223,9 +271,7 @@ class _SignupFormState extends State<SignupForm> {
               const SizedBox(height: 15),
               MyElevatedButton(
                 text: "Continue With Facebook",
-                onPressed: () async {
-                  AuthService().signInWithFacebook();
-                },
+                onPressed: signInWithFacebook,
                 backgroundColor: Colors.white,
                 textColor: AppColors.kBlackColor,
                 borderRadius: 50,
@@ -251,18 +297,16 @@ class _SignupFormState extends State<SignupForm> {
         text: const TextSpan(
           text: "Already have an account? ",
           style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 15,
-            fontWeight: FontWeight.w400,
-          ),
+              color: AppColors.textSecondary,
+              fontSize: 15,
+              fontWeight: FontWeight.w400),
           children: [
             TextSpan(
               text: "Login",
               style: TextStyle(
-                color: AppColors.buttonColor,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
+                  color: AppColors.buttonColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600),
             ),
           ],
         ),

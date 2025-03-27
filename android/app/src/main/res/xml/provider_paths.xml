@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <files-path name="internal_files" path="." />
-    <files-path name="app_flutter" path="app_flutter/" />
+    <!-- Grant access to files in the cache directory -->
+    <cache-path name="cache" path="." />
+    <!-- If you need external files as well -->
+    <external-path name="external_files" path="."/>
 </paths>

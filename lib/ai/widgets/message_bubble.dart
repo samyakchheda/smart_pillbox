@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:home/theme/app_colors.dart';
 import './../models/chat_message.dart';
 
 class MessageBubble extends StatefulWidget {
@@ -47,8 +48,9 @@ class _MessageBubbleState extends State<MessageBubble> {
         children: [
           if (!widget.message.isUser) ...[
             CircleAvatar(
-              backgroundColor: Colors.green,
-              child: const Text('SP'),
+              backgroundColor: AppColors.buttonColor,
+              child: const Text('SD'),
+              foregroundColor: Colors.white,
             ),
             const SizedBox(width: 10),
           ],
@@ -59,14 +61,14 @@ class _MessageBubbleState extends State<MessageBubble> {
                   : CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.message.isUser ? 'Rishi' : 'Smart Pillbox',
+                  widget.message.isUser ? 'Rishi' : 'SmartDose',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 5),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: widget.message.isUser

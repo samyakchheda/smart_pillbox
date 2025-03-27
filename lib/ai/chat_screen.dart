@@ -35,14 +35,40 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _initServices() async {
     await _chatService.init();
     await _audioService.initialize();
+
+    // Start a new chat first
+    _startNewChat();
+
+    // Optionally wait a moment to ensure the chat is reset
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    // Add the AI info message
+    _sendAiInfoMessage();
+
+    // Update local state
     setState(() {
       _messages = _chatService.messages;
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _sendAiInfoMessage() {
+    // Create an AI info message
+    final aiMessage = ChatMessage(
+      isUser: false,
+      text:
+          "Hello! I'm SmartDose, your health assistant. How can I help you today with your health-related questions?",
+    );
+
+    // If your ChatService provides a method to add a message, use it:
+    // _chatService.addMessage(aiMessage);
+    //
+    // Otherwise, directly add to the messages list:
+    _chatService.messages.add(aiMessage);
+
+    // Update the state so the message is displayed
+    setState(() {
+      _messages = _chatService.messages;
+    });
   }
 
   void _sendMessage({String? text, File? file}) async {
@@ -81,18 +107,20 @@ class _ChatScreenState extends State<ChatScreen> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text("Describe the Image"),
+              title: const Text("Describe the Image"),
               content: TextField(
                 controller: descriptionController,
-                decoration: InputDecoration(hintText: "Enter a description..."),
+                decoration: const InputDecoration(
+                  hintText: "Enter a description...",
+                ),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text("Cancel"),
+                  child: const Text("Cancel"),
                   onPressed: () => Navigator.pop(context, ""),
                 ),
                 TextButton(
-                  child: Text("Submit"),
+                  child: const Text("Submit"),
                   onPressed: () =>
                       Navigator.pop(context, descriptionController.text.trim()),
                 ),

@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:home/main.dart';
+import 'package:home/services/auth_service/email_auth_service.dart';
+import 'package:home/services/auth_service/facebook_auth_service.dart';
+import 'package:home/services/auth_service/google_auth_service.dart';
 import '../../../../routes/routes.dart';
-import '../../../../services/auth_service/auth_service.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_fonts.dart';
 import '../../../../helpers/validators.dart';
@@ -52,9 +54,9 @@ class _LoginFormState extends State<LoginForm> {
       _isLoading = true;
     });
 
-    String res = await AuthService().loginUser(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+    String res = await EmailAuthService().login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
     );
 
     setState(() {
@@ -76,14 +78,11 @@ class _LoginFormState extends State<LoginForm> {
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
-          // If a caretaker document exists, route to the caretaker screen.
           Navigator.pushReplacementNamed(context, Routes.caretakerHome);
         } else {
-          // Otherwise, route to the normal home screen.
           Navigator.pushReplacementNamed(context, Routes.home);
         }
       } else {
-        // Fallback if user data is not available.
         Navigator.pushReplacementNamed(context, Routes.home);
       }
     } else {
@@ -97,14 +96,55 @@ class _LoginFormState extends State<LoginForm> {
       _isLoading = true;
     });
 
-    User? user = await AuthService().signInWithGoogle();
+    // Call loginWithGoogle() and get an error string (or null on success)
+    String? result = await GoogleAuthService().loginWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result == null) {
+      // Success: get the current user from FirebaseAuth
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.email != null) {
+        mySnackBar(context, "Google Sign-In successful!", isError: false);
+
+        final normalizedEmail = user.email!.trim().toLowerCase();
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('caretakers')
+            .where('email', isEqualTo: normalizedEmail)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          Navigator.pushReplacementNamed(context, Routes.caretakerHome);
+        } else {
+          Navigator.pushReplacementNamed(context, Routes.home);
+        }
+      } else {
+        mySnackBar(context, 'Google Sign-In failed: No user found',
+            isError: true);
+      }
+    } else {
+      // There was an error during login
+      mySnackBar(context, result, isError: true);
+    }
+    setupFCM();
+  }
+
+  /// New: Integrated caretaker feature for Facebook login.
+  Future<void> signInWithFacebook() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    User? user = (await FacebookAuthService().signInWithFacebook()) as User?;
 
     setState(() {
       _isLoading = false;
     });
 
     if (user != null && user.email != null) {
-      mySnackBar(context, "Google Sign-In successful!", isError: false);
+      mySnackBar(context, "Facebook Sign-In successful!", isError: false);
 
       final normalizedEmail = user.email!.trim().toLowerCase();
       final querySnapshot = await FirebaseFirestore.instance
@@ -118,7 +158,7 @@ class _LoginFormState extends State<LoginForm> {
         Navigator.pushReplacementNamed(context, Routes.home);
       }
     } else {
-      mySnackBar(context, 'Google Sign-In failed', isError: true);
+      mySnackBar(context, 'Facebook Sign-In failed', isError: true);
     }
     setupFCM();
   }
@@ -129,7 +169,6 @@ class _LoginFormState extends State<LoginForm> {
       padding: const EdgeInsets.all(16.0),
       child: Center(
         child: AutofillGroup(
-          // Improves autofill behavior
           child: Form(
             key: _formKey,
             child: Column(
@@ -152,9 +191,7 @@ class _LoginFormState extends State<LoginForm> {
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.validateEmail,
                   fillColor: AppColors.cardBackground,
-                  autofillHints: const [
-                    AutofillHints.email
-                  ], // Enable email autofill
+                  autofillHints: const [AutofillHints.email],
                 ),
                 const SizedBox(height: 20),
                 MyTextField(
@@ -164,9 +201,7 @@ class _LoginFormState extends State<LoginForm> {
                   isPassword: true,
                   validator: Validators.validatePassword,
                   fillColor: AppColors.cardBackground,
-                  autofillHints: const [
-                    AutofillHints.password
-                  ], // Enable password autofill
+                  autofillHints: const [AutofillHints.password],
                 ),
                 _forgotPasswordText(context),
                 const SizedBox(height: 25),
@@ -198,9 +233,7 @@ class _LoginFormState extends State<LoginForm> {
                 const SizedBox(height: 15),
                 MyElevatedButton(
                   text: "Continue With Facebook",
-                  onPressed: () async {
-                    AuthService().signInWithFacebook();
-                  },
+                  onPressed: signInWithFacebook,
                   backgroundColor: Colors.white,
                   textColor: AppColors.kBlackColor,
                   borderRadius: 50,

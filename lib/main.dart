@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -38,7 +39,7 @@ MapController mapController = MapController(
 
 /// Example function to be called periodically.
 void callMedicineCheck() {
-  const String userId = "PwcfmPlHCSTjzK7bstylA6XrMFH3";
+  const String userId = "FCgtDXc6R5ccomEwxS2IHIYtRI73";
   const bool isNotification = false;
   checkMedicineTimes(userId, isNotification);
 }
@@ -92,6 +93,8 @@ void main() async {
   cron.schedule(Schedule.parse('0 0 * * *'), () {
     callMedicineCheck();
   });
+
+  await dotenv.load(fileName: "assets/.env");
 
   // Wrap the app with BetterFeedback and our custom ShakeFeedbackWrapper.
   runApp(

@@ -26,6 +26,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   final TextEditingController dobController = TextEditingController();
   String? selectedGender;
   String? phoneNumber;
+  String? phoneCountryCode;
 
   // Profile picture variables
   File? _image;
@@ -54,9 +55,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
 
         setState(() {
-          dobController.text = data['dob'] ?? "";
+          dobController.text = data['birthDate'] ?? "";
           selectedGender = data['gender'];
-          phoneNumber = data['contact'];
+          phoneNumber = data['phoneNumber'];
+          phoneCountryCode = data['phoneCountryCode'];
           _photoUrl = data['profile_picture'];
         });
       }
@@ -138,9 +140,10 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         // Save user data to Firestore
         await _firestore.collection('users').doc(user.uid).set({
           'name': nameController.text,
-          'dob': dobController.text,
+          'birthDate': dobController.text,
           'gender': selectedGender,
-          'contact': phoneNumber,
+          'phoneNumber': phoneNumber,
+          'phoneCountryCode': phoneCountryCode,
           'profile_picture': profilePictureUrl,
           'email': user.email, // Store email for reference
         }, SetOptions(merge: true));
@@ -241,7 +244,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.buttonColor,
                         shape: BoxShape.circle,
                       ),
@@ -366,8 +369,13 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         ),
         initialCountryCode: 'IN',
-        initialValue: phoneNumber?.substring(phoneNumber!.length - 10) ?? "",
-        onChanged: (phone) => phoneNumber = phone.completeNumber,
+        initialValue: phoneNumber ?? "",
+        onChanged: (phone) {
+          setState(() {
+            phoneNumber = phone.number;
+            phoneCountryCode = phone.countryCode;
+          });
+        },
       ),
     );
   }

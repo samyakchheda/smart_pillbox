@@ -4,8 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:home/presentation/scanner/ocr_screen.dart';
 import 'package:home/presentation/scanner/scanner_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:timeline_tile/timeline_tile.dart';
+import '../../theme/app_colors.dart';
 import 'medicine_form_screen.dart';
 
 // Utility Functions
@@ -122,13 +125,12 @@ class DateSelector extends StatelessWidget {
             child: Text(
               DateFormat('E, d\'th\' MMM').format(selectedDate),
               style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontSize: 28,
                 color: Colors.black,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: scrollController,
@@ -179,27 +181,31 @@ class DateSelector extends StatelessWidget {
                       width: 50.0,
                       margin: const EdgeInsets.symmetric(horizontal: 2),
                       padding: const EdgeInsets.symmetric(
-                          vertical: 6, horizontal: 12),
+                          vertical: 12, horizontal: 12),
                       decoration: BoxDecoration(
                         color: isSelected ? Colors.white : null,
-                        borderRadius: BorderRadius.circular(15),
+                        borderRadius: BorderRadius.circular(40),
                       ),
                       child: Column(
                         children: [
                           Text(
                             DateFormat('E').format(date)[0],
                             style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: isFutureDate ? Colors.grey : Colors.black,
+                              fontSize: 18,
+                              color:
+                                  isFutureDate ? Colors.black54 : Colors.black,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             DateFormat('d').format(date),
                             style: TextStyle(
+                              fontWeight: isFutureDate
+                                  ? FontWeight.normal
+                                  : FontWeight.bold,
                               fontSize: 14,
-                              color: isFutureDate ? Colors.grey : Colors.black,
+                              color:
+                                  isFutureDate ? Colors.black54 : Colors.black,
                             ),
                           ),
                         ],
@@ -372,7 +378,8 @@ class MedicineList extends StatelessWidget {
   Widget buildMedicineList(BuildContext context, List<dynamic> medicines) {
     if (medicines.isEmpty) {
       return const Center(
-          child: Text('No medicines found. Click "+" to add one.'));
+        child: Text('No medicines found. Click "+" to add one.'),
+      );
     }
 
     // Ensure selectedDate uses the same timezone by converting to UTC.
@@ -382,6 +389,12 @@ class MedicineList extends StatelessWidget {
       selectedDate.day,
     );
     String selectedWeekday = DateFormat('EEE').format(selectedDate);
+
+    // Format the selected date to match how it's stored in Firestore
+    // e.g., "02-04-2025"
+    // ------------------------------------------ // ADDED
+    String selectedDateString = DateFormat('dd-MM-yyyy').format(selectedDate);
+    // ------------------------------------------
 
     var filteredMedicines = medicines.where((medicine) {
       List<String> scheduledDays = List<String>.from(medicine['selectedDays']);
@@ -420,8 +433,27 @@ class MedicineList extends StatelessWidget {
       itemCount: filteredMedicines.length,
       itemBuilder: (context, index) {
         var medicine = filteredMedicines[index];
+
+        // Safely extract daily status for this selectedDateString
+        // ------------------------------------------ // ADDED
+        String dailyStatus = 'not taken'; // default
+        if (medicine['status'] != null && medicine['status'] is Map) {
+          // Example: medicine['status']['02-04-2025'] -> "taken" or "not taken"
+          dailyStatus = medicine['status'][selectedDateString] ?? 'not taken';
+        }
+        // ------------------------------------------
+
         String startDate = formatDate(medicine['startDate']);
         String endDate = formatDate(medicine['endDate']);
+        DateTime nextScheduledTime = getNextScheduledTime(
+          List<Timestamp>.from(medicine['medicineTimes']),
+          selectedDate,
+          now,
+        );
+
+        // Format the scheduled time
+        String time = DateFormat('hh:mm a').format(nextScheduledTime);
+
         return Dismissible(
           key: Key(medicine['id']),
           direction: DismissDirection.endToStart,
@@ -434,7 +466,8 @@ class MedicineList extends StatelessWidget {
               builder: (context) => AlertDialog(
                 title: const Text('Confirm Deletion'),
                 content: Text(
-                    'Are you sure you want to delete ${medicine['medicineNames'].first}?'),
+                  'Are you sure you want to delete ${medicine['medicineNames'].first}?',
+                ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
@@ -449,17 +482,159 @@ class MedicineList extends StatelessWidget {
             );
           },
           background: Container(
-            color: Colors.red,
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: const Icon(Icons.delete, color: Colors.white),
+            margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(50),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.delete,
+              color: Colors.white,
+              size: 40,
+            ),
           ),
-          child: AnimatedMedicineCard(
-            medicine: medicine,
-            startDate: startDate,
-            endDate: endDate,
-            onEdit: () => onEdit(medicine),
-            onDelete: () => onDelete(medicine['id']),
+          child: TimelineTile(
+            alignment: TimelineAlign.manual,
+            lineXY: 0.1,
+            isFirst: index == 0,
+            isLast: index == filteredMedicines.length - 1,
+            indicatorStyle: IndicatorStyle(
+              width: 30,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              // Use the dailyStatus to decide the icon color
+              indicator: dailyStatus == 'taken'
+                  ? const Icon(Icons.check_circle,
+                      color: Colors.green, size: 30)
+                  : const Icon(Icons.remove_circle_outline,
+                      color: Colors.red, size: 30),
+            ),
+            beforeLineStyle: const LineStyle(
+              color: Colors.grey,
+              thickness: 2,
+            ),
+            afterLineStyle: const LineStyle(
+              color: Colors.grey,
+              thickness: 2,
+            ),
+            endChild: GestureDetector(
+              onLongPress: () async {
+                HapticFeedback.vibrate();
+                bool? confirmDelete = await showDialog<bool>(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: AppColors.buttonColor.withOpacity(0.2),
+                          width: 1,
+                        ),
+                      ),
+                      backgroundColor: AppColors.cardBackground,
+                      elevation: 10,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
+                      title: Row(
+                        children: [
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.redAccent,
+                            size: 30,
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Delete Item?',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      content: const Text(
+                        'Do you want to delete this medicine entry? This action cannot be undone.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                          height: 1.5,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      actions: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: AppColors.buttonColor,
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                          ),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.buttonColor,
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                            elevation: 2,
+                          ),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                      actionsPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      actionsAlignment: MainAxisAlignment.spaceBetween,
+                    );
+                  },
+                );
+                if (confirmDelete == true) {
+                  onDelete(medicine['id']);
+                }
+              },
+              child: AnimatedMedicineCard(
+                medicine: medicine,
+                startDate: startDate,
+                endDate: endDate,
+                onEdit: () => onEdit(medicine),
+                onDelete: () => onDelete(medicine['id']),
+              ),
+            ),
           ),
         );
       },
@@ -501,11 +676,11 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
     );
 
     _animation = Tween<Offset>(
-      begin: const Offset(0, 1), // Start from bottom
-      end: const Offset(0, 0), // Move to its position
+      begin: const Offset(0, 1),
+      end: const Offset(0, 0),
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    _controller.forward(); // Start the animation
+    _controller.forward();
   }
 
   @override
@@ -516,137 +691,179 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size using MediaQuery
+    final size = MediaQuery.of(context).size;
+    final double screenWidth = size.width;
+    final double screenHeight = size.height;
+
+    // Responsive scaling factors
+    final double scaleFactor =
+        screenWidth / 375.0; // Based on standard mobile width
+    final double verticalMargin = screenHeight * 0.015; // 1.5% of screen height
+    final double horizontalMargin = screenWidth * 0.04; // 4% of screen width
+    final double paddingScale =
+        scaleFactor.clamp(0.8, 1.5); // Limit scaling range
+
     // Format the times in 12-hour format with AM/PM
     String formattedTimes = DateFormat('hh:mm a').format(
       DateTime.parse(widget.medicine['medicineTimes'][0].toDate().toString()),
     );
-
-    // Split the time and AM/PM parts
     List<String> timeParts = formattedTimes.split(' ');
-    String time = timeParts[0]; // hh:mm
-    String amPm = timeParts[1]; // AM/PM
+    String time = timeParts[0];
+    String amPm = timeParts[1];
 
     return SlideTransition(
       position: _animation,
       child: GestureDetector(
-        onLongPress: () async {
-          // Trigger vibration/haptic feedback
-          HapticFeedback.vibrate();
-          // Show a confirmation dialog on long press
-          bool? confirmDelete = await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Delete Item?'),
-                content:
-                    const Text('Do you want to delete this medicine entry?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Delete'),
-                  ),
-                ],
-              );
-            },
-          );
-          if (confirmDelete == true) {
-            widget.onDelete();
-          }
-        },
         child: Card(
-          color: Colors.white,
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          elevation: 8,
-          shadowColor: Colors.black54,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+          color: AppColors.cardBackground,
+          margin: EdgeInsets.symmetric(
+            vertical: verticalMargin, // Responsive vertical margin
+            horizontal: horizontalMargin, // Responsive horizontal margin
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(16),
-            title: Row(
-              children: [
-                Text(
-                  time,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  amPm,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+          elevation: 8 * scaleFactor, // Scale elevation
+          shadowColor: Colors.black26,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(60 * scaleFactor),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              vertical: 16 * paddingScale,
+              horizontal: 20 * paddingScale,
             ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Divider(color: Colors.black26),
-                const SizedBox(height: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: widget.medicine['medicineNames']
-                          ?.map<Widget>(
-                            (name) => Row(
-                              children: [
-                                const Icon(
-                                  FontAwesomeIcons.pills,
-                                  color: Colors.black87,
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 15, height: 40),
-                                Text(
-                                  name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
+                // Medicine image with responsive size
+                Container(
+                  width: 70 * scaleFactor,
+                  height: 70 * scaleFactor,
+                  decoration: BoxDecoration(
+                    color: AppColors.darkBackground,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.buttonColor,
+                      width: 4 * scaleFactor,
+                    ),
+                  ),
+                  child: Icon(
+                    FontAwesomeIcons.pills,
+                    color: Colors.black87,
+                    size: 36 * scaleFactor,
+                  ),
+                ),
+                SizedBox(width: 20 * scaleFactor),
+                // Medicine details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        widget.medicine['medicineNames']?.isNotEmpty == true
+                            ? widget.medicine['medicineNames'][0]
+                            : 'Unnamed',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20 * scaleFactor,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      SizedBox(height: 6 * scaleFactor),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 18 * scaleFactor,
+                            color: Colors.black87,
+                          ),
+                          SizedBox(width: 6 * scaleFactor),
+                          Text(
+                            '$time $amPm',
+                            style: TextStyle(
+                              fontSize: 16 * scaleFactor,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87,
                             ),
-                          )
-                          ?.toList() ??
-                      [const Text('Unnamed')],
-                ),
-              ],
-            ),
-            trailing: PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert),
-              onSelected: (value) {
-                if (value == 'edit') {
-                  widget.onEdit();
-                } else if (value == 'delete') {
-                  widget.onDelete();
-                }
-              },
-              itemBuilder: (BuildContext context) => [
-                const PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit, color: Colors.black, size: 30),
-                      SizedBox(width: 8),
-                      Text('Edit'),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 6 * scaleFactor),
+                      Text(
+                        widget.medicine['doseFrequency']?.isNotEmpty == true
+                            ? widget.medicine['doseFrequency']
+                            : '',
+                        style: TextStyle(
+                          fontSize: 16 * scaleFactor,
+                          color: Colors.grey[600],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.black, size: 30),
-                      SizedBox(width: 8),
-                      Text('Delete'),
-                    ],
+                // PopupMenuButton
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Colors.black87,
+                    size: 30 * scaleFactor,
                   ),
+                  onSelected: (value) {
+                    if (value == 'edit') {
+                      widget.onEdit();
+                    } else if (value == 'delete') {
+                      widget.onDelete();
+                    }
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12 * scaleFactor),
+                  ),
+                  color: AppColors.cardBackground,
+                  elevation: 4 * scaleFactor,
+                  itemBuilder: (BuildContext context) => [
+                    PopupMenuItem<String>(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.edit,
+                            color: AppColors.buttonColor,
+                            size: 30 * scaleFactor,
+                          ),
+                          SizedBox(width: 12 * scaleFactor),
+                          Text(
+                            'Edit',
+                            style: TextStyle(
+                              fontSize: 18 * scaleFactor,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.delete,
+                            color: Colors.redAccent,
+                            size: 30 * scaleFactor,
+                          ),
+                          SizedBox(width: 12 * scaleFactor),
+                          Text(
+                            'Delete',
+                            style: TextStyle(
+                              fontSize: 18 * scaleFactor,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -657,20 +874,25 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
   }
 }
 
-Widget buildSpeedDial(BuildContext context, String userId) {
+Widget buildSpeedDial(
+    BuildContext context, String userId, ValueNotifier<bool> isOpen) {
   return SpeedDial(
     icon: Icons.add,
     activeIcon: Icons.close,
-    backgroundColor: Color(0xFF4276FD), // Background color remains the same
-    foregroundColor: Colors.white, // Makes the '+' icon white
+    backgroundColor: AppColors.buttonColor,
+    foregroundColor: Colors.white,
+    buttonSize: const Size(60, 60),
+    openCloseDial: isOpen, // Bind the ValueNotifier
+    renderOverlay: false, // Disable default overlay
+    closeDialOnPop: true, // Ensure SpeedDial closes on navigation
     children: [
       SpeedDialChild(
-        child: const Icon(Icons.medical_services), // Ensure white icon
-        backgroundColor: Color(0xFF4276FD),
+        child: const Icon(Icons.medical_services),
+        backgroundColor: const Color(0xFF4276FD),
         foregroundColor: Colors.white,
-        label: 'Add Medicine', labelBackgroundColor: Color(0xFF4276FD),
-        labelStyle: const TextStyle(
-            color: Colors.white, fontSize: 20), // Makes text white
+        label: 'Add Medicine',
+        labelBackgroundColor: const Color(0xFF4276FD),
+        labelStyle: const TextStyle(color: Colors.white, fontSize: 20),
         onTap: () {
           Navigator.push(
             context,
@@ -681,19 +903,71 @@ Widget buildSpeedDial(BuildContext context, String userId) {
         },
       ),
       SpeedDialChild(
-        child:
-            const Icon(Icons.scanner, color: Colors.white), // Ensure white icon
-        backgroundColor: Color(0xFF4276FD),
+        child: const Icon(Icons.qr_code_scanner, color: Colors.white),
+        backgroundColor: const Color(0xFF4276FD),
         foregroundColor: Colors.white,
-        label: 'Scan Document', labelBackgroundColor: Color(0xFF4276FD),
-        labelStyle: const TextStyle(
-            color: Colors.white, fontSize: 18), // Makes text white,
+        label: 'Scanner',
+        labelBackgroundColor: const Color(0xFF4276FD),
+        labelStyle: const TextStyle(color: Colors.white, fontSize: 20),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ScannerScreen(userId: userId),
+          // Show a modal bottom sheet with two additional scanner options
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.white,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.medical_services,
+                          color: Color(0xFF4276FD)),
+                      title: const Text(
+                        'Scan Medicine',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Dismiss bottom sheet
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OCRScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(),
+                    ListTile(
+                      leading: const Icon(Icons.receipt_long,
+                          color: Color(0xFF4276FD)),
+                      title: const Text(
+                        'Scan Prescription',
+                        style: TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // Dismiss bottom sheet
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ScannerScreen(userId: userId),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),

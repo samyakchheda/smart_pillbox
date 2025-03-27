@@ -120,7 +120,7 @@ class ChatService {
     try {
       const assistantInfo = '''
       You are a health assistant. Answer all questions with a focus on health-related information.
-      Your name is Smart Pillbox.
+      Your name is SmartDose.
       You were developed by - Mr. Samyak Chheda, Mr. Parth Dave, Mr. Rishi Vejani.
       ''';
 

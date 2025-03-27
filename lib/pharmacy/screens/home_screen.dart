@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_colors.dart';
 import '../models/pharmacy_model.dart';
@@ -230,7 +229,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search for a pharmacy',
-                        prefixIcon: Icon(Icons.search, color: Colors.blue[800]),
+                        prefixIcon:
+                            Icon(Icons.search, color: AppColors.buttonColor),
                         filled: true,
                         fillColor: Colors.grey[200],
                         border: OutlineInputBorder(
@@ -259,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           final pharmacy = _pharmacies[realIndex];
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.blue[800],
+                              backgroundColor: AppColors.buttonColor,
                               child: const Icon(Icons.local_pharmacy,
                                   color: Colors.white),
                             ),
@@ -273,16 +273,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(FontAwesomeIcons.whatsapp,
-                                      color: Colors.green),
+                                  icon: const Icon(Icons.sms,
+                                      color: AppColors.buttonColor),
                                   onPressed: () =>
-                                      _openMessageScreen(pharmacy, 'WhatsApp'),
-                                ),
-                                IconButton(
-                                  icon:
-                                      const Icon(Icons.sms, color: Colors.blue),
-                                  onPressed: () =>
-                                      _openMessageScreen(pharmacy, 'SMS'),
+                                      _openMessageScreen(pharmacy, 'Share'),
                                 ),
                               ],
                             ),

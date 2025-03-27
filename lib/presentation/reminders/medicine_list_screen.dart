@@ -25,12 +25,16 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   late ScrollController _scrollController;
   int _selectedIndex = 0;
 
+  // Add ValueNotifier to track SpeedDial open/close state
+  late ValueNotifier<bool> _isSpeedDialOpen;
+
   @override
   void initState() {
     super.initState();
     today = DateTime.now();
     selectedDate = today;
     _scrollController = ScrollController();
+    _isSpeedDialOpen = ValueNotifier<bool>(false); // Initialize ValueNotifier
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToDate();
     });
@@ -39,6 +43,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _isSpeedDialOpen.dispose(); // Dispose of the ValueNotifier
     super.dispose();
   }
 
@@ -69,13 +74,13 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
       key: scaffoldMessengerKey,
       body: Stack(
         children: [
-          // Full-Screen Gradient Background
+          // Existing content (background and main UI)
           Container(
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.buttonColor, // Replace with your desired colors
+                  AppColors.buttonColor,
                   Colors.grey.shade400,
                 ],
                 begin: Alignment.topCenter,
@@ -84,12 +89,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             ),
           ),
 
-          // Content with Overlapping White Background
           Column(
             children: [
-              // Header with Gradient (Fixed Height)
               Container(
-                // Fixed height for the header
                 alignment: Alignment.center,
                 child: DateSelector(
                   dateRange: dateRange,
@@ -103,13 +105,11 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                   },
                 ),
               ),
-
-              // Expanded Content Section (Ensures Proper Layout)
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
-                    color: const Color(0xFFE0E0E0), // Soft blending effect
-                    borderRadius: const BorderRadius.only(
+                    color: Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -140,12 +140,39 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               ),
             ],
           ),
+
+          // Custom gradient overlay for SpeedDial
+          ValueListenableBuilder<bool>(
+            valueListenable: _isSpeedDialOpen,
+            builder: (context, value, child) {
+              return AnimatedOpacity(
+                opacity: value ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 150),
+                child: value
+                    ? Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: Alignment.bottomRight,
+                              radius: 2.5,
+                              colors: [
+                                Color(0xFF4276FD).withOpacity(0.4),
+                                Colors.transparent,
+                              ],
+                              stops: const [0.1, 1.0],
+                            ),
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              );
+            },
+          ),
         ],
       ),
       floatingActionButton: Padding(
-        padding:
-            const EdgeInsets.only(bottom: 100, left: 250), // Adjust as needed
-        child: buildSpeedDial(context, userId),
+        padding: const EdgeInsets.only(bottom: 100, left: 250),
+        child: buildSpeedDial(context, userId, _isSpeedDialOpen),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

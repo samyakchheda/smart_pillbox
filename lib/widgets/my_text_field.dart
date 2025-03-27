@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class MyTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
-  final IconData icon;
+  final IconData? icon;
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final List<String>? autofillHints;
@@ -22,7 +22,7 @@ class MyTextField extends StatefulWidget {
     super.key,
     required this.controller,
     required this.hintText,
-    required this.icon,
+    this.icon,
     this.keyboardType = TextInputType.text,
     this.validator,
     this.autofillHints,
