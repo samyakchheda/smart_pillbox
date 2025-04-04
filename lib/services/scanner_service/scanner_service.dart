@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:io';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 
-import '../api/cloudinary_service.dart';
+import '../api_service/cloudinary_service.dart';
 
 class DocumentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

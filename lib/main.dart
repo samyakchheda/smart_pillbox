@@ -8,13 +8,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:home/ai/chat_screen.dart';
-import 'package:home/helpers/functions/permissions_manager.dart'; // Handles notification and alarm permissions
-import 'package:home/pharmacy/services/location_service.dart';
-import 'package:home/pharmacy/services/pharmacy_service.dart';
-import 'package:home/presentation/caretaker/home/home_screen.dart';
-import 'package:home/presentation/home/home_screen.dart';
-import 'package:home/presentation/onboarding/onboarding_screen.dart';
+import 'package:home/screens/ai/chat_screen.dart';
+import 'package:home/helpers/functions/permissions_manager.dart';
+import 'package:home/services/pharmacy_service/location_service.dart';
+import 'package:home/services/pharmacy_service/pharmacy_service.dart';
+import 'package:home/screens/caretaker/home/home_screen.dart';
+import 'package:home/screens/home/home_screen.dart';
+import 'package:home/screens/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:home/routes/routes.dart';
 import 'package:home/services/medicine_service/medicine_service.dart';
@@ -28,6 +28,7 @@ import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -37,11 +38,19 @@ MapController mapController = MapController(
   initPosition: GeoPoint(latitude: 0, longitude: 0),
 );
 
-/// Example function to be called periodically.
-void callMedicineCheck() {
-  const String userId = "FCgtDXc6R5ccomEwxS2IHIYtRI73";
-  const bool isNotification = false;
-  checkMedicineTimes(userId, isNotification);
+void callMedicineCheck() async {
+  // Get the current user
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    String userId = user.uid; // Get UID dynamically
+    bool isNotification = false; //urgentttttttttttttttttttttttttttt
+    debugPrint(userId);
+
+    checkMedicineTimes(userId, isNotification);
+  } else {
+    print("No user is signed in.");
+  }
 }
 
 /// Requests location permission and fetches user location & nearby pharmacies.
@@ -82,6 +91,7 @@ Future<void> _initializeLocationAndPharmacies() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize Gemini with your API key.
@@ -98,9 +108,19 @@ void main() async {
 
   // Wrap the app with BetterFeedback and our custom ShakeFeedbackWrapper.
   runApp(
-    const BetterFeedback(
-      child: ShakeFeedbackWrapper(
-        child: MyApp(),
+    EasyLocalization(
+      supportedLocales: [
+        Locale('en', 'US'),
+        Locale('de', 'DE'),
+        Locale('hi', 'IN'),
+        Locale('hi'),
+      ],
+      path: 'assets/translations', // <-- path to your translation files
+      fallbackLocale: Locale('en', 'US'),
+      child: const BetterFeedback(
+        child: ShakeFeedbackWrapper(
+          child: MyApp(),
+        ),
       ),
     ),
   );
@@ -111,6 +131,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: context.localizationDelegates,
+      supportedLocales: context.supportedLocales,
+      locale: context.locale,
       navigatorKey: navigatorKey,
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.darkBackground,

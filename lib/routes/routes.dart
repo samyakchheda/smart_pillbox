@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:home/presentation/authentication/login/login_screen.dart';
-import 'package:home/presentation/authentication/password/forgot_password_screen.dart';
-import 'package:home/presentation/authentication/signup/signup_screen.dart';
-import 'package:home/presentation/caretaker/home/home_screen.dart';
-import 'package:home/presentation/home/home_screen.dart';
-import 'package:home/presentation/onboarding/onboarding_screen.dart';
-import 'package:home/presentation/profile/profile_setup/profile_completion_screen.dart';
-import 'package:home/presentation/profile/profile_setup/user_info_screen.dart';
-import 'package:home/presentation/profile/user_profile_screen.dart';
-import 'package:home/presentation/splash/splash_screen.dart';
+import 'package:home/screens/authentication/login/login_screen.dart';
+import 'package:home/screens/authentication/password/forgot_password_screen.dart';
+import 'package:home/screens/authentication/signup/signup_screen.dart';
+import 'package:home/screens/caretaker/home/home_screen.dart';
+import 'package:home/screens/home/home_screen.dart';
+import 'package:home/screens/onboarding/onboarding_screen.dart';
+import 'package:home/screens/profile/profile_setup/profile_completion_screen.dart';
+import 'package:home/screens/profile/profile_setup/user_info_screen.dart';
+import 'package:home/screens/profile/user_profile_screen.dart';
+import 'package:home/screens/splash/splash_screen.dart';
 
 class Routes {
   static const String splash = '/';
