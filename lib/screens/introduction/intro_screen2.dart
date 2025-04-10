@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../../theme/app_colors.dart';
@@ -26,14 +27,15 @@ class IntroScreen2 extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           Text(
-            "Stay on Track",
+            "Stay on Track".tr(),
             style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
           ),
           Padding(
             padding: const EdgeInsets.all(25),
             child: Text(
               "Keep your health goals in check by managing your medication schedule. "
-              "Stay organized and never miss a step in your wellness journey.",
+                      "Stay organized and never miss a step in your wellness journey."
+                  .tr(),
               textAlign: TextAlign.center,
               style: AppFonts.bodyText,
             ),

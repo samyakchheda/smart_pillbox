@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
@@ -46,23 +47,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   activeIconColor: Colors.white,
                   inactiveIconColor: Colors.white,
                   animationDuration: const Duration(minutes: 0),
-                  navigationBarButtons: const [
+                  navigationBarButtons: [
                     NavigationBarButton(
                         textColor: Colors.white,
                         icon: FontAwesomeIcons.house,
-                        text: "Home"),
+                        text: "Home".tr()),
                     NavigationBarButton(
                         textColor: Colors.white,
                         icon: FontAwesomeIcons.pills,
-                        text: "Reminders"),
+                        text: "Reminders".tr()),
                     NavigationBarButton(
                         textColor: Colors.white,
                         icon: FontAwesomeIcons.user,
-                        text: "Profile"),
+                        text: "Profile".tr()),
                     NavigationBarButton(
                         textColor: Colors.white,
                         icon: FontAwesomeIcons.shop,
-                        text: "Shop"),
+                        text: "Shop".tr()),
                   ],
                 ),
               ),

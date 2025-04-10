@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart'; // Assuming this exists
@@ -129,7 +130,7 @@ class _OCRScreenState extends State<OCRScreen> {
         medicineDetails["name"] == "Error processing image" ||
         medicineDetails["name"] == "Failed to process image") {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No valid medicine data to add.")),
+        SnackBar(content: Text("No valid medicine data to add.".tr())),
       );
       return;
     }
@@ -137,7 +138,7 @@ class _OCRScreenState extends State<OCRScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please sign in to add medicine.")),
+        SnackBar(content: Text("Please sign in to add medicine.".tr())),
       );
       return;
     }
@@ -153,8 +154,8 @@ class _OCRScreenState extends State<OCRScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Medicine added successfully!"),
+        SnackBar(
+          content: Text("Medicine added successfully!".tr()),
           backgroundColor: Colors.green,
         ),
       );
@@ -222,7 +223,7 @@ class _OCRScreenState extends State<OCRScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Medicine Scanner'),
+          title: Text('Medicine Scanner'.tr()),
         ),
         body: Stack(
           children: [
@@ -287,7 +288,7 @@ class _OCRScreenState extends State<OCRScreen> {
                         size: 40, color: AppColors.buttonColor),
                     const SizedBox(height: 8),
                     Text(
-                      'Capture or Upload an Image',
+                      'Capture or Upload an Image'.tr(),
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
@@ -380,8 +381,8 @@ class _OCRScreenState extends State<OCRScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _addMedicineToFirestore,
-        child: const Text(
-          "Add Medicine",
+        child: Text(
+          "Add Medicine".tr(),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ),

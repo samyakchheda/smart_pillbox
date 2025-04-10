@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -124,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.only(bottom: 20),
                 alignment: Alignment.bottomCenter,
                 child: Text(
-                  'Nearby Pharmacies',
+                  'Nearby Pharmacies'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

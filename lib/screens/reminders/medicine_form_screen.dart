@@ -108,7 +108,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                           ),
                           const SizedBox(width: 16),
                           Text(
-                            'Set Medicine',
+                            'Set Medicine'.tr(),
                             style: TextStyle(
                               color: AppColors.textPrimary,
                               fontSize: 32,
@@ -231,7 +231,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'Pills name',
+                    'Pills name'.tr(),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -249,7 +249,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Amount',
+                'Amount'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -292,9 +292,9 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
               _buildNextButton('Next', () {
                 if (enteredMedicines.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                       content: Text(
-                        "Please add a medicine name.",
+                        "Please add a medicine name.".tr(),
                         style: TextStyle(color: AppColors.textOnPrimary),
                       ),
                       backgroundColor: Colors.red,
@@ -333,7 +333,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Dose Frequency',
+                'Dose Frequency'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -388,7 +388,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
               ),
               const SizedBox(width: 10),
               Text(
-                'Dose Frequency',
+                'Dose Frequency'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -442,7 +442,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Medicine Days',
+                      'Medicine Days'.tr(),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -521,7 +521,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Medicine Times',
+                  'Medicine Times'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -542,9 +542,9 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                     medicineTimes.add(newTime);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
+                      SnackBar(
                         content: Text(
-                          'Maximum number of doses reached',
+                          'Maximum number of doses reached'.tr(),
                           style: TextStyle(color: AppColors.textOnPrimary),
                         ),
                         backgroundColor: Colors.red,
@@ -578,7 +578,8 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
                     if (_startDateController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text('Please select a Start Date first')),
+                            content:
+                                Text('Please select a Start Date first'.tr())),
                       );
                       return;
                     }
@@ -665,9 +666,9 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'User is not authenticated.',
+              'User is not authenticated.'.tr(),
               style: TextStyle(color: AppColors.textOnPrimary),
             ),
             backgroundColor: Colors.red,

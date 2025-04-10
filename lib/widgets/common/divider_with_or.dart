@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart'; // Adjust path to match your project structure
 import 'package:home/theme/app_fonts.dart'; // Adjust path to include AppFonts
@@ -20,7 +21,7 @@ class DividerWithOr extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Text(
-            "Or Continue with",
+            "Or Continue with".tr(),
             style: AppFonts.caption.copyWith(
               color: AppColors.textSecondary, // Theme-aware color
             ),

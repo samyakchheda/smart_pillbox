@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
@@ -519,7 +520,7 @@ class DoseFrequencyButtonForm extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: Text(
-              'Please select a dose frequency',
+              'Please select a dose frequency'.tr(),
               style: TextStyle(
                 color: AppColors.errorColor,
                 fontSize: 14,
@@ -597,7 +598,7 @@ class DoseFrequencySelector extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                "per day",
+                "per day".tr(),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -707,7 +708,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
       ),
       child: AlertDialog(
         title: Text(
-          'Select Time',
+          'Select Time'.tr(),
           style: TextStyle(color: AppColors.textPrimary),
         ),
         content: SizedBox(
@@ -827,8 +828,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child:
-                Text("Cancel", style: TextStyle(color: AppColors.buttonColor)),
+            child: Text("Cancel".tr(),
+                style: TextStyle(color: AppColors.buttonColor)),
           ),
           TextButton(
             onPressed: () {
@@ -842,7 +843,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
               widget.onTimeSelected(Timestamp.fromDate(fixedDateTime));
               Navigator.pop(context);
             },
-            child: Text("OK", style: TextStyle(color: AppColors.buttonColor)),
+            child:
+                Text("OK".tr(), style: TextStyle(color: AppColors.buttonColor)),
           ),
         ],
       ),
@@ -971,7 +973,7 @@ class AlarmNotificationToggle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Alarms',
+          'Alarms'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -1024,7 +1026,7 @@ class AlarmNotificationToggle extends StatelessWidget {
           ),
         ),
         Text(
-          'Notifications',
+          'Notifications'.tr(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,

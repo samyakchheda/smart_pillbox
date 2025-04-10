@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/services/ai_service/image_service.dart';
 import 'package:home/screens/reminders/medicine_form_screen.dart';
@@ -224,7 +225,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Prescription Details'),
+          title: Text('Prescription Details'.tr()),
         ),
         body: imageUrl == null
             ? const Center(child: CircularProgressIndicator())
@@ -298,7 +299,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        "Uploaded on: ${formattedDate}",
+                        "Uploaded on: ${formattedDate}".tr(),
                         style: Theme.of(context).textTheme.titleMedium,
                         textAlign: TextAlign.center,
                       ),
@@ -307,18 +308,18 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: _isLoadingMedicines
-                              ? const Column(
+                              ? Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     CircularProgressIndicator(),
                                     SizedBox(height: 8),
-                                    Text("Fetching medicines..."),
+                                    Text("Fetching medicines...".tr()),
                                   ],
                                 )
                               : _medicineNames.isEmpty
-                                  ? const Center(
+                                  ? Center(
                                       child: Text(
-                                        "No medicine names found.",
+                                        "No medicine names found.".tr(),
                                         style: TextStyle(fontSize: 16),
                                       ),
                                     )
@@ -327,7 +328,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Detected Medicines",
+                                          "Detected Medicines".tr(),
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleLarge,
@@ -386,8 +387,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                                                         },
                                                         icon: const Icon(
                                                             Icons.add),
-                                                        label:
-                                                            const Text('Add'),
+                                                        label: Text('Add'.tr()),
                                                       ),
                                               ],
                                             );

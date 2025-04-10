@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart'; // Assuming this exists
 
@@ -68,7 +69,7 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text("Finding Device"),
+          title: Text("Finding Device".tr()),
         ),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -92,7 +93,7 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
             ),
             const SizedBox(height: 30),
             Text(
-              "Searching for device...",
+              "Searching for device...".tr(),
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 30),
@@ -103,14 +104,14 @@ class _FindingDeviceScreenState extends State<FindingDeviceScreen>
                   onPressed: () {
                     Navigator.pop(context, true);
                   },
-                  child: const Text("Yes, Found"),
+                  child: Text("Yes, Found".tr()),
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton(
                   onPressed: () {
                     // Action when device is not found
                   },
-                  child: const Text("No, Still not found"),
+                  child: Text("No, Still not found".tr()),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../routes/routes.dart';
@@ -42,11 +43,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Routes.login, // Using the route from Routes class
                     );
                   },
-                  child: const Padding(
+                  child: Padding(
                     padding:
                         EdgeInsets.symmetric(vertical: 15.0, horizontal: 25.0),
                     child: Text(
-                      'Skip',
+                      'Skip'.tr(),
                       style: TextStyle(fontSize: 18),
                     ),
                   ),
@@ -60,11 +61,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             Routes.login, // Using the route from Routes class
                           );
                         },
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
                               vertical: 15.0, horizontal: 25.0),
                           child: Text(
-                            'Done',
+                            'Done'.tr(),
                             style: TextStyle(fontSize: 18),
                           ),
                         ),
@@ -75,11 +76,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               duration: const Duration(milliseconds: 500),
                               curve: Curves.easeIn);
                         },
-                        child: const Padding(
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
                               vertical: 15.0, horizontal: 25.0),
                           child: Text(
-                            'Next',
+                            'Next'.tr(),
                             style: TextStyle(fontSize: 18),
                           ),
                         ),

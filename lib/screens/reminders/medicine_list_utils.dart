@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -354,7 +355,7 @@ class MedicineList extends StatelessWidget {
           if (patientEmail.isEmpty) {
             return Center(
               child: Text(
-                'Patient email not found in caretaker data.',
+                'Patient email not found in caretaker data.'.tr(),
                 style: TextStyle(color: AppColors.textPrimary),
               ),
             );
@@ -380,7 +381,7 @@ class MedicineList extends StatelessWidget {
                   patientSnapshot.data!.docs.isEmpty) {
                 return Center(
                   child: Text(
-                    'No medicines found for patient.',
+                    'No medicines found for patient.'.tr(),
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
                 );
@@ -411,7 +412,7 @@ class MedicineList extends StatelessWidget {
               if (!snapshot.hasData || snapshot.data == null) {
                 return Center(
                   child: Text(
-                    'No medicines found. Click "+" to add one.',
+                    'No medicines found. Click "+" to add one.'.tr(),
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
                 );
@@ -432,7 +433,7 @@ class MedicineList extends StatelessWidget {
     if (medicines.isEmpty) {
       return Center(
         child: Text(
-          'No medicines found. Click "+" to add one.',
+          'No medicines found. Click "+" to add one.'.tr(),
           style: TextStyle(color: AppColors.textPrimary),
         ),
       );
@@ -463,7 +464,7 @@ class MedicineList extends StatelessWidget {
     if (filteredMedicines.isEmpty) {
       return Center(
         child: Text(
-          'No medicines scheduled for this day.',
+          'No medicines scheduled for this day.'.tr(),
           style: TextStyle(color: AppColors.textPrimary),
         ),
       );
@@ -512,7 +513,7 @@ class MedicineList extends StatelessWidget {
               builder: (context) => AlertDialog(
                 backgroundColor: AppColors.cardBackground,
                 title: Text(
-                  'Confirm Deletion',
+                  'Confirm Deletion'.tr(),
                   style: TextStyle(color: AppColors.textPrimary),
                 ),
                 content: Text(
@@ -523,14 +524,14 @@ class MedicineList extends StatelessWidget {
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(false),
                     child: Text(
-                      'Cancel',
+                      'Cancel'.tr(),
                       style: TextStyle(color: AppColors.buttonColor),
                     ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(true),
                     child: Text(
-                      'Delete',
+                      'Delete'.tr(),
                       style: TextStyle(color: AppColors.errorColor),
                     ),
                   ),
@@ -608,7 +609,7 @@ class MedicineList extends StatelessWidget {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'Delete Item?',
+                            'Delete Item?'.tr(),
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -618,7 +619,8 @@ class MedicineList extends StatelessWidget {
                         ],
                       ),
                       content: Text(
-                        'Do you want to delete this medicine entry? This action cannot be undone.',
+                        'Do you want to delete this medicine entry? This action cannot be undone.'
+                            .tr(),
                         style: TextStyle(
                           fontSize: 16,
                           color: AppColors.textSecondary,
@@ -641,7 +643,7 @@ class MedicineList extends StatelessWidget {
                                 horizontal: 20, vertical: 10),
                           ),
                           child: Text(
-                            'Cancel',
+                            'Cancel'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -661,8 +663,8 @@ class MedicineList extends StatelessWidget {
                                 horizontal: 20, vertical: 10),
                             elevation: 2,
                           ),
-                          child: const Text(
-                            'Delete',
+                          child: Text(
+                            'Delete'.tr(),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -940,7 +942,7 @@ Widget buildSpeedDial(
         child: const Icon(Icons.medical_services, color: AppColors.kWhiteColor),
         backgroundColor: AppColors.buttonColor,
         foregroundColor: AppColors.buttonText,
-        label: 'Add Medicine',
+        label: 'Add Medicine'.tr(),
         labelBackgroundColor: AppColors.buttonColor,
         labelStyle:
             const TextStyle(color: AppColors.textOnPrimary, fontSize: 20),
@@ -957,7 +959,7 @@ Widget buildSpeedDial(
         child: const Icon(Icons.qr_code_scanner, color: AppColors.kWhiteColor),
         backgroundColor: AppColors.buttonColor,
         foregroundColor: AppColors.buttonText,
-        label: 'Scanner',
+        label: 'Scanner'.tr(),
         labelBackgroundColor: AppColors.buttonColor,
         labelStyle:
             const TextStyle(color: AppColors.textOnPrimary, fontSize: 20),
@@ -978,7 +980,7 @@ Widget buildSpeedDial(
                       leading: Icon(Icons.medical_services,
                           color: AppColors.buttonColor),
                       title: Text(
-                        'Scan Medicine',
+                        'Scan Medicine'.tr(),
                         style: TextStyle(
                           fontSize: 20,
                           color: AppColors.textPrimary,
@@ -999,7 +1001,7 @@ Widget buildSpeedDial(
                       leading: Icon(Icons.receipt_long,
                           color: AppColors.buttonColor),
                       title: Text(
-                        'Scan Prescription',
+                        'Scan Prescription'.tr(),
                         style: TextStyle(
                           fontSize: 20,
                           color: AppColors.textPrimary,

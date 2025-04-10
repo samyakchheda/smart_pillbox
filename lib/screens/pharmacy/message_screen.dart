@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/models/pharmacy_model.dart';
@@ -76,7 +77,7 @@ class _MessageScreenState extends State<MessageScreen> {
   Future<void> _sendMessage() async {
     if (widget.pharmacy.phoneNumber.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Phone number is empty')),
+        SnackBar(content: Text('Phone number is empty'.tr())),
       );
       return;
     }
@@ -84,7 +85,7 @@ class _MessageScreenState extends State<MessageScreen> {
     final String messageText = _messageController.text;
     if (messageText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a message')),
+        SnackBar(content: Text('Please enter a message'.tr())),
       );
       return;
     }
@@ -113,7 +114,7 @@ class _MessageScreenState extends State<MessageScreen> {
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message sent successfully')),
+        SnackBar(content: Text('Message sent successfully'.tr())),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +168,7 @@ class _MessageScreenState extends State<MessageScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Compose your message:',
+                  'Compose your message:'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -194,7 +195,7 @@ class _MessageScreenState extends State<MessageScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Scanned Documents:',
+                  'Scanned Documents:'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -219,7 +220,7 @@ class _MessageScreenState extends State<MessageScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         child: Center(
                           child: Text(
-                            'No scanned documents.',
+                            'No scanned documents.'.tr(),
                             style: GoogleFonts.poppins(),
                           ),
                         ),

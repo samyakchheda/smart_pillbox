@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import '../../../theme/app_colors.dart';
@@ -26,14 +27,15 @@ class IntroScreen3 extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           Text(
-            "Gentle Reminders",
+            "Gentle Reminders".tr(),
             style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
           ),
           Padding(
             padding: const EdgeInsets.all(25),
             child: Text(
               "Receive gentle reminders when it's time to take your medicine. "
-              "Let us help you stay consistent, ensuring you never forget a dose.",
+                      "Let us help you stay consistent, ensuring you never forget a dose."
+                  .tr(),
               textAlign: TextAlign.center,
               style: AppFonts.bodyText,
             ),

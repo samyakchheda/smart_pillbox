@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/screens/pharmacy/home_screen.dart';
 import 'package:home/main.dart';
@@ -53,7 +54,7 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
                 const SizedBox(height: 20),
                 // Optional loading text
                 Text(
-                  'Fetching Pharmacy Data...',
+                  'Fetching Pharmacy Data...'.tr(),
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColors.textPrimary,

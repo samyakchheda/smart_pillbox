@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import 'package:url_launcher/url_launcher.dart';
@@ -26,7 +27,7 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Could not open email app',
+            'Could not open email app'.tr(),
             style: TextStyle(color: AppColors.textOnPrimary),
           ),
           backgroundColor: AppColors.cardBackground,
@@ -95,7 +96,7 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          title: const Text("Report an Issue"),
+          title: Text("Report an Issue".tr()),
         ),
         body: Stack(
           children: [
@@ -131,7 +132,7 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Describe Your Issue",
+                        "Describe Your Issue".tr(),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 12),
@@ -152,8 +153,8 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
                       Center(
                         child: ElevatedButton(
                           onPressed: _sendEmail,
-                          child: const Text(
-                            "Send Issue",
+                          child: Text(
+                            "Send Issue".tr(),
                             style: TextStyle(fontSize: 16),
                           ),
                         ),

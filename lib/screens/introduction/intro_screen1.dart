@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -27,14 +28,15 @@ class IntroScreen1 extends StatelessWidget {
           ),
           const SizedBox(height: 15),
           Text(
-            "Wellness Path",
+            "Wellness Path".tr(),
             style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
           ),
           Padding(
             padding: const EdgeInsets.all(25),
             child: Text(
               "Begin your path to better health by managing your medications effortlessly. "
-              "Stay organized, and embrace a healthier lifestyle from day one.",
+                      "Stay organized, and embrace a healthier lifestyle from day one."
+                  .tr(),
               textAlign: TextAlign.center,
               style: AppFonts.bodyText,
             ),

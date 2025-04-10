@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import '../../services/scanner_service/scanner_service.dart';
@@ -85,7 +86,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
           child: const Icon(Icons.add, size: 30),
         ),
         appBar: AppBar(
-          title: const Text('Prescription Scanner'),
+          title: Text('Prescription Scanner'.tr()),
         ),
         body: Column(
           children: [
@@ -93,7 +94,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
               child: _scannedDocuments.isEmpty
                   ? Center(
                       child: Text(
-                        'No documents scanned yet.',
+                        'No documents scanned yet.'.tr(),
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     )

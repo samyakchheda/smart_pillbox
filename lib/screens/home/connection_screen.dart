@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -44,7 +45,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Location permission is required to scan Wi-Fi networks.',
+              'Location permission is required to scan Wi-Fi networks.'.tr(),
               style: TextStyle(color: AppColors.textOnPrimary),
             ),
             backgroundColor: AppColors.cardBackground,
@@ -111,11 +112,11 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
         return AlertDialog(
           backgroundColor: AppColors.cardBackground,
           title: Text(
-            'Provisioning',
+            'Provisioning'.tr(),
             style: TextStyle(color: AppColors.textPrimary),
           ),
           content: Text(
-            'Provisioning started. Please wait...',
+            'Provisioning started. Please wait...'.tr(),
             style: TextStyle(color: AppColors.textPrimary),
           ),
           actions: <Widget>[
@@ -125,7 +126,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                 foregroundColor: AppColors.buttonColor,
               ),
               child: Text(
-                'Stop',
+                'Stop'.tr(),
                 style: TextStyle(color: AppColors.buttonColor),
               ),
             ),
@@ -152,7 +153,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
         return AlertDialog(
           backgroundColor: AppColors.cardBackground,
           title: Text(
-            'Device provisioned',
+            'Device provisioned'.tr(),
             style: TextStyle(color: AppColors.textPrimary),
           ),
           content: Column(
@@ -164,7 +165,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
               ),
               SizedBox.fromSize(size: Size.fromHeight(20)),
               Text(
-                'Device:',
+                'Device:'.tr(),
                 style: TextStyle(color: AppColors.textPrimary),
               ),
               Text(
@@ -184,7 +185,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                 foregroundColor: AppColors.buttonColor,
               ),
               child: Text(
-                'OK',
+                'OK'.tr(),
                 style: TextStyle(color: AppColors.buttonColor),
               ),
             ),
@@ -280,7 +281,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Wi-Fi Scanner'),
+          title: Text('Wi-Fi Scanner'.tr()),
         ),
         body: Center(
           child: _isWifiEnabled
@@ -348,7 +349,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
                                       child: Text(
-                                        'Cancel',
+                                        'Cancel'.tr(),
                                         style: TextStyle(
                                           color: AppColors.buttonColor,
                                         ),
@@ -363,7 +364,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                                             wifi.ssid ?? '', password);
                                       },
                                       child: Text(
-                                        'Connect',
+                                        'Connect'.tr(),
                                         style: TextStyle(
                                           color: AppColors.buttonColor,
                                         ),
@@ -383,7 +384,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Please enable Wi-Fi to continue',
+                      'Please enable Wi-Fi to continue'.tr(),
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge
@@ -395,7 +396,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                         WiFiForIoTPlugin.setEnabled(true,
                             shouldOpenSettings: true);
                       },
-                      child: const Text('Enable Wi-Fi'),
+                      child: Text('Enable Wi-Fi'.tr()),
                     ),
                   ],
                 ),

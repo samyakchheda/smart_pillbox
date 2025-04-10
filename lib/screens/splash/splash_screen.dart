@@ -1,4 +1,5 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../routes/routes.dart';
 import '../../theme/app_colors.dart';
@@ -31,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: AnimatedTextKit(
           animatedTexts: [
             TyperAnimatedText(
-              "SmartDose",
+              "SmartDose".tr(),
               textStyle: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
