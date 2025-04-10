@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:ui'; // For Glassmorphism effect
 
 class SendIssueScreen extends StatefulWidget {
-  const SendIssueScreen({Key? key}) : super(key: key);
+  const SendIssueScreen({super.key});
 
   @override
   _SendIssueScreenState createState() => _SendIssueScreenState();
@@ -14,7 +13,7 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
   final TextEditingController _issueController = TextEditingController();
 
   void _sendEmail() async {
-    final String email = "smartdose.care@gmail.com";
+    const String email = "smartdose.care@gmail.com";
     final String subject =
         Uri.encodeComponent("User Issue Report - SmartPillbox");
     final String body = Uri.encodeComponent(_issueController.text);
@@ -25,111 +24,147 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
       await launchUrl(emailUri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open email app')),
+        SnackBar(
+          content: Text(
+            'Could not open email app',
+            style: TextStyle(color: AppColors.textOnPrimary),
+          ),
+          backgroundColor: AppColors.cardBackground,
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true, // Extends background behind AppBar
-      appBar: AppBar(
-        title: const Text("Report an Issue"),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Stack(
-        children: [
-          // Gradient Background
-          Container(
-            decoration: const BoxDecoration(color: const Color(0xFFE0E0E0)),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: isDarkMode ? AppColors.textOnPrimary : AppColors.textPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-
-          // Glassmorphism Card
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white, // Changed to solid white
-                  borderRadius: BorderRadius.circular(20),
-                  border:
-                      Border.all(color: Colors.grey.shade300), // Subtle border
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1), // Light shadow
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Describe Your Issue",
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.black, // Changed to black
+        ),
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+          ),
+          titleLarge: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: isDarkMode
+              ? AppColors.cardBackground.withOpacity(0.3)
+              : AppColors.cardBackground.withOpacity(0.1),
+          contentPadding: const EdgeInsets.all(12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.buttonColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: AppColors.borderColor),
+          ),
+          hintStyle: TextStyle(color: AppColors.textPlaceholder),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.buttonColor,
+            foregroundColor: AppColors.buttonText,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          ),
+        ),
+      ),
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          title: const Text("Report an Issue"),
+        ),
+        body: Stack(
+          children: [
+            // Background
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.background,
+              ),
+            ),
+            // Glassmorphism Card
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? AppColors.cardBackground.withOpacity(0.7)
+                        : AppColors.cardBackground.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.borderColor),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.textSecondary.withOpacity(0.1),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Input Field
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100, // Light grey background
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Describe Your Issue",
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                      child: TextField(
+                      const SizedBox(height: 12),
+                      // Input Field
+                      TextField(
                         controller: _issueController,
                         maxLines: 5,
-                        style: const TextStyle(
-                            color: Colors.black), // Changed to black
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.all(12),
-                          border: InputBorder.none,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                        ),
+                        decoration: InputDecoration(
                           hintText: "Enter your issue here...",
-                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Send Button
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: _sendEmail,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              AppColors.buttonColor, // Primary color
-                          foregroundColor: Colors.white, // Text color
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 14),
-                        ),
-                        child: const Text(
-                          "Send Issue",
-                          style: TextStyle(
-                            fontSize: 16,
+                      const SizedBox(height: 20),
+                      // Send Button
+                      Center(
+                        child: ElevatedButton(
+                          onPressed: _sendEmail,
+                          child: const Text(
+                            "Send Issue",
+                            style: TextStyle(fontSize: 16),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

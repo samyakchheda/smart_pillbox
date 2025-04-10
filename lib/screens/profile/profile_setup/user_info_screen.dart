@@ -14,6 +14,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
+import '../../../widgets/common/my_text_field.dart';
+
 class UserInfoScreen extends StatefulWidget {
   const UserInfoScreen({super.key});
 
@@ -162,21 +164,23 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Choose Photo Source"),
+          title: Text("Choose Photo Source", style: AppFonts.headline),
+          backgroundColor: AppColors.cardBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("Gallery"),
+                leading:
+                    Icon(Icons.photo_library, color: AppColors.textPrimary),
+                title: Text("Gallery", style: AppFonts.bodyText),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Camera"),
+                leading: Icon(Icons.camera_alt, color: AppColors.textPrimary),
+                title: Text("Camera", style: AppFonts.bodyText),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -192,10 +196,11 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: AppColors.background, // Theme-aware background
       appBar: AppBar(
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: AppColors.background,
         elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -211,8 +216,9 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                   children: [
                     TextSpan(
                       text: "yourself",
-                      style: AppFonts.headline
-                          .copyWith(color: AppColors.iconPrimary),
+                      style: AppFonts.headline.copyWith(
+                        color: AppColors.buttonColor,
+                      ),
                     ),
                   ],
                 ),
@@ -228,15 +234,15 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     onTap: _showImageSourceDialog,
                     child: CircleAvatar(
                       radius: 60,
-                      backgroundColor: AppColors.lightBackground,
+                      backgroundColor: AppColors.cardBackground,
                       backgroundImage: _image != null
                           ? FileImage(_image!) as ImageProvider
                           : (_photoUrl != null
                               ? NetworkImage(_photoUrl!) as ImageProvider
                               : null),
                       child: (_image == null && _photoUrl == null)
-                          ? const Icon(Icons.person,
-                              size: 60, color: AppColors.darkBackground)
+                          ? Icon(Icons.person,
+                              size: 60, color: AppColors.textSecondary)
                           : null,
                     ),
                   ),
@@ -244,7 +250,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     bottom: 0,
                     right: 0,
                     child: Container(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.buttonColor,
                         shape: BoxShape.circle,
                       ),
@@ -261,21 +267,20 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             const SizedBox(height: 30),
 
             // Full Name
-            _buildInputField(
-              label: "Full Name",
-              hint: "Enter your full name",
+            MyTextField(
               controller: nameController,
+              hintText: "Enter your full name",
               keyboardType: TextInputType.name,
+              fillColor: AppColors.cardBackground,
             ),
-
+            const SizedBox(height: 15),
             // Date of Birth
-            _buildInputField(
-              label: "Date of Birth",
-              hint: "Select your DOB",
+            MyTextField(
               controller: dobController,
-              readOnly: true,
-              suffixIcon: const Icon(Icons.calendar_today,
-                  color: AppColors.textSecondary),
+              hintText: "Select your DOB",
+              // readOnly: true,
+              fillColor: AppColors.cardBackground,
+              icon: Icons.calendar_today,
               onTap: _selectDOB,
             ),
 
@@ -291,48 +296,19 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Align(
               alignment: Alignment.center,
               child: _isUploading
-                  ? const CircularProgressIndicator(
-                      color: AppColors.buttonColor)
+                  ? CircularProgressIndicator(color: AppColors.buttonColor)
                   : MyElevatedButton(
-                      onPressed: _saveUserData,
                       text: 'Save & Continue',
+                      onPressed: _saveUserData,
                       backgroundColor: AppColors.buttonColor,
-                      textStyle: AppFonts.buttonText,
+                      height: 50,
                       borderRadius: 50,
+                      textStyle: AppFonts.buttonText
+                          .copyWith(color: AppColors.textOnPrimary),
                     ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    TextInputType? keyboardType,
-    bool readOnly = false,
-    VoidCallback? onTap,
-    Widget? suffixIcon,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        readOnly: readOnly,
-        onTap: onTap,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          suffixIcon: suffixIcon,
-          labelStyle: AppFonts.caption.copyWith(color: AppColors.textSecondary),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        ),
-        style: AppFonts.bodyText,
       ),
     );
   }
@@ -344,16 +320,29 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         value: selectedGender,
         onChanged: (value) => setState(() => selectedGender = value),
         items: ["Male", "Female", "Prefer not to say"]
-            .map((gender) =>
-                DropdownMenuItem(value: gender, child: Text(gender)))
+            .map((gender) => DropdownMenuItem(
+                  value: gender,
+                  child: Text(gender, style: AppFonts.bodyText),
+                ))
             .toList(),
         decoration: InputDecoration(
           labelText: "Gender",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
+          filled: true,
+          fillColor: AppColors.cardBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.buttonColor),
+          ),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          labelStyle: AppFonts.caption.copyWith(color: AppColors.textSecondary),
         ),
-        style: AppFonts.bodyText,
+        dropdownColor: AppColors.cardBackground,
+        style: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
       ),
     );
   }
@@ -364,9 +353,19 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       child: IntlPhoneField(
         decoration: InputDecoration(
           labelText: "Contact Number",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
+          filled: true,
+          fillColor: AppColors.cardBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.buttonColor),
+          ),
           contentPadding:
               const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          labelStyle: AppFonts.caption.copyWith(color: AppColors.textSecondary),
         ),
         initialCountryCode: 'IN',
         initialValue: phoneNumber ?? "",
@@ -376,6 +375,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             phoneCountryCode = phone.countryCode;
           });
         },
+        style: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
       ),
     );
   }

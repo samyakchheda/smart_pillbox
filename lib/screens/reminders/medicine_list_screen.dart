@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,13 +60,15 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     List<DateTime> dateRange = generateDateRange(today);
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
-          child: Text('User not authenticated'),
+          child: Text('User is not authenticated'.tr()),
         ),
       );
     }
@@ -79,10 +82,15 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppColors.buttonColor,
-                  Colors.grey.shade400,
-                ],
+                colors: isDarkMode
+                    ? [
+                        AppColors.buttonColor.withOpacity(0.8), // Darkened blue
+                        AppColors.darkBackground.withOpacity(0.9), // Dark gray
+                      ]
+                    : [
+                        AppColors.buttonColor, // Light mode blue
+                        Colors.grey.shade400, // Light mode gray
+                      ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -107,9 +115,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               ),
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -121,7 +129,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                     onDelete: (medicineId) async {
                       await deleteMedicine(_firestore, userId, medicineId);
                       scaffoldMessengerKey.currentState?.showSnackBar(
-                        const SnackBar(content: Text('Medicine deleted.')),
+                        SnackBar(content: Text('Medicine deleted.'.tr())),
                       );
                       await AlarmScheduler.cancelAlarm(medicineId);
                     },

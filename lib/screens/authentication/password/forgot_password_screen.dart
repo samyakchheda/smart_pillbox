@@ -51,59 +51,92 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: AppColors.background, // Adaptive background
       appBar: AppBar(
-        backgroundColor: AppColors.darkBackground,
+        backgroundColor: AppColors.background, // Matches scaffold
+        elevation: 0, // Flat design for modern look
         centerTitle: true,
-        title: const Text('Forgot Password', style: AppFonts.headline),
-        iconTheme: const IconThemeData(color: AppColors.kBlackColor),
+        title: Text(
+          'Forgot Password',
+          style: AppFonts.headline.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 24,
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppColors.buttonColor, size: 28),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Enter your registered email, and we will send a password reset link:',
-                  style:
-                      AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 30),
-                MyTextField(
-                  controller: _emailController,
-                  hintText: 'Enter your email',
-                  icon: Icons.email,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.validateEmail,
-                  fillColor: AppColors.cardBackground,
-                ),
-                const SizedBox(height: 40),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : MyElevatedButton(
-                        text: 'Send Reset Email',
-                        onPressed: _resetPassword,
-                        backgroundColor: AppColors.buttonColor,
-                        textColor: AppColors.buttonText,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        borderRadius: 50,
-                      ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Sign In',
-                    style: AppFonts.buttonText
-                        .copyWith(color: AppColors.buttonColor),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Enter your registered email, and we will send a password reset link:',
+                    style: AppFonts.bodyText.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 32),
+                  MyTextField(
+                    controller: _emailController,
+                    hintText: 'Enter your email',
+                    icon: Icons.email,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: Validators.validateEmail,
+                    fillColor: AppColors.cardBackground,
+                    hintStyle: AppFonts.bodyText.copyWith(
+                      color: AppColors.textSecondary.withOpacity(0.6),
+                    ),
+                    textStyle: AppFonts.bodyText.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                    iconColor: AppColors.buttonColor,
+                    borderRadius: 12,
+                  ),
+                  const SizedBox(height: 48),
+                  _isLoading
+                      ? CircularProgressIndicator(
+                          color: AppColors.buttonColor,
+                        )
+                      : MyElevatedButton(
+                          text: 'Send Reset Email',
+                          onPressed: _resetPassword,
+                          backgroundColor: AppColors.buttonColor,
+                          textColor: AppColors.buttonText,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 18, horizontal: 24),
+                          borderRadius: 50,
+                          textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+                          height: 60,
+                          icon: const Icon(Icons.mail, size: 20),
+                          iconSpacing: 12.0,
+                        ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Sign In',
+                      style: AppFonts.buttonText.copyWith(
+                        color: AppColors.buttonColor,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

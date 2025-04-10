@@ -1,14 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cube/flutter_cube.dart' as cube;
-import 'package:google_fonts/google_fonts.dart';
 import 'package:home/screens/home/connection_screen.dart';
 import 'package:home/screens/home/find_device.dart';
 import 'package:home/screens/home/issue.dart';
 import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_fonts.dart';
 
 class AutoRotateCubeWithFuture extends StatefulWidget {
-  const AutoRotateCubeWithFuture({Key? key}) : super(key: key);
+  const AutoRotateCubeWithFuture({super.key});
 
   @override
   State<AutoRotateCubeWithFuture> createState() =>
@@ -19,7 +19,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
     with SingleTickerProviderStateMixin {
   Object? _model;
 
-  // Sample device details (Replace with real data)
   String deviceName = "Smart Pillbox";
   int batteryLevel = 80;
   String connectivityStatus = "Connected";
@@ -34,19 +33,16 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
   @override
   void initState() {
     super.initState();
-    // Create the controller for all animations.
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // Header Animation: Fades and scales in
     _headerAnimation = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
     );
 
-    // Cube Card Animation: Slide from left & fade in
     _cubeSlideAnimation = Tween<Offset>(
       begin: const Offset(-0.5, 0),
       end: Offset.zero,
@@ -66,7 +62,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
       ),
     );
 
-    // Grid Animation: Slide from bottom & fade in
     _gridSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
@@ -86,7 +81,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
       ),
     );
 
-    // Start the animations
     _controller.forward();
   }
 
@@ -98,27 +92,32 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Full-Screen Gradient Background
           Container(
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  AppColors.buttonColor,
-                  Colors.grey.shade400,
-                ],
+                colors: isDarkMode
+                    ? [
+                        AppColors.buttonColor.withOpacity(0.8),
+                        AppColors.darkBackground.withOpacity(0.9),
+                      ]
+                    : [
+                        AppColors.buttonColor,
+                        AppColors.lightBackground.withOpacity(0.7),
+                      ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
-          // Content with Overlapping White Background
           Column(
             children: [
-              // Animated Header with Gradient (Fixed Height)
               FadeTransition(
                 opacity: _headerAnimation,
                 child: ScaleTransition(
@@ -129,21 +128,19 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
                       'SmartDose'.tr(),
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.headline.copyWith(
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.textOnPrimary,
                       ),
                     ),
                   ),
                 ),
               ),
-              // Expanded Content Section
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -151,7 +148,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        // Animated cube card
                         SlideTransition(
                           position: _cubeSlideAnimation,
                           child: FadeTransition(
@@ -174,7 +170,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                             ),
                           ),
                         ),
-                        // Animated grid for device controls
                         SlideTransition(
                           position: _gridSlideAnimation,
                           child: FadeTransition(
@@ -206,7 +201,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                                         context,
                                         MaterialPageRoute(
                                             builder: (context) =>
-                                                FindingDeviceScreen()));
+                                                const FindingDeviceScreen()));
                                   }),
                                   GestureDetector(
                                     onTap: () {
@@ -214,7 +209,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  SendIssueScreen()));
+                                                  const SendIssueScreen()));
                                     },
                                     child: _buildIssueCard(),
                                   ),
@@ -225,25 +220,72 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                         ),
                         ElevatedButton(
                           onPressed: () {
-                            // Switch to German
-                            context.setLocale(Locale('de', 'DE'));
+                            context.setLocale(const Locale('gu', 'IN'));
                           },
-                          child: Text('Switch to German'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColor,
+                            foregroundColor: AppColors.buttonText,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            'Switch to Gujarati',
+                            style: AppFonts.buttonText
+                                .copyWith(color: AppColors.buttonText),
+                          ),
                         ),
+                        const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () {
-                            // Switch to German
-                            context.setLocale(Locale('en', 'US'));
+                            context.setLocale(const Locale('en', 'US'));
                           },
-                          child: Text('Switch to English'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColor,
+                            foregroundColor: AppColors.buttonText,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            'Switch to English',
+                            style: AppFonts.buttonText
+                                .copyWith(color: AppColors.buttonText),
+                          ),
                         ),
+                        const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () {
-                            // Switch to German
-                            context.setLocale(Locale('hi', 'IN'));
+                            context.setLocale(const Locale('hi', 'IN'));
                           },
-                          child: Text('Switch to Hindi'),
-                        )
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColor,
+                            foregroundColor: AppColors.buttonText,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            'Switch to Hindi',
+                            style: AppFonts.buttonText
+                                .copyWith(color: AppColors.buttonText),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.setLocale(const Locale('mr', 'IN'));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.buttonColor,
+                            foregroundColor: AppColors.buttonText,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text(
+                            'Switch to Marathi',
+                            style: AppFonts.buttonText
+                                .copyWith(color: AppColors.buttonText),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -255,174 +297,206 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
       ),
     );
   }
-}
 
-// 🔹 Device Info Card
-Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
-  return Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    elevation: 6,
-    color: Colors.white,
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade200],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(2, 4),
+  Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      color: AppColors.cardBackground,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.cardBackground,
+              AppColors.cardBackground.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            const Icon(Icons.devices, size: 50, color: AppColors.buttonColor),
-            const SizedBox(height: 10),
-            Text(
-              deviceName.tr(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.battery_full,
-                    color: battery > 20 ? Colors.green : Colors.red),
-                const SizedBox(width: 5),
-                Text("$battery%", style: const TextStyle(fontSize: 14)),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(status == "Connected" ? Icons.wifi : Icons.wifi_off,
-                    color: status == "Connected" ? Colors.blue : Colors.red),
-                const SizedBox(width: 5),
-                Text(status,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color:
-                            status == "Connected" ? Colors.blue : Colors.red)),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textSecondary.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(2, 4),
             ),
           ],
         ),
-      ),
-    ),
-  );
-}
-
-// 🔹 Reusable Card Widget
-Widget _buildCard(
-    String title, String buttonText, IconData icon, VoidCallback onPressed) {
-  return Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    elevation: 6,
-    color: Colors.white,
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade200],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(2, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(icon, size: 50, color: AppColors.buttonColor),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Text(
-                title,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Icon(Icons.devices, size: 50, color: AppColors.buttonColor),
+              const SizedBox(height: 10),
+              Text(
+                deviceName.tr(),
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                softWrap: true,
-              ),
-            ),
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
-                  elevation: 4,
+                style: AppFonts.subHeadline.copyWith(
+                  fontSize: 16,
+                  color: AppColors.textPrimary,
                 ),
-                onPressed: onPressed,
-                child: Text(buttonText, style: const TextStyle(fontSize: 16)),
               ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-// 🔹 Issue Card
-Widget _buildIssueCard() {
-  return Card(
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-    elevation: 6,
-    color: Colors.white,
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          colors: [Colors.white, Colors.red.withOpacity(0.1)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.2),
-            blurRadius: 10,
-            offset: const Offset(2, 4),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.battery_full,
+                      color: battery > 20 ? AppColors.buttonColor : Colors.red),
+                  const SizedBox(width: 5),
+                  Text(
+                    "$battery%",
+                    style: AppFonts.bodyText.copyWith(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(status == "Connected" ? Icons.wifi : Icons.wifi_off,
+                      color: status == "Connected"
+                          ? AppColors.buttonColor
+                          : Colors.red),
+                  const SizedBox(width: 5),
+                  Text(
+                    status,
+                    style: AppFonts.bodyText.copyWith(
+                      fontSize: 14,
+                      color: status == "Connected"
+                          ? AppColors.textPrimary
+                          : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Icon(Icons.report_problem, size: 50, color: Colors.red),
-            const SizedBox(height: 10),
-            Expanded(
-              child: Text(
-                "Facing some issues with the box?".tr(),
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                softWrap: true,
-              ),
+    );
+  }
+
+  Widget _buildCard(
+      String title, String buttonText, IconData icon, VoidCallback onPressed) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      color: AppColors.cardBackground,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.cardBackground,
+              AppColors.cardBackground.withOpacity(0.8),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textSecondary.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(2, 4),
             ),
           ],
         ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, size: 50, color: AppColors.buttonColor),
+              const SizedBox(height: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: AppFonts.subHeadline.copyWith(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  softWrap: true,
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.buttonColor,
+                    foregroundColor: AppColors.buttonText,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
+                    elevation: 4,
+                  ),
+                  onPressed: onPressed,
+                  child: Text(
+                    buttonText,
+                    style: AppFonts.buttonText.copyWith(
+                      fontSize: 16,
+                      color: AppColors.buttonText,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  Widget _buildIssueCard() {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 6,
+      color: AppColors.cardBackground,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            colors: [
+              AppColors.cardBackground,
+              Colors.red.withOpacity(0.1),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(2, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(Icons.report_problem, size: 50, color: Colors.red),
+              const SizedBox(height: 10),
+              Expanded(
+                child: Text(
+                  "Facing some issues with the box?".tr(),
+                  textAlign: TextAlign.center,
+                  style: AppFonts.subHeadline.copyWith(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                  ),
+                  softWrap: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -92,7 +92,7 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
                 onPressed: widget.onBack,
               ),
               Text(

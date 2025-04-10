@@ -15,6 +15,7 @@ import '../../../../helpers/validators.dart';
 import '../../../../widgets/common/divider_with_or.dart';
 import '../../../../widgets/common/my_snack_bar.dart';
 import '../../../../widgets/common/my_text_field.dart';
+import '../../../../widgets/common/my_elevated_button.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key});
@@ -285,68 +286,61 @@ class _LoginFormState extends State<LoginForm> {
         _forgotPasswordText(context),
         const SizedBox(height: 25),
         _isLoading
-            ? const CircularProgressIndicator(color: AppColors.buttonColor)
-            : ElevatedButton(
+            ? CircularProgressIndicator(color: AppColors.buttonColor)
+            : MyElevatedButton(
+                text: "Login",
+                backgroundColor: AppColors.buttonColor,
                 onPressed: loginUser,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.buttonColor,
-                  foregroundColor: AppColors.buttonText,
-                  minimumSize: const Size(380, 60),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-                child: const Text(
-                  "Login",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
+                height: 60,
+                borderRadius: 50,
+                width: 380,
               ),
         const SizedBox(height: 20),
         const DividerWithOr(),
         const SizedBox(height: 20),
-        ElevatedButton(
+        MyElevatedButton(
           onPressed: signInWithGoogle,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.kBlackColor,
-            minimumSize: const Size(double.infinity, 60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-              side: const BorderSide(color: AppColors.kBlackColor, width: 2),
-            ),
-          ),
+          backgroundColor: AppColors.cardBackground,
+          textColor: AppColors.textPrimary,
+          height: 60,
+          borderRadius: 50,
+          borderSide: BorderSide(color: AppColors.borderColor, width: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset("assets/icons/ic_google.png", height: 24),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 "Continue With Google",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 15),
-        ElevatedButton(
+        MyElevatedButton(
           onPressed: signInWithFacebook,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: AppColors.kBlackColor,
-            minimumSize: const Size(double.infinity, 60),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(50),
-              side: const BorderSide(color: AppColors.kBlackColor, width: 2),
-            ),
-          ),
+          backgroundColor: AppColors.cardBackground,
+          textColor: AppColors.textPrimary,
+          height: 60,
+          borderRadius: 50,
+          borderSide: BorderSide(color: AppColors.borderColor, width: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset("assets/icons/ic_fb.png", height: 24),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 "Continue With Facebook",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
@@ -371,9 +365,9 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: 10),
         Text(
           "Enter the 6-digit code sent to your email",
-          style: TextStyle(
+          style: AppFonts.caption.copyWith(
             fontSize: 16,
-            color: AppColors.textSecondary.withOpacity(0.8),
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 20),
@@ -382,7 +376,6 @@ class _LoginFormState extends State<LoginForm> {
           children: List.generate(6, (index) {
             return Flexible(
               child: Container(
-                // Remove fixed width to allow flexibility
                 constraints: const BoxConstraints(
                   minWidth: 45,
                   maxWidth: 60,
@@ -395,7 +388,7 @@ class _LoginFormState extends State<LoginForm> {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   maxLength: 1,
-                  style: const TextStyle(
+                  style: AppFonts.bodyText.copyWith(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
@@ -410,7 +403,7 @@ class _LoginFormState extends State<LoginForm> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
+                      borderSide: BorderSide(
                         color: AppColors.buttonColor,
                         width: 2,
                       ),
@@ -437,11 +430,11 @@ class _LoginFormState extends State<LoginForm> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.timer, color: AppColors.textSecondary, size: 20),
+            Icon(Icons.timer, color: AppColors.textSecondary, size: 20),
             const SizedBox(width: 5),
             Text(
               'Time remaining: $_secondsRemaining sec',
-              style: const TextStyle(
+              style: AppFonts.caption.copyWith(
                 fontSize: 16,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
@@ -450,8 +443,8 @@ class _LoginFormState extends State<LoginForm> {
           ],
         ),
         const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: _secondsRemaining == 0
+        MyElevatedButton(
+          onPressedAsync: _secondsRemaining == 0
               ? () async {
                   try {
                     User? user = FirebaseAuth.instance.currentUser;
@@ -465,21 +458,15 @@ class _LoginFormState extends State<LoginForm> {
                   }
                 }
               : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor:
-                _secondsRemaining == 0 ? AppColors.buttonColor : Colors.grey,
-            foregroundColor: AppColors.buttonText,
-            minimumSize: const Size(200, 50),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(25),
-            ),
-          ),
-          child: Text(
-            _secondsRemaining == 0
-                ? "Resend OTP"
-                : "Resend in $_secondsRemaining s",
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
+          backgroundColor:
+              _secondsRemaining == 0 ? AppColors.buttonColor : Colors.grey,
+          text: _secondsRemaining == 0
+              ? "Resend OTP"
+              : "Resend in $_secondsRemaining s",
+          height: 50,
+          width: 200,
+          borderRadius: 25,
+          disabled: _secondsRemaining > 0,
         ),
         const SizedBox(height: 20),
         TextButton(
@@ -489,9 +476,9 @@ class _LoginFormState extends State<LoginForm> {
               controller.clear();
             }
           },
-          child: const Text(
+          child: Text(
             "Back to Login",
-            style: TextStyle(
+            style: AppFonts.bodyText.copyWith(
               color: AppColors.buttonColor,
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -509,11 +496,11 @@ class _LoginFormState extends State<LoginForm> {
         onPressed: () {
           Navigator.pushNamed(context, Routes.forgotPassword);
         },
-        child: const Text(
+        child: Text(
           "Forgot Password?",
-          style: TextStyle(
+          style: AppFonts.bodyText.copyWith(
             fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 28, 48, 160),
+            color: AppColors.buttonColor,
           ),
         ),
       ),
@@ -526,9 +513,9 @@ class _LoginFormState extends State<LoginForm> {
         Navigator.pushReplacementNamed(context, Routes.signup);
       },
       child: RichText(
-        text: const TextSpan(
+        text: TextSpan(
           text: "Don't have an account? ",
-          style: TextStyle(
+          style: AppFonts.bodyText.copyWith(
             color: AppColors.textPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w400,
@@ -536,7 +523,7 @@ class _LoginFormState extends State<LoginForm> {
           children: [
             TextSpan(
               text: "Sign Up",
-              style: TextStyle(
+              style: AppFonts.bodyText.copyWith(
                 color: AppColors.buttonColor,
                 fontSize: 15,
                 fontWeight: FontWeight.w600,

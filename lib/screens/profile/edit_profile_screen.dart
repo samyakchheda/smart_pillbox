@@ -2,15 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:home/services/api_service/cloudinary_service.dart';
 import 'package:home/widgets/common/my_elevated_button.dart';
+import 'package:home/widgets/common/my_text_field.dart';
 import 'package:home/widgets/common/my_snack_bar.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -31,6 +33,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   File? _image;
   String? _photoUrl;
   bool _isUploading = false;
+  bool _isLoadingImage = true;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -40,14 +43,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     _fetchUserData();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (phoneNumber != null && phoneCountryCode != null) {
-        setState(() {
-          phoneController.text = '$phoneCountryCode $phoneNumber';
-        });
-      }
-    });
   }
 
   Future<void> _fetchUserData() async {
@@ -66,7 +61,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             dobController.text = data['birthDate'] ?? "";
             selectedGender = data['gender'];
             _photoUrl = data['profile_picture'];
-
             phoneCountryCode = data['phoneCountryCode'];
             phoneNumber = data['phoneNumber'];
 
@@ -74,12 +68,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               phoneController.text = '$phoneCountryCode $phoneNumber';
             }
 
+            _isLoadingImage = false;
+            print("Photo URL fetched: $_photoUrl");
             print("Phone display set to: ${phoneController.text}");
           });
+        } else {
+          setState(() {
+            _isLoadingImage = false;
+          });
+          print("User document does not exist");
         }
+      } else {
+        setState(() {
+          _isLoadingImage = false;
+        });
+        print("No authenticated user found");
       }
     } catch (e) {
       print("Error fetching user data: $e");
+      setState(() {
+        _isLoadingImage = false;
+      });
       mySnackBar(context, "Error fetching data: $e", isError: true);
     }
   }
@@ -90,6 +99,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.buttonColor,
+              onPrimary: AppColors.buttonText,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.buttonColor,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedDate != null) {
       setState(() {
@@ -105,6 +131,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
+        _isLoadingImage = false;
       });
     }
   }
@@ -144,7 +171,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (_image != null) {
           File? compressedImage = await _compressImage(_image!);
           if (compressedImage != null) {
-// Delete old image from Cloudinary if it exists
             if (_photoUrl != null && _photoUrl!.isNotEmpty) {
               bool deleted =
                   await CloudinaryService.deleteFromCloudinary(_photoUrl!);
@@ -182,7 +208,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           await user.updateDisplayName(nameController.text.trim());
         }
 
-        setState(() => _isUploading = false);
+        setState(() {
+          _isUploading = false;
+          _photoUrl = profilePictureUrl;
+          _image = null;
+        });
         mySnackBar(context, "Profile updated successfully");
         widget.onBack();
       }
@@ -196,26 +226,106 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Choose Photo Source"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text("Gallery"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery);
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: AppColors.cardBackground,
+            colorScheme: ColorScheme.fromSwatch(
+              primarySwatch: MaterialColor(
+                AppColors.buttonColor.value,
+                <int, Color>{
+                  50: AppColors.buttonColor.withOpacity(0.1),
+                  100: AppColors.buttonColor.withOpacity(0.2),
+                  200: AppColors.buttonColor.withOpacity(0.3),
+                  300: AppColors.buttonColor.withOpacity(0.4),
+                  400: AppColors.buttonColor.withOpacity(0.5),
+                  500: AppColors.buttonColor,
+                  600: AppColors.buttonColor.withOpacity(0.7),
+                  700: AppColors.buttonColor.withOpacity(0.8),
+                  800: AppColors.buttonColor.withOpacity(0.9),
+                  900: AppColors.buttonColor,
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text("Camera"),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera);
-                },
+              accentColor: AppColors.buttonColor,
+              cardColor: AppColors.cardBackground,
+              backgroundColor: AppColors.cardBackground,
+              errorColor: AppColors.errorColor,
+              brightness: Theme.of(context).brightness,
+            ).copyWith(
+              onPrimary: AppColors.buttonText,
+              onSurface: AppColors.textPrimary,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.buttonColor,
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonColor,
+                foregroundColor: AppColors.buttonText,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                elevation: 4,
+              ),
+            ),
+          ),
+          child: AlertDialog(
+            backgroundColor: AppColors.cardBackground,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            title: Text(
+              "Choose Photo Source",
+              style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MyElevatedButton(
+                  text: "Gallery",
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.gallery);
+                  },
+                  icon: const Icon(Icons.photo_library, size: 20),
+                  backgroundColor: AppColors.buttonColor,
+                  textColor: AppColors.buttonText,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  borderRadius: 50,
+                  textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+                  iconSpacing: 8.0,
+                ),
+                const SizedBox(height: 10),
+                MyElevatedButton(
+                  text: "Camera",
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickImage(ImageSource.camera);
+                  },
+                  icon: const Icon(Icons.camera_alt, size: 20),
+                  backgroundColor: AppColors.buttonColor,
+                  textColor: AppColors.buttonText,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  borderRadius: 50,
+                  textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+                  iconSpacing: 8.0,
+                ),
+              ],
+            ),
+            actions: [
+              MyElevatedButton(
+                text: "Cancel",
+                onPressed: () => Navigator.pop(context),
+                backgroundColor: AppColors.cardBackground,
+                textColor: AppColors.buttonText,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                borderRadius: 50,
+                textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
               ),
             ],
           ),
@@ -226,7 +336,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      color: AppColors.background,
       padding: const EdgeInsets.all(16.0),
       child: SingleChildScrollView(
         child: Column(
@@ -236,15 +347,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
                   onPressed: widget.onBack,
                 ),
                 Text(
                   "Edit Profile",
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style:
+                      AppFonts.headline.copyWith(color: AppColors.textPrimary),
                 ),
               ],
             ),
@@ -254,18 +363,66 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: [
                   InkWell(
                     onTap: _showImageSourceDialog,
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: AppColors.lightBackground,
-                      backgroundImage: _image != null
-                          ? FileImage(_image!)
-                          : (_photoUrl != null
-                              ? NetworkImage(_photoUrl!)
-                              : null),
-                      child: (_image == null && _photoUrl == null)
-                          ? const Icon(Icons.person,
-                              size: 60, color: AppColors.darkBackground)
-                          : null,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.buttonColor, width: 2),
+                      ),
+                      child: ClipOval(
+                        child: _isLoadingImage
+                            ? CircleAvatar(
+                                radius: 60,
+                                backgroundColor: AppColors.cardBackground,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.buttonColor,
+                                ),
+                              )
+                            : _image != null
+                                ? Image.file(
+                                    _image!,
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 120,
+                                  )
+                                : (_photoUrl != null && _photoUrl!.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        imageUrl: _photoUrl!,
+                                        fit: BoxFit.cover,
+                                        width: 120,
+                                        height: 120,
+                                        placeholder: (context, url) =>
+                                            CircleAvatar(
+                                          radius: 60,
+                                          backgroundColor:
+                                              AppColors.cardBackground,
+                                          child: CircularProgressIndicator(
+                                            color: AppColors.buttonColor,
+                                          ),
+                                        ),
+                                        errorWidget: (context, url, error) {
+                                          print("Image load error: $error");
+                                          return CircleAvatar(
+                                            radius: 60,
+                                            backgroundColor:
+                                                AppColors.cardBackground,
+                                            child: Icon(Icons.error,
+                                                size: 60,
+                                                color: AppColors.buttonColor),
+                                          );
+                                        },
+                                      )
+                                    : CircleAvatar(
+                                        radius: 60,
+                                        backgroundColor:
+                                            AppColors.cardBackground,
+                                        child: Icon(Icons.person,
+                                            size: 60,
+                                            color: AppColors.textPrimary),
+                                      )),
+                      ),
                     ),
                   ),
                   Positioned(
@@ -273,12 +430,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     right: 0,
                     child: Container(
                       decoration: const BoxDecoration(
-                        color: AppColors.buttonColor,
+                        color: AppColors.kBlackColor,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
-                        icon: const Icon(Icons.camera_alt,
-                            color: Colors.white, size: 20),
+                        icon: Icon(Icons.camera_alt,
+                            color: AppColors.buttonColor, size: 20),
                         onPressed: _showImageSourceDialog,
                       ),
                     ),
@@ -298,8 +455,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               hint: "Select your DOB",
               controller: dobController,
               readOnly: true,
-              suffixIcon: const Icon(Icons.calendar_today,
-                  color: AppColors.textSecondary),
+              icon: Icons.calendar_today,
               onTap: _selectDOB,
             ),
             _buildDropdown(),
@@ -307,15 +463,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 30),
             Center(
               child: _isUploading
-                  ? const CircularProgressIndicator(
-                      color: AppColors.buttonColor)
+                  ? CircularProgressIndicator(color: AppColors.buttonColor)
                   : MyElevatedButton(
                       onPressed: _saveUserData,
                       text: 'Save',
                       backgroundColor: AppColors.buttonColor,
-                      textStyle: GoogleFonts.poppins(
-                          fontSize: 16, color: Colors.white),
+                      textColor: AppColors.buttonText,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 24),
                       borderRadius: 50,
+                      textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+                      height: 60,
+                      icon: const Icon(Icons.save, size: 20),
+                      iconSpacing: 12.0,
                     ),
             ),
           ],
@@ -331,25 +491,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     TextInputType? keyboardType,
     bool readOnly = false,
     VoidCallback? onTap,
-    Widget? suffixIcon,
+    IconData? icon,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
+      child: MyTextField(
         controller: controller,
-        keyboardType: keyboardType,
-        readOnly: readOnly,
+        hintText: hint,
+        keyboardType: keyboardType ?? TextInputType.text,
         onTap: onTap,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          suffixIcon: suffixIcon,
-          labelStyle: GoogleFonts.poppins(color: AppColors.textSecondary),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        ),
-        style: GoogleFonts.poppins(),
+        enabled: !readOnly,
+        icon: icon,
+        fillColor: AppColors.cardBackground,
+        hintStyle: AppFonts.bodyText
+            .copyWith(color: AppColors.textSecondary.withOpacity(0.6)),
+        textStyle: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
+        borderRadius: 50,
       ),
     );
   }
@@ -365,17 +522,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   value: gender,
                   child: Text(
                     gender,
-                    style: GoogleFonts.poppins(color: Colors.black),
+                    style: AppFonts.bodyText
+                        .copyWith(color: AppColors.textPrimary),
                   ),
                 ))
             .toList(),
         decoration: InputDecoration(
           labelText: "Gender",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+          labelStyle: AppFonts.caption.copyWith(color: AppColors.textSecondary),
+          filled: true,
+          fillColor: AppColors.cardBackground,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.textPlaceholder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.textPlaceholder),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(50),
+            borderSide: BorderSide(color: AppColors.buttonColor),
+          ),
         ),
-        style: GoogleFonts.poppins(),
+        dropdownColor: AppColors.cardBackground,
       ),
     );
   }
@@ -383,18 +553,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildPhoneField() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: TextField(
+      child: MyTextField(
         controller: phoneController,
+        hintText: "Enter phone number",
         keyboardType: TextInputType.phone,
-        decoration: InputDecoration(
-          labelText: "Contact Number",
-          hintText: "Enter phone number (e.g., +91 9876543210)",
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
-          contentPadding:
-              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-          labelStyle: GoogleFonts.poppins(color: AppColors.textSecondary),
-        ),
-        style: GoogleFonts.poppins(),
+        icon: Icons.phone,
+        fillColor: AppColors.cardBackground,
+        hintStyle: AppFonts.bodyText
+            .copyWith(color: AppColors.textSecondary.withOpacity(0.6)),
+        textStyle: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
+        borderRadius: 50,
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/models/chat_message.dart';
 import 'package:home/services/ai_service/audio_service.dart';
@@ -10,7 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({Key? key}) : super(key: key);
+  const ChatScreen({super.key});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -52,13 +53,11 @@ class _ChatScreenState extends State<ChatScreen> {
     final aiMessage = ChatMessage(
       isUser: false,
       text:
-          "Hello! I'm SmartDose, your health assistant. How can I help you today with your health-related questions?",
+          "Hello! I'm SmartDose, your health assistant. How can I help you today with your health-related questions?"
+              .tr(),
     );
 
-    // If your ChatService provides a method to add a message, use it:
-    // _chatService.addMessage(aiMessage);
-    //
-    // Otherwise, directly add to the messages list:
+    // Add to the messages list via ChatService
     _chatService.messages.add(aiMessage);
 
     // Update the state so the message is displayed
@@ -103,20 +102,40 @@ class _ChatScreenState extends State<ChatScreen> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: const Text("Describe the Image"),
+              backgroundColor: AppColors.cardBackground,
+              title: Text(
+                "Describe the Image".tr(),
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
               content: TextField(
                 controller: descriptionController,
-                decoration: const InputDecoration(
-                  hintText: "Enter a description...",
+                decoration: InputDecoration(
+                  hintText: "Enter a description...".tr(),
+                  hintStyle: TextStyle(color: AppColors.textPlaceholder),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.buttonColor),
+                  ),
                 ),
+                style: TextStyle(color: AppColors.textPrimary),
               ),
               actions: <Widget>[
                 TextButton(
-                  child: const Text("Cancel"),
+                  child: Text(
+                    "Cancel".tr(),
+                    style: TextStyle(color: AppColors.buttonColor),
+                  ),
                   onPressed: () => Navigator.pop(context, ""),
                 ),
                 TextButton(
-                  child: const Text("Submit"),
+                  child: Text(
+                    "Submit".tr(),
+                    style: TextStyle(color: AppColors.buttonColor),
+                  ),
                   onPressed: () =>
                       Navigator.pop(context, descriptionController.text.trim()),
                 ),
@@ -155,6 +174,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Container(
@@ -163,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> {
               gradient: LinearGradient(
                 colors: [
                   AppColors.buttonColor,
-                  Colors.grey.shade400,
+                  AppColors.borderColor,
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -181,22 +201,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Builder(
                       builder: (context) => IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.black),
+                        icon: Icon(Icons.menu, color: AppColors.buttonColor),
                         onPressed: () {
                           Scaffold.of(context).openDrawer();
                         },
                       ),
                     ),
-                    const Text(
-                      'ChatBot',
+                    Text(
+                      'ChatBot'.tr(),
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.textOnPrimary,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.black),
+                      icon: Icon(Icons.close, color: AppColors.buttonColor),
                       onPressed: () {
                         Navigator.pop(context);
                       },
@@ -207,7 +227,7 @@ class _ChatScreenState extends State<ChatScreen> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE0E0E0),
+                    color: AppColors.cardBackground,
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),

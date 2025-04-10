@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:home/theme/app_colors.dart';
 import '../../models/chat_message.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MessageBubble extends StatefulWidget {
   final ChatMessage message;
@@ -13,17 +14,37 @@ class MessageBubble extends StatefulWidget {
 }
 
 class _MessageBubbleState extends State<MessageBubble> {
-  // Static set to remember which messages have already been animated.
+  // Static set to remember which messages have already been animated during runtime.
   static final Set<String> _animatedMessages = {};
+  // Persisted set loaded from SharedPreferences.
+  static Set<String> _persistentAnimatedMessages = {};
+
   bool _animationCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    // If this message text has been animated before, mark it as complete.
-    if (_animatedMessages.contains(widget.message.text)) {
-      _animationCompleted = true;
-    }
+    _loadPersistentAnimatedMessages().then((_) {
+      // Check if this message was animated in a previous session.
+      if (_persistentAnimatedMessages.contains(widget.message.text)) {
+        setState(() {
+          _animationCompleted = true;
+        });
+      }
+    });
+  }
+
+  Future<void> _loadPersistentAnimatedMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final messagesList = prefs.getStringList('animatedMessages') ?? [];
+    _persistentAnimatedMessages = messagesList.toSet();
+  }
+
+  Future<void> _updatePersistentAnimatedMessages(String messageText) async {
+    _persistentAnimatedMessages.add(messageText);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        'animatedMessages', _persistentAnimatedMessages.toList());
   }
 
   @override
@@ -31,8 +52,8 @@ class _MessageBubbleState extends State<MessageBubble> {
     super.didUpdateWidget(oldWidget);
     // When a new message arrives, check if it has been animated before.
     if (oldWidget.message.text != widget.message.text) {
-      _animationCompleted =
-          _animatedMessages.contains(widget.message.text) ? true : false;
+      _animationCompleted = _animatedMessages.contains(widget.message.text) ||
+          _persistentAnimatedMessages.contains(widget.message.text);
     }
   }
 
@@ -107,11 +128,12 @@ class _MessageBubbleState extends State<MessageBubble> {
         totalRepeatCount: 1,
         displayFullTextOnTap: true,
         onFinished: () {
-          // Mark animation as complete and store it in our static set.
+          // Mark animation as complete and store it in our static set and persistent storage.
           setState(() {
             _animationCompleted = true;
             _animatedMessages.add(widget.message.text);
           });
+          _updatePersistentAnimatedMessages(widget.message.text);
         },
       );
     }

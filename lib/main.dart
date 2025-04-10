@@ -10,11 +10,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:home/screens/ai/chat_screen.dart';
 import 'package:home/helpers/functions/permissions_manager.dart';
+import 'package:home/screens/language/lang_selection_screen.dart';
 import 'package:home/services/pharmacy_service/location_service.dart';
 import 'package:home/services/pharmacy_service/pharmacy_service.dart';
 import 'package:home/screens/caretaker/home/home_screen.dart';
 import 'package:home/screens/home/home_screen.dart';
-import 'package:home/screens/onboarding/onboarding_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:home/routes/routes.dart';
 import 'package:home/services/medicine_service/medicine_service.dart';
@@ -111,9 +111,9 @@ void main() async {
     EasyLocalization(
       supportedLocales: [
         Locale('en', 'US'),
-        Locale('de', 'DE'),
         Locale('hi', 'IN'),
-        Locale('hi'),
+        Locale('gu', 'IN'), // Gujarati - India
+        Locale('mr', 'IN'), // Marathi - India
       ],
       path: 'assets/translations', // <-- path to your translation files
       fallbackLocale: Locale('en', 'US'),
@@ -199,7 +199,7 @@ class AuthWrapper extends StatelessWidget {
                     child: Container(
                       width: 60,
                       height: 60,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.buttonColor,
                         shape: BoxShape.circle,
                         boxShadow: [
@@ -220,7 +220,7 @@ class AuthWrapper extends StatelessWidget {
             );
           } else {
             // If the user is not logged in, show the onboarding screen.
-            return const OnboardingScreen();
+            return LanguageSelectionScreen();
           }
         } else {
           return const Center(child: CircularProgressIndicator());

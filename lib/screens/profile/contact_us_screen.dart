@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:home/screens/ai/chat_screen.dart';
+import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:url_launcher/url_launcher.dart'; // Import url_launcher
+import 'package:url_launcher/url_launcher.dart';
+import 'package:home/widgets/common/my_snack_bar.dart';
 
 class ContactUsScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -15,139 +18,129 @@ class ContactUsScreen extends StatefulWidget {
 class _ContactUsScreenState extends State<ContactUsScreen> {
   bool _isHovered = false;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  // Function to launch URLs
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Could not launch $url")),
-      );
+      mySnackBar(context, "Could not launch $url", isError: true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
+      color: AppColors.background,
       height: MediaQuery.of(context).size.height,
       width: double.infinity,
       child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 40.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                    onPressed: widget.onBack,
-                  ),
-                  Expanded(
-                    child: Text(
-                      "Contact Us",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
-                    ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.1),
-                  ),
-                  const SizedBox(width: 48),
-                ],
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                IconButton(
+                  icon:
+                      Icon(Icons.arrow_back_ios, color: AppColors.buttonColor),
+                  onPressed: widget.onBack,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "Contact Us",
+                    textAlign: TextAlign.center,
+                    style: AppFonts.headline.copyWith(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textOnPrimary,
+                    ),
+                  ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.15),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            Card(
+              color: AppColors.cardBackground,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
               ),
-              const SizedBox(height: 24),
-              Text(
-                "Get in Touch",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black.withOpacity(0.8),
+              elevation: 6,
+              shadowColor: AppColors.textSecondary.withOpacity(0.4),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Get in Touch",
+                      style: AppFonts.subHeadline.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textPrimary,
+                      ),
+                    ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
+                    const SizedBox(height: 10),
+                    Text(
+                      "We’re here to help—reach out anytime.",
+                      style: AppFonts.bodyText.copyWith(
+                        fontSize: 15,
+                        color: AppColors.textSecondary,
+                      ),
+                    ).animate().fadeIn(delay: 300.ms, duration: 500.ms),
+                  ],
                 ),
-              ).animate().fadeIn(delay: 200.ms, duration: 600.ms),
-              const SizedBox(height: 8),
-              Text(
-                "We’re here to help—reach out anytime.",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.black.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(height: 30),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              children: [
+                _buildContactCard(
+                  icon: Icons.email_outlined,
+                  title: "Email Us",
+                  subtitle: "smartdose.care@gmail.com",
+                  onTap: () => _launchUrl(
+                      'mailto:smartdose.care@gmail.com?subject=Contact%20Us'),
                 ),
-              ).animate().fadeIn(delay: 300.ms, duration: 600.ms),
-              const SizedBox(height: 32),
-              _buildContactOptions(),
-              const SizedBox(height: 32),
-            ],
-          ),
+                _buildContactCard(
+                  icon: Icons.phone_outlined,
+                  title: "Call Us",
+                  subtitle: "+91 123 456 7890",
+                  onTap: () => _launchUrl('tel:+911234567890'),
+                ),
+                _buildContactCard(
+                  icon: Icons.chat_bubble_outline,
+                  title: "Live Chat",
+                  subtitle: "Chat with us now",
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => const ChatScreen(),
+                    ),
+                  ),
+                ),
+                _buildContactCard(
+                  icon: Icons.location_on_outlined,
+                  title: "Visit Us",
+                  subtitle: "SVKM's SBMPCOE, Vile Parle, Mumbai",
+                  onTap: () => _launchUrl(
+                      'https://www.google.com/maps/search/?api=1&query=SVKM"s Shri Bhagubhai Mafatlal Polytechnic and College of Engineering'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
-  }
-
-  Widget _buildContactOptions() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildContactCard(
-              icon: Icons.email_outlined,
-              title: "Email Us",
-              subtitle: "smartdose.care@gmail.com",
-              onTap: () {
-                _launchUrl(
-                    'mailto:smartdose.care@gmail.com?subject=Contact%20Us');
-              },
-            ),
-            _buildContactCard(
-              icon: Icons.phone_outlined,
-              title: "Call Us",
-              subtitle: "+91 123 456 7890",
-              onTap: () {
-                _launchUrl('tel:+911234567890');
-              },
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildContactCard(
-              icon: Icons.chat_bubble_outline,
-              title: "Live Chat",
-              subtitle: "Chat with us now",
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Chat feature coming soon!")),
-                );
-              },
-            ),
-            _buildContactCard(
-              icon: Icons.location_on_outlined,
-              title: "Visit Us",
-              subtitle:
-                  "SVKM's SBMPCOE, Irla, Suvarna Nagar, Vile Parle, Mumbai, Maharashtra 400056",
-              onTap: () {
-                _launchUrl(
-                    'https://www.google.com/maps/search/?api=1&query=SVKM"s Shri Bhagubhai Mafatlal Polytechnic and College of Engineering');
-              },
-            ),
-          ],
-        ),
-      ],
-    ).animate().fadeIn(delay: 400.ms, duration: 600.ms);
   }
 
   Widget _buildContactCard({
@@ -162,40 +155,66 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         onEnter: (_) => setState(() => _isHovered = true),
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 140,
-          height: 140,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: _isHovered
-                  ? Colors.black.withOpacity(0.8)
-                  : Colors.black.withOpacity(0.3),
+                  ? AppColors.buttonColor
+                  : AppColors.textPlaceholder,
               width: 1.5,
             ),
-            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: _isHovered
+                    ? AppColors.buttonColor.withOpacity(0.3)
+                    : AppColors.textSecondary.withOpacity(0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            gradient: _isHovered
+                ? LinearGradient(
+                    colors: [
+                      AppColors.cardBackground.withOpacity(0.9),
+                      AppColors.cardBackground,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 36, color: Colors.black),
-              const SizedBox(height: 8),
+              Icon(
+                icon,
+                size: 36,
+                color: AppColors.buttonColor,
+              ).animate().scale(delay: 100.ms, duration: 300.ms),
+              const SizedBox(height: 10),
               Text(
                 title,
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
+                textAlign: TextAlign.center,
+                style: AppFonts.subHeadline.copyWith(
+                  fontSize: 16,
                   fontWeight: FontWeight.w500,
-                  color: Colors.black,
+                  color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 subtitle,
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color: Colors.black.withOpacity(0.6),
-                ),
                 textAlign: TextAlign.center,
+                style: AppFonts.bodyText.copyWith(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

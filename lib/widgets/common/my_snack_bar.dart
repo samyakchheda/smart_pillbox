@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../theme/app_colors.dart';
-import '../../../../theme/app_fonts.dart';
+import 'package:home/theme/app_colors.dart'; // Adjust import path
+import 'package:home/theme/app_fonts.dart'; // Adjust import path
 
 void mySnackBar(BuildContext context, String message,
     {bool isError = false, IconData? icon}) {
@@ -9,22 +9,22 @@ void mySnackBar(BuildContext context, String message,
       children: [
         Icon(
           icon ?? (isError ? Icons.error_outline : Icons.check_circle_outline),
-          color: isError ? AppColors.iconSecondary : AppColors.iconPrimary,
+          color: isError ? AppColors.buttonColor : AppColors.buttonColor,
           size: 24,
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             message,
-            style: AppFonts.bodyText.copyWith(color: AppColors.textOnPrimary),
+            style: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
           ),
         ),
       ],
     ),
-    backgroundColor: isError ? AppColors.buttonColor : AppColors.darkBackground,
+    backgroundColor: isError ? AppColors.buttonColor : AppColors.cardBackground,
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(30), // Pill-shaped design
+      borderRadius: BorderRadius.circular(30),
     ),
     margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     duration: const Duration(seconds: 3),

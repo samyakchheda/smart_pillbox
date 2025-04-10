@@ -9,7 +9,7 @@ class IntroScreen2 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: AppColors.background, // Theme-aware background
       body: _buildUI(),
     );
   }
@@ -20,15 +20,17 @@ class IntroScreen2 extends StatelessWidget {
         children: [
           const SizedBox(height: 50),
           Center(
-            child: Lottie.asset("assets/animations/progress_tracker.json"),
+            child: Container(
+              child: Lottie.asset("assets/animations/progress_tracker.json"),
+            ),
           ),
           const SizedBox(height: 15),
           Text(
             "Stay on Track",
             style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
           ),
-          const Padding(
-            padding: EdgeInsets.all(25),
+          Padding(
+            padding: const EdgeInsets.all(25),
             child: Text(
               "Keep your health goals in check by managing your medication schedule. "
               "Stay organized and never miss a step in your wellness journey.",

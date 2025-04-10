@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:home/services/ai_service/image_service.dart';
 import 'package:home/screens/reminders/medicine_form_screen.dart';
-import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -172,205 +172,236 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final formattedDate = uploadedAt != null
         ? DateFormat('dd-MM-yyyy').format(uploadedAt!.toDate())
         : 'Unknown';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prescription Details'),
-        backgroundColor: const Color(0xFFE0E0E0),
-        elevation: 0,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.buttonColor,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: AppColors.textOnPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cardTheme: CardTheme(
+          color: isDarkMode
+              ? AppColors.cardBackground.withOpacity(0.8)
+              : AppColors.cardBackground,
+          elevation: 3,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        textTheme: TextTheme(
+          titleMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          titleLarge: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+          bodyMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.buttonColor,
+            foregroundColor: AppColors.buttonText,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
       ),
-      body: imageUrl == null
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Scaffold(
-                              backgroundColor: Colors.white,
-                              appBar: AppBar(
-                                backgroundColor: Colors.transparent,
-                                elevation: 0,
-                                iconTheme:
-                                    const IconThemeData(color: Colors.black),
-                              ),
-                              body: Center(
-                                child: InteractiveViewer(
-                                  child: Image.network(
-                                    imageUrl!,
-                                    fit: BoxFit.contain,
-                                    loadingBuilder:
-                                        (context, child, loadingProgress) {
-                                      if (loadingProgress == null) return child;
-                                      return const Center(
-                                          child: CircularProgressIndicator());
-                                    },
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
-                                      Icons.error,
-                                      color: Colors.red,
-                                      size: 50,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Prescription Details'),
+        ),
+        body: imageUrl == null
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Scaffold(
+                                backgroundColor: AppColors.background,
+                                appBar: AppBar(
+                                  backgroundColor: Colors.transparent,
+                                  elevation: 0,
+                                  iconTheme: IconThemeData(
+                                      color: isDarkMode
+                                          ? AppColors.textOnPrimary
+                                          : Colors.black),
+                                ),
+                                body: Center(
+                                  child: InteractiveViewer(
+                                    child: Image.network(
+                                      imageUrl!,
+                                      fit: BoxFit.contain,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return const Center(
+                                            child: CircularProgressIndicator());
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(
+                                        Icons.error,
+                                        color: Colors.red,
+                                        size: 50,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl!,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height * 0.4,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          },
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                            Icons.error,
-                            color: Colors.red,
-                            size: 50,
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            imageUrl!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: MediaQuery.of(context).size.height * 0.4,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            },
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(
+                              Icons.error,
+                              color: Colors.red,
+                              size: 50,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      "Uploaded on: ${formattedDate}",
-                      style: Theme.of(context).textTheme.titleMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    Card(
-                      color: Colors.white,
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Uploaded on: ${formattedDate}",
+                        style: Theme.of(context).textTheme.titleMedium,
+                        textAlign: TextAlign.center,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: _isLoadingMedicines
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: 8),
-                                  Text("Fetching medicines..."),
-                                ],
-                              )
-                            : _medicineNames.isEmpty
-                                ? const Center(
-                                    child: Text(
-                                      "No medicine names found.",
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  )
-                                : Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        "Detected Medicines",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                      const SizedBox(height: 24),
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: _isLoadingMedicines
+                              ? const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(),
+                                    SizedBox(height: 8),
+                                    Text("Fetching medicines..."),
+                                  ],
+                                )
+                              : _medicineNames.isEmpty
+                                  ? const Center(
+                                      child: Text(
+                                        "No medicine names found.",
+                                        style: TextStyle(fontSize: 16),
                                       ),
-                                      const SizedBox(height: 12),
-                                      ListView.separated(
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        itemCount: _medicineNames.length,
-                                        separatorBuilder: (context, index) =>
-                                            const Divider(),
-                                        itemBuilder: (context, index) {
-                                          final medicine =
-                                              _medicineNames[index];
-                                          final isAdded = _addedMedicines
-                                              .contains(medicine);
+                                    )
+                                  : Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Detected Medicines",
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleLarge,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        ListView.separated(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          itemCount: _medicineNames.length,
+                                          separatorBuilder: (context, index) =>
+                                              const Divider(color: Colors.grey),
+                                          itemBuilder: (context, index) {
+                                            final medicine =
+                                                _medicineNames[index];
+                                            final isAdded = _addedMedicines
+                                                .contains(medicine);
 
-                                          return Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Expanded(
-                                                child: Text(
-                                                  medicine,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
+                                            return Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    medicine,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
                                                   ),
                                                 ),
-                                              ),
-                                              isAdded
-                                                  ? const Icon(
-                                                      Icons.check_circle,
-                                                      color: Colors.green,
-                                                    )
-                                                  : ElevatedButton.icon(
-                                                      onPressed: () async {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder: (context) =>
-                                                                MedicineFormScreen(
-                                                              existingData: {
-                                                                'enteredMedicines':
-                                                                    [medicine],
-                                                              },
+                                                isAdded
+                                                    ? const Icon(
+                                                        Icons.check_circle,
+                                                        color: Colors.green,
+                                                      )
+                                                    : ElevatedButton.icon(
+                                                        onPressed: () async {
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  MedicineFormScreen(
+                                                                existingData: {
+                                                                  'enteredMedicines':
+                                                                      [
+                                                                    medicine
+                                                                  ],
+                                                                },
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ).then((_) async {
-                                                          // Refresh the added medicines state after returning
-                                                          await _checkAddedMedicinesInFirebase();
-                                                        });
-                                                      },
-                                                      icon:
-                                                          const Icon(Icons.add),
-                                                      label: const Text('Add'),
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            AppColors
-                                                                .buttonColor,
-                                                        foregroundColor:
-                                                            Colors.white,
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(8),
-                                                        ),
+                                                          ).then((_) async {
+                                                            // Refresh the added medicines state after returning
+                                                            await _checkAddedMedicinesInFirebase();
+                                                          });
+                                                        },
+                                                        icon: const Icon(
+                                                            Icons.add),
+                                                        label:
+                                                            const Text('Add'),
                                                       ),
-                                                    ),
-                                            ],
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 }

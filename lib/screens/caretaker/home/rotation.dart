@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -7,7 +8,7 @@ import 'package:home/screens/home/issue.dart';
 import 'package:home/theme/app_colors.dart';
 
 class AutoRotateCubeWithFuture extends StatefulWidget {
-  const AutoRotateCubeWithFuture({Key? key}) : super(key: key);
+  const AutoRotateCubeWithFuture({super.key});
 
   @override
   State<AutoRotateCubeWithFuture> createState() =>
@@ -139,7 +140,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                     alignment: Alignment.bottomCenter,
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
-                      'SmartDose',
+                      'SmartDose'.tr(),
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -164,7 +165,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                     child: Column(
                       children: [
                         Text(
-                          'Patient',
+                          'Patient'.tr(),
                           style: GoogleFonts.poppins(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -183,10 +184,10 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                               );
                             }
                             if (!snapshot.hasData || snapshot.data == null) {
-                              return const Padding(
+                              return Padding(
                                 padding: EdgeInsets.all(20.0),
                                 child: Text(
-                                  'Patient data not found',
+                                  'Patient data not found'.tr(),
                                   style: TextStyle(
                                       fontSize: 16, color: Colors.black),
                                 ),
@@ -202,7 +203,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                             );
                           },
                         ),
-                        ReportScreen(),
+                        const ReportScreen(),
                         // Animated grid for device controls
                         SlideTransition(
                           position: _gridSlideAnimation,
@@ -227,7 +228,7 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                                           context,
                                           MaterialPageRoute(
                                               builder: (context) =>
-                                                  SendIssueScreen()));
+                                                  const SendIssueScreen()));
                                     },
                                     child: _buildIssueCard(),
                                   ),
@@ -272,10 +273,10 @@ Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            const Icon(Icons.devices, size: 50, color: AppColors.buttonColor),
+            Icon(Icons.devices, size: 50, color: AppColors.buttonColor),
             const SizedBox(height: 10),
             Text(
-              deviceName,
+              deviceName.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
@@ -394,15 +395,15 @@ Widget _buildIssueCard() {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Icon(Icons.report_problem, size: 50, color: Colors.red),
-            const SizedBox(height: 10),
-            const Expanded(
+            Icon(Icons.report_problem, size: 50, color: Colors.red),
+            SizedBox(height: 10),
+            Expanded(
               child: Text(
-                "Facing some issues with the box?",
+                "Facing some issues with the box?".tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 softWrap: true,
@@ -422,11 +423,11 @@ class PatientInfoCard extends StatelessWidget {
   final String profileUrl;
 
   const PatientInfoCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.email,
     required this.profileUrl,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

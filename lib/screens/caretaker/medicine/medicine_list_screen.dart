@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -59,9 +60,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
     if (userId == null) {
-      return const Scaffold(
+      return Scaffold(
         body: Center(
-          child: Text('User not authenticated'),
+          child: Text('User is not authenticated'.tr()),
         ),
       );
     }

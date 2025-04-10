@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class ReportScreen extends StatefulWidget {
-  const ReportScreen({Key? key}) : super(key: key);
+  const ReportScreen({super.key});
 
   @override
   _ReportScreenState createState() => _ReportScreenState();
@@ -153,7 +153,7 @@ class _ReportScreenState extends State<ReportScreen> {
               children: [
                 pw.Text(
                   "Medication List",
-                  style: pw.TextStyle(fontSize: 24),
+                  style: const pw.TextStyle(fontSize: 24),
                 ),
                 pw.SizedBox(height: 20),
                 pw.Table.fromTextArray(
@@ -167,7 +167,8 @@ class _ReportScreenState extends State<ReportScreen> {
                   data: tableData,
                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                   cellAlignment: pw.Alignment.centerLeft,
-                  headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
+                  headerDecoration:
+                      const pw.BoxDecoration(color: PdfColors.grey300),
                   cellHeight: 30,
                   cellAlignments: {
                     0: pw.Alignment.centerLeft,
@@ -349,13 +350,13 @@ class _ReportScreenState extends State<ReportScreen> {
           children: [
             pw.Text(
               "Medication Records",
-              style: pw.TextStyle(fontSize: 24),
+              style: const pw.TextStyle(fontSize: 24),
             ),
             pw.SizedBox(height: 10),
             pw.Text(
               "From ${DateFormat('dd MMM yyyy').format(dateRange.start)} "
               "to ${DateFormat('dd MMM yyyy').format(dateRange.end)}",
-              style: pw.TextStyle(fontSize: 14),
+              style: const pw.TextStyle(fontSize: 14),
             ),
             pw.SizedBox(height: 20),
           ],
@@ -367,7 +368,8 @@ class _ReportScreenState extends State<ReportScreen> {
               data: tableData,
               headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               cellAlignment: pw.Alignment.centerLeft,
-              headerDecoration: pw.BoxDecoration(color: PdfColors.grey300),
+              headerDecoration:
+                  const pw.BoxDecoration(color: PdfColors.grey300),
               cellHeight: 30,
               cellAlignments: {
                 0: pw.Alignment.centerLeft,

@@ -173,7 +173,7 @@ class _OCRScreenState extends State<OCRScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Medicine Scanner'),
-        backgroundColor: Color(0xFFE0E0E0),
+        backgroundColor: const Color(0xFFE0E0E0),
         foregroundColor: Colors.black,
       ),
       body: Stack(
@@ -195,7 +195,7 @@ class _OCRScreenState extends State<OCRScreen> {
           if (_isLoading)
             Container(
               color: Colors.black45,
-              child: const Center(
+              child: Center(
                 child: CircularProgressIndicator(
                   valueColor:
                       AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
@@ -227,13 +227,13 @@ class _OCRScreenState extends State<OCRScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: Image.file(_image!, fit: BoxFit.cover),
               )
-            : const Center(
+            : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.camera_alt,
                         size: 40, color: AppColors.buttonColor),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Capture or Upload an Image',
                       style: TextStyle(

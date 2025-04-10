@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:home/theme/app_colors.dart'; // Adjust import path
+import 'package:home/theme/app_fonts.dart'; // Adjust import path
 import '../../../routes/routes.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
@@ -22,24 +24,24 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Adjust based on your theme
+      backgroundColor: AppColors.background, // Theme-aware background
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Lottie.asset(
-              'assets/animations/profile_complete.json', // Replace with your downloaded Lottie file path
+              'assets/animations/loading.json', // Replace with your downloaded Lottie file path
               width: 200,
               height: 200,
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Setting Up Your Profile...",
-              style: TextStyle(
+            Text(
+              "Crafting Your Profile...",
+              style: AppFonts.headline.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF222222), // Matches your textPrimary color
+                color: AppColors.textPrimary, // Theme-aware text color
               ),
             ),
           ],

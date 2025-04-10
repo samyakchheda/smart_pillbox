@@ -15,12 +15,12 @@ class MedicineNameInput extends StatefulWidget {
   final Function(String) onRemove;
 
   const MedicineNameInput({
-    Key? key,
+    super.key,
     required this.controller,
     required this.enteredMedicines,
     required this.onAdd,
     required this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   _MedicineNameInputState createState() => _MedicineNameInputState();
@@ -32,7 +32,6 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
 
   Timer? _debounce;
 
-// Fetch suggestions from the API based on user input.
   Future<void> _fetchSuggestions(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -52,7 +51,6 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> result = json.decode(response.body);
         if (result.containsKey("suggestions")) {
-          // Extract product_name from each suggestion.
           setState(() {
             suggestions = List<String>.from(result["suggestions"]
                 .map((suggestion) => suggestion["product_name"]));
@@ -73,10 +71,7 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
   }
 
   void _onChanged(String value) {
-    // Cancel the previous debounce timer if it's still running.
     _debounce?.cancel();
-
-    // Start a new debounce timer.
     _debounce = Timer(const Duration(seconds: 1), () {
       _fetchSuggestions(value);
     });
@@ -89,12 +84,13 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
       children: [
         TextFormField(
           controller: widget.controller,
-          cursorColor: Colors.black,
+          cursorColor: AppColors.textPrimary,
           decoration: InputDecoration(
             labelText: 'Medicine Name',
+            labelStyle: TextStyle(color: AppColors.textSecondary),
             floatingLabelBehavior: FloatingLabelBehavior.never,
             filled: true,
-            fillColor: Colors.grey[200],
+            fillColor: AppColors.borderColor.withOpacity(0.2),
             contentPadding:
                 const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             border: OutlineInputBorder(
@@ -102,7 +98,7 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
               borderSide: BorderSide.none,
             ),
             suffixIcon: IconButton(
-              icon: const Icon(Icons.add),
+              icon: Icon(Icons.add, color: AppColors.buttonColor),
               onPressed: () {
                 widget.onAdd();
                 setState(() {
@@ -111,19 +107,23 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
               },
             ),
           ),
+          style: TextStyle(color: AppColors.textPrimary),
           onChanged: _onChanged,
         ),
         if (isLoading)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8.0),
-            child: LinearProgressIndicator(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: LinearProgressIndicator(
+              backgroundColor: AppColors.borderColor.withOpacity(0.2),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
+            ),
           ),
         if (suggestions.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(top: 4),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(10),
             ),
             constraints: const BoxConstraints(maxHeight: 200),
@@ -133,7 +133,10 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
               itemBuilder: (context, index) {
                 final suggestion = suggestions[index];
                 return ListTile(
-                  title: Text(suggestion),
+                  title: Text(
+                    suggestion,
+                    style: TextStyle(color: AppColors.textPrimary),
+                  ),
                   onTap: () {
                     widget.controller.text = suggestion;
                     setState(() {
@@ -152,16 +155,22 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
             return Chip(
               label: Text(
                 medicineName,
-                style: const TextStyle(color: Colors.black),
+                style: TextStyle(color: AppColors.textPrimary),
               ),
-              backgroundColor: Colors.grey[200],
-              deleteIcon: const Icon(Icons.close),
+              backgroundColor: AppColors.borderColor.withOpacity(0.2),
+              deleteIcon: Icon(Icons.close, color: AppColors.buttonColor),
               onDeleted: () => widget.onRemove(medicineName),
             );
           }).toList(),
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
   }
 }
 
@@ -171,30 +180,31 @@ class DateInput extends StatelessWidget {
   final VoidCallback onTap;
 
   const DateInput({
-    Key? key,
+    super.key,
     required this.controller,
     required this.label,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[200], // Light grey background
-        borderRadius: BorderRadius.circular(12), // Rounded corners
+        color: AppColors.borderColor.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: TextFormField(
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Colors.black),
-          floatingLabelStyle: const TextStyle(color: Colors.black),
-          suffixIcon: const Icon(Icons.date_range, color: Colors.black),
-          border: InputBorder.none, // Removes the default border
-          contentPadding: const EdgeInsets.symmetric(
-              vertical: 15, horizontal: 20), // Padding for text
+          labelStyle: TextStyle(color: AppColors.textSecondary),
+          floatingLabelStyle: TextStyle(color: AppColors.textPrimary),
+          suffixIcon: Icon(Icons.date_range, color: AppColors.buttonColor),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         ),
+        style: TextStyle(color: AppColors.textPrimary),
         readOnly: true,
         onTap: onTap,
         validator: (value) =>
@@ -204,15 +214,96 @@ class DateInput extends StatelessWidget {
   }
 }
 
+Future<void> selectDate(
+  BuildContext context,
+  TextEditingController controller, {
+  DateTime? minDate,
+  DateTime? maxDate,
+}) async {
+  DateTime initialDate;
+  if (controller.text.isNotEmpty) {
+    initialDate = DateFormat('dd-MM-yyyy').parse(controller.text);
+  } else {
+    initialDate = DateTime.now();
+  }
+  if (minDate != null && initialDate.isBefore(minDate)) {
+    initialDate = minDate;
+  }
+  if (maxDate != null && initialDate.isAfter(maxDate)) {
+    initialDate = maxDate;
+  }
+
+  final DateTime? pickedDate = await showDatePicker(
+    context: context,
+    initialDate: initialDate,
+    firstDate: minDate ?? DateTime.now(),
+    lastDate: maxDate ?? DateTime(2099, 12, 31),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: Theme.of(context).copyWith(
+          dialogBackgroundColor: AppColors.cardBackground,
+          primaryColor: AppColors.buttonColor,
+          colorScheme: ColorScheme.fromSwatch(
+            primarySwatch: MaterialColor(
+              AppColors.buttonColor.value,
+              <int, Color>{
+                50: AppColors.buttonColor.withOpacity(0.1),
+                100: AppColors.buttonColor.withOpacity(0.2),
+                200: AppColors.buttonColor.withOpacity(0.3),
+                300: AppColors.buttonColor.withOpacity(0.4),
+                400: AppColors.buttonColor.withOpacity(0.5),
+                500: AppColors.buttonColor,
+                600: AppColors.buttonColor.withOpacity(0.7),
+                700: AppColors.buttonColor.withOpacity(0.8),
+                800: AppColors.buttonColor.withOpacity(0.9),
+                900: AppColors.buttonColor,
+              },
+            ),
+            accentColor: AppColors.buttonColor,
+            cardColor: AppColors.cardBackground,
+            backgroundColor: AppColors.cardBackground,
+            errorColor: AppColors.errorColor,
+            brightness: Theme.of(context).brightness, // Use current brightness
+          ).copyWith(
+            // Apply additional properties
+            onPrimary: AppColors.textOnPrimary,
+            onSurface: AppColors.textPrimary,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.buttonColor,
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            labelStyle: TextStyle(color: AppColors.textSecondary),
+            floatingLabelStyle: TextStyle(color: AppColors.textPrimary),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: AppColors.buttonColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: AppColors.borderColor),
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (pickedDate != null) {
+    controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
+  }
+}
+
 class DaySelector extends StatefulWidget {
   final List<String> selectedDays;
   final Function(String, bool) onSelectionChanged;
 
   const DaySelector({
-    Key? key,
+    super.key,
     required this.selectedDays,
     required this.onSelectionChanged,
-  }) : super(key: key);
+  });
 
   @override
   _DaySelectorState createState() => _DaySelectorState();
@@ -239,7 +330,6 @@ class _DaySelectorState extends State<DaySelector> {
         'Sat',
         'Sun'
       ];
-      // Toggle all days based on the new isDaily value
       for (var day in allDays) {
         widget.onSelectionChanged(day, isDaily);
       }
@@ -261,29 +351,31 @@ class _DaySelectorState extends State<DaySelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Daily button added above the day list
         ElevatedButton(
           onPressed: _toggleDaily,
-          child: Text(isDaily ? 'Clear All' : 'Select All'),
           style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
             backgroundColor: AppColors.buttonColor,
+            foregroundColor: AppColors.buttonText,
+          ),
+          child: Text(
+            isDaily ? 'Clear All' : 'Select All',
+            style: const TextStyle(color: AppColors.textOnPrimary),
           ),
         ),
         const SizedBox(height: 16),
         ClipRRect(
           child: ShaderMask(
             shaderCallback: (Rect bounds) {
-              return const LinearGradient(
+              return LinearGradient(
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
                   Colors.transparent,
-                  Colors.white,
-                  Colors.white,
+                  AppColors.background,
+                  AppColors.background,
                   Colors.transparent,
                 ],
-                stops: [0.0, 0.1, 0.9, 1.0],
+                stops: const [0.0, 0.1, 0.9, 1.0],
               ).createShader(bounds);
             },
             blendMode: BlendMode.dstIn,
@@ -305,14 +397,16 @@ class _DaySelectorState extends State<DaySelector> {
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 10),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.grey[200],
+                        color: isSelected
+                            ? AppColors.cardBackground
+                            : AppColors.borderColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: isSelected
                             ? Border.all(color: AppColors.buttonColor, width: 2)
                             : null,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: AppColors.textSecondary.withOpacity(0.2),
                             spreadRadius: 1,
                             blurRadius: 2,
                             offset: const Offset(0, 2),
@@ -326,7 +420,7 @@ class _DaySelectorState extends State<DaySelector> {
                             style: TextStyle(
                               color: isSelected
                                   ? AppColors.buttonColor
-                                  : Colors.black87,
+                                  : AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -338,16 +432,19 @@ class _DaySelectorState extends State<DaySelector> {
                               shape: BoxShape.circle,
                               color: isSelected
                                   ? AppColors.buttonColor
-                                  : Colors.white,
+                                  : AppColors.cardBackground,
                               border: isSelected
                                   ? null
-                                  : Border.all(color: Colors.grey, width: 2),
+                                  : Border.all(
+                                      color: AppColors.borderColor, width: 2),
                             ),
-                            child: isSelected
-                                ? const Icon(Icons.check,
-                                    color: Colors.white, size: 16)
-                                : const Icon(Icons.check,
-                                    color: Colors.grey, size: 16),
+                            child: Icon(
+                              Icons.check,
+                              color: isSelected
+                                  ? AppColors.buttonColor
+                                  : AppColors.buttonColor,
+                              size: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -368,10 +465,10 @@ class DoseFrequencyButtonForm extends StatelessWidget {
   final ValueChanged<String?> onChanged;
 
   const DoseFrequencyButtonForm({
-    Key? key,
+    super.key,
     required this.value,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -394,12 +491,12 @@ class DoseFrequencyButtonForm extends StatelessWidget {
               onPressed: () => onChanged(option),
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    isSelected ? AppColors.buttonColor : Colors.grey[300],
-                foregroundColor: isSelected ? Colors.white : Colors.black87,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20, vertical: 14), // Maintain padding
-                minimumSize: const Size(
-                    300, 40), // Increased width (kept height the same)
+                    isSelected ? AppColors.buttonColor : AppColors.borderColor,
+                foregroundColor:
+                    isSelected ? AppColors.buttonText : AppColors.textPrimary,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                minimumSize: const Size(300, 40),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -407,9 +504,12 @@ class DoseFrequencyButtonForm extends StatelessWidget {
               ),
               child: Text(
                 option,
-                style: const TextStyle(
-                  fontSize: 16, // Text size remains the same
+                style: TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
+                  color: isSelected
+                      ? AppColors.textOnPrimary
+                      : AppColors.textPrimary,
                 ),
               ),
             );
@@ -421,7 +521,7 @@ class DoseFrequencyButtonForm extends StatelessWidget {
             child: Text(
               'Please select a dose frequency',
               style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
+                color: AppColors.errorColor,
                 fontSize: 14,
               ),
             ),
@@ -436,25 +536,24 @@ class DoseFrequencySelector extends StatelessWidget {
   final ValueChanged<String?> onChanged;
 
   const DoseFrequencySelector({
-    Key? key,
+    super.key,
     required this.value,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      // Ensures everything is centered on the screen
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Keeps the column size minimal
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                height: 140, // Maintain scrolling height
-                width: 60, // Constrain width to focus on digits
+                height: 140,
+                width: 60,
                 child: ListWheelScrollView.useDelegate(
                   itemExtent: 44,
                   physics: const FixedExtentScrollPhysics(),
@@ -484,7 +583,7 @@ class DoseFrequencySelector extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                   color: isSelected
                                       ? AppColors.buttonColor
-                                      : Colors.grey[600],
+                                      : AppColors.textSecondary,
                                 ),
                               ),
                             );
@@ -496,13 +595,13 @@ class DoseFrequencySelector extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10), // Space between number & text
-              const Text(
+              const SizedBox(width: 10),
+              Text(
                 "per day",
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.buttonColor, // Fixed text color
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -513,24 +612,15 @@ class DoseFrequencySelector extends StatelessWidget {
   }
 }
 
-// Uncomment this if you are not using an existing Timestamp type (e.g. from firebase)
-// class Timestamp {
-//   final DateTime dateTime;
-//   Timestamp(this.dateTime);
-//   factory Timestamp.fromDate(DateTime dateTime) => Timestamp(dateTime);
-//   DateTime toDate() => dateTime;
-// }
-
-/// Custom time picker widget using ListWheelScrollView for hour, minute, and AM/PM selection.
 class CustomTimePicker extends StatefulWidget {
   final Function(Timestamp) onTimeSelected;
-  final Timestamp? initialTime; // Optional initial time
+  final Timestamp? initialTime;
 
   const CustomTimePicker({
-    Key? key,
+    super.key,
     required this.onTimeSelected,
     this.initialTime,
-  }) : super(key: key);
+  });
 
   @override
   _CustomTimePickerState createState() => _CustomTimePickerState();
@@ -549,10 +639,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
   void initState() {
     super.initState();
 
-    // If an initialTime is provided, parse it; otherwise use defaults (12:30 AM).
     if (widget.initialTime != null) {
       DateTime dateTime = widget.initialTime!.toDate();
-      // Convert 24-hour to 12-hour format.
       selectedHour = dateTime.hour % 12 == 0 ? 12 : dateTime.hour % 12;
       selectedMinute = dateTime.minute;
       selectedPeriod = dateTime.hour >= 12 ? 'PM' : 'AM';
@@ -562,7 +650,6 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
       selectedPeriod = 'AM';
     }
 
-    // Initialize controllers with the correct initial item.
     hourController = FixedExtentScrollController(initialItem: selectedHour - 1);
     minuteController = FixedExtentScrollController(initialItem: selectedMinute);
     periodController = FixedExtentScrollController(
@@ -580,29 +667,54 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
   @override
   Widget build(BuildContext context) {
     return Theme(
-      data: ThemeData.light().copyWith(
-        dialogBackgroundColor: Colors.white, // Background color set to white
-        textTheme: const TextTheme(
-          titleLarge: TextStyle(color: Colors.black), // Title color
-          bodyLarge: TextStyle(color: Colors.black), // General text color
+      data: Theme.of(context).copyWith(
+        dialogBackgroundColor: AppColors.cardBackground,
+        textTheme: TextTheme(
+          titleLarge: TextStyle(color: AppColors.textPrimary),
+          bodyLarge: TextStyle(color: AppColors.textPrimary),
+        ),
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: MaterialColor(
+            AppColors.buttonColor.value,
+            <int, Color>{
+              50: AppColors.buttonColor.withOpacity(0.1),
+              100: AppColors.buttonColor.withOpacity(0.2),
+              200: AppColors.buttonColor.withOpacity(0.3),
+              300: AppColors.buttonColor.withOpacity(0.4),
+              400: AppColors.buttonColor.withOpacity(0.5),
+              500: AppColors.buttonColor,
+              600: AppColors.buttonColor.withOpacity(0.7),
+              700: AppColors.buttonColor.withOpacity(0.8),
+              800: AppColors.buttonColor.withOpacity(0.9),
+              900: AppColors.buttonColor,
+            },
+          ),
+          accentColor: AppColors.buttonColor,
+          cardColor: AppColors.cardBackground,
+          backgroundColor: AppColors.cardBackground,
+          errorColor: AppColors.errorColor,
+          brightness: Theme.of(context).brightness, // Use current brightness
+        ).copyWith(
+          // Apply additional properties
+          onPrimary: AppColors.textOnPrimary,
+          onSurface: AppColors.textPrimary,
         ),
         textButtonTheme: TextButtonThemeData(
           style: TextButton.styleFrom(
-            foregroundColor: Colors.black, // Button text color
+            foregroundColor: AppColors.buttonColor,
           ),
         ),
       ),
       child: AlertDialog(
-        title: const Text(
+        title: Text(
           'Select Time',
-          style: TextStyle(color: Colors.black), // Title text color
+          style: TextStyle(color: AppColors.textPrimary),
         ),
         content: SizedBox(
           height: 180,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Hours Wheel
               Expanded(
                 child: ListWheelScrollView.useDelegate(
                   controller: hourController,
@@ -626,7 +738,9 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            color: isSelected ? Colors.black : Colors.grey,
+                            color: isSelected
+                                ? AppColors.buttonColor
+                                : AppColors.textSecondary,
                           ),
                         ),
                       );
@@ -635,9 +749,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                   ),
                 ),
               ),
-              const Text(":",
-                  style: TextStyle(fontSize: 24, color: Colors.black)),
-              // Minutes Wheel
+              Text(":",
+                  style: TextStyle(fontSize: 24, color: AppColors.textPrimary)),
               Expanded(
                 child: ListWheelScrollView.useDelegate(
                   controller: minuteController,
@@ -661,7 +774,9 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            color: isSelected ? Colors.black : Colors.grey,
+                            color: isSelected
+                                ? AppColors.buttonColor
+                                : AppColors.textSecondary,
                           ),
                         ),
                       );
@@ -670,7 +785,6 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                   ),
                 ),
               ),
-              // AM/PM Wheel
               Expanded(
                 child: ListWheelScrollView.useDelegate(
                   controller: periodController,
@@ -696,7 +810,9 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                             fontWeight: isSelected
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            color: isSelected ? Colors.black : Colors.grey,
+                            color: isSelected
+                                ? AppColors.buttonColor
+                                : AppColors.textSecondary,
                           ),
                         ),
                       );
@@ -711,7 +827,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.black)),
+            child:
+                Text("Cancel", style: TextStyle(color: AppColors.buttonColor)),
           ),
           TextButton(
             onPressed: () {
@@ -721,12 +838,11 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
               } else if (selectedPeriod == 'AM' && hour == 12) {
                 hour = 0;
               }
-              // Use a fixed date so that only the time-of-day matters.
               final fixedDateTime = DateTime(1970, 1, 1, hour, selectedMinute);
               widget.onTimeSelected(Timestamp.fromDate(fixedDateTime));
               Navigator.pop(context);
             },
-            child: const Text("OK", style: TextStyle(color: Colors.black)),
+            child: Text("OK", style: TextStyle(color: AppColors.buttonColor)),
           ),
         ],
       ),
@@ -734,20 +850,17 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
   }
 }
 
-/// Widget that shows a table of intakes (rows) with a label and a time-selection button.
 class MedicineTimeSelector extends StatelessWidget {
-  /// A list where each index represents an intake’s selected time.
-  /// If a time hasn’t been set for an intake, its value is null.
   final List<Timestamp?> medicineTimes;
   final int numberOfDoses;
   final Function(Timestamp, int) onTimeSelected;
 
   const MedicineTimeSelector({
-    Key? key,
+    super.key,
     required this.medicineTimes,
     required this.numberOfDoses,
     required this.onTimeSelected,
-  }) : super(key: key);
+  });
 
   void _pickTime(BuildContext context, int index) {
     showDialog(
@@ -757,7 +870,6 @@ class MedicineTimeSelector extends StatelessWidget {
           initialTime:
               index < medicineTimes.length ? medicineTimes[index] : null,
           onTimeSelected: (timestamp) {
-            // Return the index of the intake along with the timestamp.
             onTimeSelected(timestamp, index);
           },
         );
@@ -765,13 +877,11 @@ class MedicineTimeSelector extends StatelessWidget {
     );
   }
 
-  /// Format the timestamp to a readable string (e.g., "5:08 PM").
   String _formatTimestamp(Timestamp timestamp) {
     final dateTime = timestamp.toDate();
     return DateFormat.jm().format(dateTime);
   }
 
-  /// Returns a label for the intake row (e.g., "1st Intake", "2nd Intake", etc.).
   String _getIntakeLabel(int index) {
     if (index == 0) return "1st Intake";
     if (index == 1) return "2nd Intake";
@@ -783,18 +893,16 @@ class MedicineTimeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white, // Set background color
-        borderRadius: BorderRadius.circular(12), // Curved borders
-        border:
-            Border.all(color: Colors.grey.shade300, width: 2), // Outer border
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.borderColor, width: 2),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(
-            12), // Ensures the table follows the rounded shape
+        borderRadius: BorderRadius.circular(12),
         child: Table(
           border: TableBorder(
-            horizontalInside: BorderSide(
-                color: Colors.grey.shade300, width: 1), // Only horizontal lines
+            horizontalInside:
+                BorderSide(color: AppColors.borderColor, width: 1),
           ),
           columnWidths: const {
             0: FixedColumnWidth(120),
@@ -808,29 +916,33 @@ class MedicineTimeSelector extends StatelessWidget {
 
             return TableRow(
               children: [
-                // Intake Label Cell
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Center(
                     child: Text(
                       _getIntakeLabel(index),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),
                 ),
-                // Button Cell
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                     onPressed: () => _pickTime(context, index),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.buttonColor,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.buttonText,
                     ),
                     child: Text(
                       buttonText,
-                      style: const TextStyle(fontSize: 16),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textOnPrimary,
+                      ),
                     ),
                   ),
                 ),
@@ -848,19 +960,22 @@ class AlarmNotificationToggle extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   const AlarmNotificationToggle({
-    Key? key,
+    super.key,
     required this.isNotification,
     required this.onChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           'Alarms',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
         GestureDetector(
           onTap: () => onChanged(!isNotification),
@@ -869,12 +984,13 @@ class AlarmNotificationToggle extends StatelessWidget {
             width: 60,
             height: 30,
             decoration: BoxDecoration(
-              color: isNotification ? Colors.grey[300] : AppColors.buttonColor,
+              color: isNotification
+                  ? AppColors.borderColor
+                  : AppColors.buttonColor,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Stack(
               children: [
-                // Moving Circle with Icon Inside
                 AnimatedAlign(
                   duration: const Duration(milliseconds: 300),
                   alignment: isNotification
@@ -884,9 +1000,9 @@ class AlarmNotificationToggle extends StatelessWidget {
                     width: 26,
                     height: 26,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.white,
+                      color: AppColors.cardBackground,
                     ),
                     child: Center(
                       child: AnimatedSwitcher(
@@ -907,16 +1023,19 @@ class AlarmNotificationToggle extends StatelessWidget {
             ),
           ),
         ),
-        const Text(
+        Text(
           'Notifications',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
       ],
     );
   }
 }
 
-// Functions
+// Functions (mostly unchanged, themed where applicable)
 
 void initializeFormData(
   Map<String, dynamic>? existingData,
@@ -950,70 +1069,6 @@ void initializeFormData(
   }
 }
 
-Future<void> selectDate(
-  BuildContext context,
-  TextEditingController controller, {
-  DateTime? minDate,
-  DateTime? maxDate,
-}) async {
-  // Determine the initial date.
-  DateTime initialDate;
-  if (controller.text.isNotEmpty) {
-    initialDate = DateFormat('dd-MM-yyyy').parse(controller.text);
-  } else {
-    initialDate = DateTime.now();
-  }
-  // Ensure the initial date falls within the provided bounds.
-  if (minDate != null && initialDate.isBefore(minDate)) {
-    initialDate = minDate;
-  }
-  if (maxDate != null && initialDate.isAfter(maxDate)) {
-    initialDate = maxDate;
-  }
-
-  final DateTime? pickedDate = await showDatePicker(
-    context: context,
-    initialDate: initialDate,
-    firstDate: minDate ?? DateTime.now(),
-    lastDate: maxDate ?? DateTime(2099, 12, 31),
-    builder: (BuildContext context, Widget? child) {
-      return Theme(
-        data: ThemeData.light().copyWith(
-          dialogBackgroundColor: Colors.white, // Background color set to white
-          primaryColor: AppColors.buttonColor, // Adjust primary color
-          colorScheme: const ColorScheme.light(
-            primary: AppColors.buttonColor, // Highlight color
-            onPrimary: Colors.white, // Button text color
-            onSurface: Colors.black, // Default text color
-          ),
-          textButtonTheme: TextButtonThemeData(
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.buttonColor, // Button text color
-            ),
-          ),
-          inputDecorationTheme: const InputDecorationTheme(
-            labelStyle: TextStyle(color: Colors.black), // Default label color
-            floatingLabelStyle:
-                TextStyle(color: Colors.black), // Floating label color
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.black),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderSide:
-                  BorderSide(color: Colors.grey), // Default border color
-            ),
-          ),
-        ),
-        child: child!,
-      );
-    },
-  );
-
-  if (pickedDate != null) {
-    controller.text = DateFormat('dd-MM-yyyy').format(pickedDate);
-  }
-}
-
 int getDoseCount(String? doseFrequency, {int? customDoseCount}) {
   switch (doseFrequency) {
     case '1 time, Daily':
@@ -1023,8 +1078,7 @@ int getDoseCount(String? doseFrequency, {int? customDoseCount}) {
     case '3 times, Daily':
       return 3;
     case 'Custom':
-      // Use customDoseCount to return the dynamic value
-      return customDoseCount ?? 0; // Return 0 if customDoseCount is null
+      return customDoseCount ?? 0;
     default:
       return 0;
   }
@@ -1034,8 +1088,7 @@ Future<Timestamp?> addMedicineTime(BuildContext context, String? doseFrequency,
     List<Timestamp> medicineTimes, int? customDoseCount) async {
   int maxAllowedTimes;
   if (doseFrequency == 'Custom') {
-    maxAllowedTimes =
-        customDoseCount ?? 10; // Default to 10 if customDoseCount is null
+    maxAllowedTimes = customDoseCount ?? 10;
   } else {
     maxAllowedTimes = getDoseCount(doseFrequency);
   }
@@ -1045,8 +1098,9 @@ Future<Timestamp?> addMedicineTime(BuildContext context, String? doseFrequency,
       SnackBar(
         content: Text(
           'You can only add up to $maxAllowedTimes timings for the selected dose frequency.',
+          style: const TextStyle(color: AppColors.textOnPrimary),
         ),
-        backgroundColor: Colors.red,
+        backgroundColor: AppColors.errorColor,
       ),
     );
     return null;
@@ -1055,6 +1109,24 @@ Future<Timestamp?> addMedicineTime(BuildContext context, String? doseFrequency,
   final TimeOfDay? pickedTime = await showTimePicker(
     context: context,
     initialTime: TimeOfDay.now(),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData.light().copyWith(
+          primaryColor: AppColors.buttonColor,
+          colorScheme: ColorScheme.light(
+            primary: AppColors.buttonColor,
+            onPrimary: AppColors.textOnPrimary,
+            onSurface: AppColors.textPrimary,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.buttonColor,
+            ),
+          ),
+        ),
+        child: child!,
+      );
+    },
   );
   if (pickedTime != null) {
     final now = DateTime.now();
@@ -1092,8 +1164,11 @@ bool validateForm(BuildContext context, List<String> enteredMedicines,
 void showErrorSnackBar(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.red,
+      content: Text(
+        message,
+        style: const TextStyle(color: AppColors.textOnPrimary),
+      ),
+      backgroundColor: AppColors.errorColor,
     ),
   );
 }
@@ -1110,20 +1185,14 @@ Map<String, dynamic> createMedicineData(
   const uuid = Uuid();
   String uniqueId = uuid.v4();
 
-  // Parse the start and end dates.
   DateTime start = DateFormat('dd-MM-yyyy').parse(startDate);
   DateTime end = DateFormat('dd-MM-yyyy').parse(endDate);
 
-// Initialize the status map.
   Map<String, String> statusMap = {};
-
-// Loop from start to end (inclusive) and add a key-value pair for each date.
   for (DateTime date = start;
       !date.isAfter(end);
       date = date.add(const Duration(days: 1))) {
-    // Format the date as needed. For example, using 'dd-MM-yyyy'.
     String formattedDate = DateFormat('dd-MM-yyyy').format(date);
-    // Set a default value. You can change "not taken" to false or any value you need.
     statusMap[formattedDate] = 'not taken';
   }
 
@@ -1150,7 +1219,7 @@ Future<void> saveMedicineData(String userId, Map<String, dynamic> medicineData,
     final docRef = FirebaseFirestore.instance.collection('users').doc(userId);
     final docSnapshot = await docRef.get();
 
-    print("📌 Medicine Data to Save: $medicineData"); // Debugging print
+    print("📌 Medicine Data to Save: $medicineData");
 
     if (!docSnapshot.exists) {
       print("🆕 Document does not exist, creating new user entry...");

@@ -10,10 +10,10 @@ class HomeScreen extends StatefulWidget {
   final MapController mapController;
 
   const HomeScreen({
-    Key? key,
+    super.key,
     required this.pharmacies,
     required this.mapController,
-  }) : super(key: key);
+  });
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -58,8 +58,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       for (var pharmacy in _pharmacies) {
         await widget.mapController.addMarker(
           GeoPoint(latitude: pharmacy.lat, longitude: pharmacy.lon),
-          markerIcon: MarkerIcon(
-            icon: const Icon(Icons.location_on, color: Colors.red, size: 48),
+          markerIcon: const MarkerIcon(
+            icon: Icon(Icons.location_on, color: Colors.red, size: 48),
           ),
         );
       }
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Header with Gradient (Fixed Height)
               Container(
                 height: 166,
-                padding: EdgeInsets.only(bottom: 20),
+                padding: const EdgeInsets.only(bottom: 20),
                 alignment: Alignment.bottomCenter,
                 child: Text(
                   'Nearby Pharmacies',
@@ -180,13 +180,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       borderRadius: BorderRadius.circular(16),
       child: OSMFlutter(
         controller: widget.mapController,
-        osmOption: OSMOption(
+        osmOption: const OSMOption(
           enableRotationByGesture: true,
           userTrackingOption: UserTrackingOption(
             enableTracking: false,
             unFollowUser: true,
           ),
-          zoomOption: const ZoomOption(
+          zoomOption: ZoomOption(
             initZoom: 17,
             minZoomLevel: 3,
             maxZoomLevel: 19,
@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.sms,
+                                  icon: Icon(Icons.sms,
                                       color: AppColors.buttonColor),
                                   onPressed: () =>
                                       _openMessageScreen(pharmacy, 'Share'),

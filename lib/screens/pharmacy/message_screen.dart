@@ -13,10 +13,10 @@ class MessageScreen extends StatefulWidget {
   final String messageType; // "SMS" or "MMS"
 
   const MessageScreen({
-    Key? key,
+    super.key,
     required this.pharmacy,
     required this.messageType,
-  }) : super(key: key);
+  });
 
   @override
   _MessageScreenState createState() => _MessageScreenState();
@@ -155,11 +155,11 @@ class _MessageScreenState extends State<MessageScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 6,
-                  offset: const Offset(0, 2),
+                  offset: Offset(0, 2),
                 ),
               ],
             ),

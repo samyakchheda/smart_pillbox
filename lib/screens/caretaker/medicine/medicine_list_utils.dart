@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -104,13 +105,13 @@ class DateSelector extends StatelessWidget {
   final Function(DateTime) onDateSelected;
 
   const DateSelector({
-    Key? key,
+    super.key,
     required this.dateRange,
     required this.selectedDate,
     required this.today,
     required this.scrollController,
     required this.onDateSelected,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -260,11 +261,11 @@ class MedicineList extends StatelessWidget {
   final DateTime selectedDate;
 
   const MedicineList({
-    Key? key,
+    super.key,
     required this.firestore,
     required this.userId,
     required this.selectedDate,
-  }) : super(key: key);
+  });
 
   // Helper function to get the next scheduled time on the selected date.
   DateTime getNextScheduledTime(
@@ -321,8 +322,8 @@ class MedicineList extends StatelessWidget {
           final caretakerData = caretakerDoc.data() as Map<String, dynamic>;
           final String patientEmail = caretakerData['patient'] ?? '';
           if (patientEmail.isEmpty) {
-            return const Center(
-                child: Text('Patient email not found in caretaker data.'));
+            return Center(
+                child: Text('Patient email not found in caretaker data.'.tr()));
           }
           // Query the "users" collection for the patient document using patientEmail.
           return StreamBuilder<QuerySnapshot>(
@@ -336,8 +337,8 @@ class MedicineList extends StatelessWidget {
               }
               if (!patientSnapshot.hasData ||
                   patientSnapshot.data!.docs.isEmpty) {
-                return const Center(
-                    child: Text('No medicines found for patient.'));
+                return Center(
+                    child: Text('No medicines found for patient.'.tr()));
               }
               final patientDoc = patientSnapshot.data!.docs.first;
               Map<String, dynamic> data =
@@ -356,8 +357,9 @@ class MedicineList extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
               if (!snapshot.hasData || snapshot.data == null) {
-                return const Center(
-                    child: Text('No medicines found. Click "+" to add one.'));
+                return Center(
+                    child:
+                        Text('No medicines found. Click "+" to add one.'.tr()));
               }
               Map<String, dynamic> data =
                   snapshot.data!.data() as Map<String, dynamic>;
@@ -373,8 +375,8 @@ class MedicineList extends StatelessWidget {
 
   Widget buildMedicineList(BuildContext context, List<dynamic> medicines) {
     if (medicines.isEmpty) {
-      return const Center(
-        child: Text('No medicines found. Click "+" to add one.'),
+      return Center(
+        child: Text('No medicines found. Click "+" to add one.'.tr()),
       );
     }
 
@@ -410,7 +412,7 @@ class MedicineList extends StatelessWidget {
     }).toList();
 
     if (filteredMedicines.isEmpty) {
-      return const Center(child: Text('No medicines scheduled for this day.'));
+      return Center(child: Text('No medicines scheduled for this day.'.tr()));
     }
 
     // Sorting based on next scheduled medicine time for the selected day.
@@ -492,14 +494,14 @@ class MedicineList extends StatelessWidget {
                         horizontal: 24, vertical: 16),
                     title: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.warning_amber_rounded,
                           color: Colors.redAccent,
                           size: 30,
                         ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Delete Item?',
+                        SizedBox(width: 12),
+                        Text(
+                          'Delete Item?'.tr(),
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -509,8 +511,9 @@ class MedicineList extends StatelessWidget {
                         ),
                       ],
                     ),
-                    content: const Text(
-                      'Do you want to delete this medicine entry? This action cannot be undone.',
+                    content: Text(
+                      'Do you want to delete this medicine entry? This action cannot be undone.'
+                          .tr(),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black54,
@@ -533,7 +536,7 @@ class MedicineList extends StatelessWidget {
                               horizontal: 20, vertical: 10),
                         ),
                         child: Text(
-                          'Cancel',
+                          'Cancel'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -553,8 +556,8 @@ class MedicineList extends StatelessWidget {
                               horizontal: 20, vertical: 10),
                           elevation: 2,
                         ),
-                        child: const Text(
-                          'Delete',
+                        child: Text(
+                          'Delete'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -589,11 +592,11 @@ class AnimatedMedicineCard extends StatefulWidget {
   final String endDate;
 
   const AnimatedMedicineCard({
-    Key? key,
+    super.key,
     required this.medicine,
     required this.startDate,
     required this.endDate,
-  }) : super(key: key);
+  });
 
   @override
   _AnimatedMedicineCardState createState() => _AnimatedMedicineCardState();
@@ -762,7 +765,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                           ),
                           SizedBox(width: 12 * scaleFactor),
                           Text(
-                            'Edit',
+                            'Edit'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
                               color: Colors.black87,
@@ -783,7 +786,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                           ),
                           SizedBox(width: 12 * scaleFactor),
                           Text(
-                            'Delete',
+                            'Delete'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
                               color: Colors.black87,
@@ -840,8 +843,8 @@ Widget buildSpeedDial(
                     ListTile(
                       leading: const Icon(Icons.medical_services,
                           color: Color(0xFF4276FD)),
-                      title: const Text(
-                        'Scan Medicine',
+                      title: Text(
+                        'Scan Medicine'.tr(),
                         style: TextStyle(
                           fontSize: 20,
                           color: Colors.black,
@@ -852,7 +855,7 @@ Widget buildSpeedDial(
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OCRScreen(),
+                            builder: (context) => const OCRScreen(),
                           ),
                         );
                       },
@@ -861,8 +864,8 @@ Widget buildSpeedDial(
                     ListTile(
                       leading: const Icon(Icons.receipt_long,
                           color: Color(0xFF4276FD)),
-                      title: const Text(
-                        'Scan Prescription',
+                      title: Text(
+                        'Scan Prescription'.tr(),
                         style: TextStyle(
                           fontSize: 20,
                           color: Colors.black,
@@ -873,7 +876,7 @@ Widget buildSpeedDial(
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ScannerScreen(),
+                            builder: (context) => const ScannerScreen(),
                           ),
                         );
                       },

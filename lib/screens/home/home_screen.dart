@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTabChange: (index) => setState(() => _currentIndex = index),
                   activeIconColor: Colors.white,
                   inactiveIconColor: Colors.white,
-                  animationDuration: Duration(minutes: 0),
+                  animationDuration: const Duration(minutes: 0),
                   navigationBarButtons: const [
                     NavigationBarButton(
                         textColor: Colors.white,

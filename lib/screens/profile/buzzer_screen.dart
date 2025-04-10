@@ -84,7 +84,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
                 onPressed: widget.onBack,
               ),
               Expanded(
@@ -196,7 +196,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
                   },
                 ),
                 if (isSelected)
-                  const Icon(Icons.check_circle, color: AppColors.buttonColor),
+                  Icon(Icons.check_circle, color: AppColors.buttonColor),
               ],
             ),
             onTap: () {

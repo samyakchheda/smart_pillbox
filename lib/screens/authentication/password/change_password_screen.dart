@@ -114,87 +114,89 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: widget.onBack,
-              ),
-              Text(
-                "Change Password",
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      color: AppColors.background,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                  onPressed: widget.onBack,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          MyTextField(
-            controller: _currentPasswordController,
-            hintText: "Old Password",
-            icon: Icons.lock,
-            isPassword: true,
-            keyboardType: TextInputType.visiblePassword,
-            autofillHints: const [AutofillHints.password],
-            enabled: _isEmailPasswordUser,
-            fillColor: Colors.grey[200]!,
-            borderRadius: 50,
-          ),
-          const SizedBox(height: 15),
-          MyTextField(
-            controller: _newPasswordController,
-            hintText: "New Password",
-            icon: Icons.lock,
-            isPassword: true,
-            keyboardType: TextInputType.visiblePassword,
-            autofillHints: const [AutofillHints.newPassword],
-            enabled: _isEmailPasswordUser,
-            fillColor: Colors.grey[200]!,
-            borderRadius: 50,
-          ),
-          const SizedBox(height: 15),
-          MyTextField(
-            controller: _confirmPasswordController,
-            hintText: "Confirm New Password",
-            icon: Icons.lock_reset,
-            isPassword: true,
-            keyboardType: TextInputType.visiblePassword,
-            autofillHints: const [AutofillHints.password],
-            enabled: _isEmailPasswordUser,
-            fillColor: Colors.grey[200]!,
-            borderRadius: 50,
-          ),
-          const SizedBox(height: 30),
-          if (!_isEmailPasswordUser)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                "Password changes are not available for Google/Facebook accounts",
-                style: GoogleFonts.poppins(
-                  color: Colors.grey,
-                  fontSize: 14,
+                Text(
+                  "Change Password",
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
+              ],
             ),
-          Center(
-            child: MyElevatedButton(
-              text: "Save",
-              onPressed: _isEmailPasswordUser ? _changePassword : () {},
-              backgroundColor: AppColors.buttonColor,
-              textColor: Colors.white,
+            const SizedBox(height: 20),
+            MyTextField(
+              controller: _currentPasswordController,
+              hintText: "Old Password",
+              icon: Icons.lock,
+              isPassword: true,
+              keyboardType: TextInputType.visiblePassword,
+              autofillHints: const [AutofillHints.password],
+              enabled: _isEmailPasswordUser,
+              fillColor: Colors.grey[200]!,
               borderRadius: 50,
-              height: 50.0,
-              width: double.infinity,
             ),
-          ),
-        ],
+            const SizedBox(height: 15),
+            MyTextField(
+              controller: _newPasswordController,
+              hintText: "New Password",
+              icon: Icons.lock,
+              isPassword: true,
+              keyboardType: TextInputType.visiblePassword,
+              autofillHints: const [AutofillHints.newPassword],
+              enabled: _isEmailPasswordUser,
+              fillColor: Colors.grey[200]!,
+              borderRadius: 50,
+            ),
+            const SizedBox(height: 15),
+            MyTextField(
+              controller: _confirmPasswordController,
+              hintText: "Confirm New Password",
+              icon: Icons.lock_reset,
+              isPassword: true,
+              keyboardType: TextInputType.visiblePassword,
+              autofillHints: const [AutofillHints.password],
+              enabled: _isEmailPasswordUser,
+              fillColor: Colors.grey[200]!,
+              borderRadius: 50,
+            ),
+            const SizedBox(height: 30),
+            if (!_isEmailPasswordUser)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  "Password changes are not available for Google/Facebook accounts",
+                  style: GoogleFonts.poppins(
+                    color: Colors.grey,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            Center(
+              child: MyElevatedButton(
+                text: "Save",
+                onPressed: _isEmailPasswordUser ? _changePassword : () {},
+                backgroundColor: AppColors.buttonColor,
+                textColor: Colors.white,
+                borderRadius: 50,
+                height: 50.0,
+                width: double.infinity,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

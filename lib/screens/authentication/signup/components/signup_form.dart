@@ -75,7 +75,6 @@ class _SignupFormState extends State<SignupForm> {
   }
 
   /// Google Sign-Up with caretaker integration.
-  /// Google Sign-Up with caretaker integration.
   Future<void> signInWithGoogle() async {
     setState(() => _isLoading = true);
 
@@ -201,15 +200,20 @@ class _SignupFormState extends State<SignupForm> {
                 children: [
                   Checkbox(
                     value: _isChecked,
+                    activeColor: AppColors.buttonColor,
+                    checkColor: AppColors.textOnPrimary,
+                    side: BorderSide(color: AppColors.borderColor),
                     onChanged: (value) => setState(() => _isChecked = value!),
                   ),
                   Expanded(
                     child: GestureDetector(
                       onTap: () {},
-                      child: const Text(
+                      child: Text(
                         "I agree to the Privacy Policy and Terms of Use",
-                        style: TextStyle(
-                            fontSize: 14, color: AppColors.textSecondary),
+                        style: AppFonts.bodyText.copyWith(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -217,7 +221,7 @@ class _SignupFormState extends State<SignupForm> {
               ),
               const SizedBox(height: 40),
               _isLoading
-                  ? const CircularProgressIndicator()
+                  ? CircularProgressIndicator(color: AppColors.buttonColor)
                   : ConstrainedBox(
                       constraints:
                           const BoxConstraints(maxWidth: double.infinity),
@@ -245,23 +249,23 @@ class _SignupFormState extends State<SignupForm> {
               MyElevatedButton(
                 text: "Continue With Google",
                 onPressed: signInWithGoogle,
-                backgroundColor: Colors.white,
-                textColor: AppColors.kBlackColor,
+                backgroundColor: AppColors.cardBackground,
+                textColor: AppColors.textPrimary,
                 borderRadius: 50,
-                icon: Image.asset("assets/icons/ic_google.png"),
+                icon: Image.asset("assets/icons/ic_google.png", height: 24),
                 height: 60,
-                borderColor: AppColors.kBlackColor,
+                borderSide: BorderSide(color: AppColors.borderColor, width: 2),
               ),
               const SizedBox(height: 15),
               MyElevatedButton(
                 text: "Continue With Facebook",
                 onPressed: signInWithFacebook,
-                backgroundColor: Colors.white,
-                textColor: AppColors.kBlackColor,
+                backgroundColor: AppColors.cardBackground,
+                textColor: AppColors.textPrimary,
                 borderRadius: 50,
-                icon: Image.asset("assets/icons/ic_fb.png"),
+                icon: Image.asset("assets/icons/ic_fb.png", height: 24),
                 height: 60,
-                borderColor: AppColors.kBlackColor,
+                borderSide: BorderSide(color: AppColors.borderColor, width: 2),
               ),
               const SizedBox(height: 15),
               _navigateToLoginScreen(),
@@ -278,19 +282,21 @@ class _SignupFormState extends State<SignupForm> {
         Navigator.pushReplacementNamed(context, Routes.login);
       },
       child: RichText(
-        text: const TextSpan(
+        text: TextSpan(
           text: "Already have an account? ",
-          style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 15,
-              fontWeight: FontWeight.w400),
+          style: AppFonts.bodyText.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+          ),
           children: [
             TextSpan(
               text: "Login",
-              style: TextStyle(
-                  color: AppColors.buttonColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600),
+              style: AppFonts.bodyText.copyWith(
+                color: AppColors.buttonColor,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

@@ -112,6 +112,7 @@ dependencies:
   audioplayers: ^5.2.1
   sms_mms: ^0.0.3
   easy_localization: ^3.0.7+1
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
@@ -156,6 +157,8 @@ flutter:
     - assets/buzzer/soft_melody.wav
     - assets/buzzer/relaxing_sound.wav
     - assets/translations/
+    - assets/images/splash_logo.png
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -177,3 +180,19 @@ flutter:
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_native_splash:
+  color: "#FFFFFF" # Smoky white background color
+  color_dark: "#000000"
+
+
+  android_12:
+    color: "#FFFFFF" # Smoky white for Android 12
+    icon_background_color_dark: "#000000"
+
+  web: false
+  android: true
+  ios: true
+  android_gravity: center # Adjust logo position
+  ios_content_mode: scaleAspectFit # Maintains aspect ratio
+  web_image_mode: center

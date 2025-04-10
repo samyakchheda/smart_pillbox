@@ -2,16 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:home/screens/profile/buzzer_screen.dart';
 import 'package:home/screens/profile/contact_us_screen.dart';
 import 'package:home/screens/profile/report_screen.dart';
 import 'package:home/screens/profile/smart_diagnosis_screen.dart';
 import 'package:home/screens/profile/two_factor_auth_screen.dart';
 import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_fonts.dart';
+import 'package:home/theme/theme_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:app_settings/app_settings.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:home/widgets/common/my_elevated_button.dart';
+import 'package:home/widgets/common/my_text_field.dart';
+import 'package:home/widgets/common/my_snack_bar.dart';
+import '../../main.dart';
 import '../authentication/password/change_password_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_addresses_screen.dart';
@@ -61,6 +66,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     super.initState();
     _fetchUserProfile();
     _checkNotificationPermission();
+    ThemeProvider.themeNotifier.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    ThemeProvider.themeNotifier.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _checkNotificationPermission() async {
@@ -141,7 +159,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blue, width: 8),
+                  border: Border.all(color: AppColors.buttonColor, width: 8),
                 ),
                 child: _profilePictureUrl != null
                     ? CachedNetworkImage(
@@ -150,24 +168,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           radius: 120,
                           backgroundImage: imageProvider,
                         ),
-                        placeholder: (context, url) => const CircleAvatar(
+                        placeholder: (context, url) => CircleAvatar(
                           radius: 120,
-                          backgroundColor: AppColors.darkBackground,
-                          child: CircularProgressIndicator(),
+                          backgroundColor: AppColors.cardBackground,
+                          child: CircularProgressIndicator(
+                            color: AppColors.buttonColor,
+                          ),
                         ),
-                        errorWidget: (context, url, error) =>
-                            const CircleAvatar(
+                        errorWidget: (context, url, error) => CircleAvatar(
                           radius: 120,
-                          backgroundColor: AppColors.darkBackground,
-                          child:
-                              Icon(Icons.error, size: 60, color: Colors.white),
+                          backgroundColor: AppColors.cardBackground,
+                          child: Icon(Icons.error,
+                              size: 60, color: AppColors.buttonColor),
                         ),
                       )
-                    : const CircleAvatar(
+                    : CircleAvatar(
                         radius: 120,
-                        backgroundColor: AppColors.darkBackground,
-                        child:
-                            Icon(Icons.person, size: 120, color: Colors.white),
+                        backgroundColor: AppColors.cardBackground,
+                        child: Icon(Icons.person,
+                            size: 120, color: AppColors.buttonColor),
                       ),
               ),
             ],
@@ -177,9 +196,85 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
+  void _showAppearanceBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: AppColors.cardBackground,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Appearance',
+                style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: Icon(Icons.light_mode, color: AppColors.buttonColor),
+                title: Text('Light Theme',
+                    style: AppFonts.bodyText
+                        .copyWith(color: AppColors.textPrimary)),
+                trailing: ThemeProvider.themeNotifier.value == ThemeMode.light
+                    ? Icon(Icons.check, color: AppColors.buttonColor)
+                    : null,
+                onTap: () {
+                  print("Switching to Light Theme");
+                  ThemeProvider.setTheme(ThemeMode.light);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.dark_mode, color: AppColors.buttonColor),
+                title: Text('Dark Theme',
+                    style: AppFonts.bodyText
+                        .copyWith(color: AppColors.textPrimary)),
+                trailing: ThemeProvider.themeNotifier.value == ThemeMode.dark
+                    ? Icon(Icons.check, color: AppColors.buttonColor)
+                    : null,
+                onTap: () {
+                  print("Switching to Dark Theme");
+                  ThemeProvider.setTheme(ThemeMode.dark);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.settings_system_daydream,
+                    color: AppColors.buttonColor),
+                title: Text('System Default',
+                    style: AppFonts.bodyText
+                        .copyWith(color: AppColors.textPrimary)),
+                trailing: ThemeProvider.themeNotifier.value == ThemeMode.system
+                    ? Icon(Icons.check, color: AppColors.buttonColor)
+                    : null,
+                onTap: () {
+                  print("Switching to System Default");
+                  ThemeProvider.setTheme(ThemeMode.system);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = ThemeProvider.themeNotifier.value == ThemeMode.dark ||
+        (ThemeProvider.themeNotifier.value == ThemeMode.system &&
+            WidgetsBinding.instance.window.platformBrightness ==
+                Brightness.dark);
+
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           Column(
@@ -188,7 +283,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 height: 250,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.buttonColor, Colors.grey.shade400],
+                    colors: isDarkMode
+                        ? [
+                            AppColors.buttonColor
+                                .withOpacity(0.8), // Darkened blue
+                            AppColors.darkBackground
+                                .withOpacity(0.9), // Dark gray
+                          ]
+                        : [
+                            AppColors.buttonColor, // Light mode blue
+                            Colors.grey.shade400, // Light mode gray
+                          ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -198,10 +303,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text(
                       'Profile Settings',
-                      style: GoogleFonts.poppins(
+                      style: AppFonts.headline.copyWith(
+                        color: AppColors.textOnPrimary,
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
                       ),
                     ),
                   ),
@@ -217,7 +321,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 topRight: Radius.circular(32),
               ),
               child: Container(
-                color: const Color(0xFFE0E0E0),
+                color: AppColors.background,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -244,7 +348,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         clipBehavior: Clip.none,
         children: [
           Card(
-            color: Colors.white,
+            color: AppColors.cardBackground,
             elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -259,19 +363,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: 40),
                   Text(
                     _userName ?? "Unknown",
-                    style: GoogleFonts.poppins(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: AppFonts.headline
+                        .copyWith(color: AppColors.textPrimary),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _userEmail ?? "example.com",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: AppColors.textPlaceholder,
-                    ),
+                    style: AppFonts.caption
+                        .copyWith(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -291,10 +390,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     border: Border.all(color: AppColors.buttonColor, width: 4),
                   ),
                   child: _isProfileImageLoading
-                      ? const CircleAvatar(
+                      ? CircleAvatar(
                           radius: 50,
-                          backgroundColor: AppColors.darkBackground,
-                          child: CircularProgressIndicator(),
+                          backgroundColor: AppColors.cardBackground,
+                          child: CircularProgressIndicator(
+                            color: AppColors.buttonColor,
+                          ),
                         )
                       : (_profilePictureUrl != null
                           ? CachedNetworkImage(
@@ -304,26 +405,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 radius: 50,
                                 backgroundImage: imageProvider,
                               ),
-                              placeholder: (context, url) => const CircleAvatar(
+                              placeholder: (context, url) => CircleAvatar(
                                 radius: 50,
-                                backgroundColor: AppColors.darkBackground,
-                                child: CircularProgressIndicator(),
+                                backgroundColor: AppColors.cardBackground,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.buttonColor,
+                                ),
                               ),
                               errorWidget: (context, url, error) {
                                 print("Error loading image: $error");
-                                return const CircleAvatar(
+                                return CircleAvatar(
                                   radius: 50,
-                                  backgroundColor: AppColors.darkBackground,
+                                  backgroundColor: AppColors.cardBackground,
                                   child: Icon(Icons.person,
-                                      size: 50, color: Colors.white),
+                                      size: 50, color: AppColors.buttonColor),
                                 );
                               },
                             )
-                          : const CircleAvatar(
+                          : CircleAvatar(
                               radius: 50,
-                              backgroundColor: AppColors.darkBackground,
+                              backgroundColor: AppColors.cardBackground,
                               child: Icon(Icons.person,
-                                  size: 50, color: Colors.white),
+                                  size: 50, color: AppColors.buttonColor),
                             )),
                 ),
               ),
@@ -359,7 +462,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           onBack: () => _onOptionSelected(ProfileOption.main),
         );
       case ProfileOption.smartDiagnosis:
-        // Navigate to a standalone SmartDiagnosis screen instead of embedding it
         Future.microtask(() {
           Navigator.push(
             context,
@@ -372,8 +474,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
           ).then((_) => _onOptionSelected(ProfileOption.main));
         });
-        // Return a placeholder while navigation happens
-        return const Center(child: CircularProgressIndicator());
+        return Center(
+            child: CircularProgressIndicator(color: AppColors.buttonColor));
       case ProfileOption.addCareTaker:
         return CaretakerScreen(
             onBack: () => _onOptionSelected(ProfileOption.main));
@@ -398,8 +500,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 _buildListTile(Icons.lock, "Change Password",
                     onTap: () =>
                         _onOptionSelected(ProfileOption.changePassword)),
-                _buildListTile(Icons.security,
-                    "2-Factor Authentication", // Add this new ListTile
+                _buildListTile(Icons.security, "2-Factor Authentication",
                     onTap: () =>
                         _onOptionSelected(ProfileOption.twoFactorAuth)),
                 _buildListTile(Icons.location_on, "Saved Addresses",
@@ -410,6 +511,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 _buildListTile(Icons.receipt_long_sharp, "Reports",
                     onTap: () => _onOptionSelected(ProfileOption.reports)),
               ],
+              sectionBackground: AppColors.sectionHeaderBackground,
+              sectionText: AppColors.sectionHeaderText,
+              itemBackground: AppColors.listItemBackground,
+              itemText: AppColors.listItemText,
+              itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
               title: "Preferences",
@@ -418,17 +524,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     trailing: Switch(
                       value: _notificationsEnabled,
                       activeColor: AppColors.buttonColor,
+                      inactiveTrackColor: AppColors.buttonColor,
                       onChanged: (bool value) async {
                         setState(() {
                           _notificationsEnabled = value;
                         });
-                        AppSettings.openAppSettings(
+                        await AppSettings.openAppSettings(
                             type: AppSettingsType.notification);
                       },
                     )),
-                _buildListTile(Icons.brightness_6, "Dark Mode / Light Mode",
-                    onTap: () {}),
+                _buildListTile(Icons.brightness_6, "Appearance",
+                    onTap: _showAppearanceBottomSheet),
               ],
+              sectionBackground: AppColors.sectionHeaderBackground,
+              sectionText: AppColors.sectionHeaderText,
+              itemBackground: AppColors.listItemBackground,
+              itemText: AppColors.listItemText,
+              itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
               title: "Smart Pillbox",
@@ -440,6 +552,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     onTap: () =>
                         _onOptionSelected(ProfileOption.smartDiagnosis)),
               ],
+              sectionBackground: AppColors.sectionHeaderBackground,
+              sectionText: AppColors.sectionHeaderText,
+              itemBackground: AppColors.listItemBackground,
+              itemText: AppColors.listItemText,
+              itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
               title: "More",
@@ -453,10 +570,33 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 _buildListTile(Icons.logout, "Log Out",
                     onTap: _handleLogout, trailing: null),
               ],
+              sectionBackground: AppColors.sectionHeaderBackground,
+              sectionText: AppColors.sectionHeaderText,
+              itemBackground: AppColors.listItemBackground,
+              itemText: AppColors.listItemText,
+              itemIcon: AppColors.buttonColor,
             ),
           ],
         );
     }
+  }
+
+  Widget _buildListTile(IconData icon, String title,
+      {VoidCallback? onTap, Widget? trailing}) {
+    return Container(
+      color: AppColors.listItemBackground,
+      child: ListTile(
+        leading: Icon(icon, color: AppColors.buttonColor),
+        title: Text(
+          title,
+          style: AppFonts.bodyText.copyWith(color: AppColors.listItemText),
+        ),
+        trailing: trailing ??
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColors.buttonColor),
+        onTap: onTap,
+      ),
+    );
   }
 
   Widget _feedback({required Function(int rating, String feedback) onSubmit}) {
@@ -470,7 +610,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
                 onPressed: () =>
                     setState(() => _selectedOption = ProfileOption.main),
               ),
@@ -478,8 +618,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Text(
                   "Feedback",
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                      fontSize: 22, fontWeight: FontWeight.bold),
+                  style:
+                      AppFonts.headline.copyWith(color: AppColors.textPrimary),
                 ),
               ),
               const SizedBox(width: 48),
@@ -489,8 +629,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Center(
             child: Text(
               "How was your experience?",
-              style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.bold),
+              style:
+                  AppFonts.subHeadline.copyWith(color: AppColors.textPrimary),
             ),
           ),
           const SizedBox(height: 10),
@@ -508,56 +648,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          TextField(
+          MyTextField(
             controller: feedbackController,
+            hintText: "Tell us more about your experience...",
             maxLines: 3,
-            decoration: InputDecoration(
-              hintText: "Tell us more about your experience...",
-              hintStyle: GoogleFonts.poppins(color: Colors.grey.shade600),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.grey.shade200,
-            ),
+            borderRadius: 12,
+            fillColor: AppColors.cardBackground,
+            hintStyle: AppFonts.bodyText
+                .copyWith(color: AppColors.textSecondary.withOpacity(0.6)),
+            textStyle: AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
           ),
           const SizedBox(height: 20),
           Center(
-            child: ElevatedButton.icon(
+            child: MyElevatedButton(
+              text: "Submit Feedback",
               onPressed: () {
                 if (_selectedRating != null) {
-                  // Submit the feedback
                   onSubmit(_selectedRating!, feedbackController.text);
-                  // Show confirmation
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Feedback submitted successfully'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                  // Navigate back to main profile screen
+                  mySnackBar(context, 'Feedback submitted successfully');
                   _onOptionSelected(ProfileOption.main);
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please select a rating')),
-                  );
+                  mySnackBar(context, 'Please select a rating', isError: true);
                 }
               },
-              icon: const Icon(Icons.send, color: Colors.white),
-              label: Text(
-                "Submit Feedback",
-                style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-              ),
+              icon: Icon(Icons.send, color: AppColors.buttonColor),
+              backgroundColor: AppColors.buttonColor,
+              textColor: AppColors.buttonText,
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
+              borderRadius: 50,
+              height: 60,
+              textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+              iconSpacing: 12.0,
             ),
           ),
         ],
@@ -570,16 +691,44 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Log Out'),
-          content: const Text('Are you sure you want to log out?'),
+          backgroundColor: AppColors.cardBackground,
+          title: Text('Log Out',
+              style: AppFonts.headline.copyWith(color: AppColors.textPrimary)),
+          content: Text('Are you sure you want to log out?',
+              style:
+                  AppFonts.bodyText.copyWith(color: AppColors.textSecondary)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('CANCEL'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              ),
+              child: Text(
+                'CANCEL',
+                style: AppFonts.buttonText.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold, // Increase visibility
+                ),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('LOG OUT'),
+              style: TextButton.styleFrom(
+                backgroundColor:
+                    AppColors.buttonColor.withOpacity(0.1), // Subtle background
+                foregroundColor: AppColors.buttonColor,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              ),
+              child: Text(
+                'LOG OUT',
+                style: AppFonts.buttonText.copyWith(
+                  color: AppColors.buttonColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         );
@@ -590,16 +739,5 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       await FirebaseAuth.instance.signOut();
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
     }
-  }
-
-  Widget _buildListTile(IconData icon, String title,
-      {VoidCallback? onTap, Widget? trailing}) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.buttonColor),
-      title: Text(title, style: GoogleFonts.poppins(fontSize: 14)),
-      trailing: trailing ??
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-      onTap: onTap,
-    );
   }
 }

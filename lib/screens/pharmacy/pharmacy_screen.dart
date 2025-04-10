@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:home/screens/home/loading.dart';
 import 'package:home/screens/pharmacy/home_screen.dart';
-import 'package:home/main.dart'; // Import to access userLocation and pharmacyData
+import 'package:home/main.dart';
+import 'package:home/theme/app_colors.dart';
+import 'package:lottie/lottie.dart';
 
 class PharmacyScreen extends StatefulWidget {
   const PharmacyScreen({super.key});
@@ -20,13 +21,10 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
   }
 
   Future<void> _waitForData() async {
-    // Wait until the location and pharmacyData are available.
-    // You can adjust the condition as needed based on your actual logic.
     while (pharmacyData == null || mapController == null) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
-    // Optionally add a slight delay for smooth transition:
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1)); // Smooth transition delay
     setState(() {
       _dataFetched = true;
     });
@@ -35,20 +33,40 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_dataFetched) {
-      // Show the custom RotatingPillAnimation until the data is fetched.
       return MaterialApp(
         title: 'Pharmacy Finder',
         debugShowCheckedModeBanner: false,
         home: Scaffold(
-          backgroundColor: Color(0xFFE0E0E0),
+          backgroundColor: AppColors.background, // Theme-aware background
           body: Center(
-            child: RotatingPillAnimation(),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Lottie Animation
+                Lottie.asset(
+                  'assets/animations/loading.json', // Adjust path to your file
+                  width: 200, // Adjust size as needed
+                  height: 200,
+                  fit: BoxFit.contain,
+                  repeat: true, // Loop the animation
+                ),
+                const SizedBox(height: 20),
+                // Optional loading text
+                Text(
+                  'Fetching Pharmacy Data...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textPrimary,
+                    fontFamily: 'Poppins', // Assuming AppFonts uses Poppins
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       );
     }
 
-    // Once data is available, load HomeScreen
     return MaterialApp(
       title: 'Pharmacy Finder',
       theme: ThemeData(primarySwatch: Colors.blue),

@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class RotatingPillAnimation extends StatefulWidget {
+  const RotatingPillAnimation({super.key});
+
   @override
   _RotatingPillAnimationState createState() => _RotatingPillAnimationState();
 }
@@ -29,15 +31,15 @@ class _RotatingPillAnimationState extends State<RotatingPillAnimation>
 
     // Rotation: continuously rotates the pill.
     _rotationController =
-        AnimationController(vsync: this, duration: Duration(seconds: 4));
+        AnimationController(vsync: this, duration: const Duration(seconds: 4));
     _rotationAnimation = Tween<double>(begin: 0, end: 2 * pi).animate(
       CurvedAnimation(parent: _rotationController, curve: Curves.linear),
     );
     _rotationController.repeat();
 
     // Split controller: opens and closes the pill.
-    _splitController =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 500));
+    _splitController = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     _splitAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _splitController, curve: Curves.easeInOut),
     );
@@ -48,16 +50,16 @@ class _RotatingPillAnimationState extends State<RotatingPillAnimation>
 
   Future<void> _startSplitCycle() async {
     // Initial delay before first split.
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 2));
     while (mounted) {
       // Open the pill (split).
       await _splitController.forward();
       // Keep open for a short moment.
-      await Future.delayed(Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 300));
       // Close the pill.
       await _splitController.reverse();
       // Wait before next cycle.
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
     }
   }
 
@@ -92,7 +94,7 @@ class _RotatingPillAnimationState extends State<RotatingPillAnimation>
                     child: Container(
                       width: pillWidth / 2,
                       height: pillHeight,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.black,
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(pillHeight / 2),
@@ -107,7 +109,7 @@ class _RotatingPillAnimationState extends State<RotatingPillAnimation>
                     child: Container(
                       width: pillWidth / 2,
                       height: pillHeight,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.only(
                           topRight: Radius.circular(pillHeight / 2),
@@ -168,7 +170,7 @@ class _RotatingPillAnimationState extends State<RotatingPillAnimation>
           child: Container(
             width: bubbleSize,
             height: bubbleSize,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.blue,
               shape: BoxShape.circle,
             ),

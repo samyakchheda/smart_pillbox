@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
@@ -170,54 +170,106 @@ class _OCRScreenState extends State<OCRScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Medicine Scanner'),
-        backgroundColor: Color(0xFFE0E0E0),
-        foregroundColor: Colors.black,
-      ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildImagePreview(),
-                const SizedBox(height: 20),
-                _buildButtonRow(),
-                const SizedBox(height: 20),
-                _buildResultCard(),
-                const SizedBox(height: 20),
-                _buildAddButton(),
-              ],
-            ),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.buttonColor,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: AppColors.textOnPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-          if (_isLoading)
-            Container(
-              color: Colors.black45,
-              child: const Center(
-                child: CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
-                ),
+        ),
+        cardTheme: CardTheme(
+          color: isDarkMode
+              ? AppColors.cardBackground.withOpacity(0.8)
+              : AppColors.cardBackground,
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 14,
+          ),
+          titleLarge: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 4,
+            backgroundColor: AppColors.buttonColor,
+            foregroundColor: AppColors.buttonText,
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: isDarkMode ? AppColors.errorColor : Colors.red,
+          contentTextStyle: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
+      ),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Medicine Scanner'),
+        ),
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  _buildImagePreview(),
+                  const SizedBox(height: 20),
+                  _buildButtonRow(),
+                  const SizedBox(height: 20),
+                  _buildResultCard(),
+                  const SizedBox(height: 20),
+                  _buildAddButton(),
+                ],
               ),
             ),
-        ],
+            if (_isLoading)
+              Container(
+                color: Colors.black45,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildImagePreview() {
     return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         height: 220,
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.white],
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? [
+                    AppColors.buttonColor.withOpacity(0.2),
+                    AppColors.cardBackground.withOpacity(0.5),
+                  ]
+                : [Colors.blue.shade50, Colors.white],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -227,20 +279,16 @@ class _OCRScreenState extends State<OCRScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: Image.file(_image!, fit: BoxFit.cover),
               )
-            : const Center(
+            : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.camera_alt,
                         size: 40, color: AppColors.buttonColor),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       'Capture or Upload an Image',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.buttonColor,
-                      ),
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ],
                 ),
@@ -270,12 +318,10 @@ class _OCRScreenState extends State<OCRScreen> {
   Widget _buildResultCard() {
     return Expanded(
       child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
+            color: Theme.of(context).cardTheme.color,
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -302,19 +348,14 @@ class _OCRScreenState extends State<OCRScreen> {
         children: [
           Text(
             title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.buttonColor,
-            ),
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: AppColors.buttonColor,
+                ),
           ),
           const SizedBox(height: 6),
           Text(
             content,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade800,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           const Divider(color: Colors.grey),
         ],
@@ -331,13 +372,6 @@ class _OCRScreenState extends State<OCRScreen> {
       onPressed: onPressed,
       icon: Icon(icon, size: 24),
       label: Text(label),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 4,
-        backgroundColor: AppColors.buttonColor,
-        foregroundColor: Colors.white,
-      ),
     );
   }
 
@@ -346,14 +380,6 @@ class _OCRScreenState extends State<OCRScreen> {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _addMedicineToFirestore,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          backgroundColor: AppColors.buttonColor,
-          foregroundColor: Colors.white,
-          elevation: 4,
-        ),
         child: const Text(
           "Add Medicine",
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

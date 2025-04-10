@@ -10,7 +10,7 @@ class IntroScreen1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: AppColors.background, // Theme-aware background
       body: _buildUI(context),
     );
   }
@@ -21,15 +21,17 @@ class IntroScreen1 extends StatelessWidget {
         children: [
           const SizedBox(height: 50),
           Center(
-            child: Lottie.asset("assets/animations/Doctor.json"),
+            child: Container(
+              child: Lottie.asset("assets/animations/Doctor.json"),
+            ),
           ),
           const SizedBox(height: 15),
           Text(
             "Wellness Path",
             style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
           ),
-          const Padding(
-            padding: EdgeInsets.all(25),
+          Padding(
+            padding: const EdgeInsets.all(25),
             child: Text(
               "Begin your path to better health by managing your medications effortlessly. "
               "Stay organized, and embrace a healthier lifestyle from day one.",

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:home/theme/app_colors.dart'; // Adjust import path
+import 'package:home/theme/app_fonts.dart'; // Adjust import path
 
 class MyTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -15,8 +17,11 @@ class MyTextField extends StatefulWidget {
   final int maxLines;
   final void Function(String)? onChanged;
   final void Function()? onTap;
-  final Color fillColor;
-  final double borderRadius; // New borderRadius parameter
+  final Color? fillColor;
+  final double borderRadius;
+  final TextStyle? hintStyle; // Added
+  final TextStyle? textStyle; // Added
+  final Color? iconColor; // Added
 
   const MyTextField({
     super.key,
@@ -34,8 +39,11 @@ class MyTextField extends StatefulWidget {
     this.maxLines = 1,
     this.onChanged,
     this.onTap,
-    this.fillColor = Colors.transparent,
-    this.borderRadius = 50, // Default border radius
+    this.fillColor,
+    this.borderRadius = 50,
+    this.hintStyle, // Added
+    this.textStyle, // Added
+    this.iconColor, // Added
   });
 
   @override
@@ -66,8 +74,13 @@ class _MyTextFieldState extends State<MyTextField> {
       validator: widget.validator,
       onChanged: widget.onChanged,
       onTap: widget.onTap,
+      style: widget.textStyle ?? // Use provided textStyle or default
+          AppFonts.bodyText.copyWith(color: AppColors.textPrimary),
       decoration: InputDecoration(
-        prefixIcon: Icon(widget.icon),
+        prefixIcon: widget.icon != null
+            ? Icon(widget.icon,
+                color: widget.iconColor ?? AppColors.buttonColor)
+            : null,
         suffixIcon: widget.isPassword
             ? AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
@@ -75,30 +88,36 @@ class _MyTextFieldState extends State<MyTextField> {
                     FadeTransition(opacity: animation, child: child),
                 child: IconButton(
                   key: ValueKey<bool>(_isSecure),
-                  icon:
-                      Icon(_isSecure ? Icons.visibility : Icons.visibility_off),
+                  icon: Icon(
+                    _isSecure ? Icons.visibility : Icons.visibility_off,
+                    color: widget.iconColor ?? AppColors.buttonColor,
+                  ),
                   onPressed: () => setState(() => _isSecure = !_isSecure),
                 ),
               )
             : null,
         hintText: widget.hintText,
-        hintStyle: const TextStyle(color: Colors.grey),
-        fillColor: widget.fillColor,
+        hintStyle: widget.hintStyle ?? // Use provided hintStyle or default
+            AppFonts.caption.copyWith(color: AppColors.textPlaceholder),
+        fillColor:
+            widget.fillColor ?? AppColors.cardBackground.withOpacity(0.1),
         filled: true,
         border: _borderStyle(),
         enabledBorder: _borderStyle(),
-        focusedBorder: _borderStyle(borderColor: Colors.blue),
+        focusedBorder: _borderStyle(borderColor: AppColors.buttonColor),
         errorBorder: _borderStyle(borderColor: Colors.red),
         focusedErrorBorder: _borderStyle(borderColor: Colors.red),
       ),
     );
   }
 
-  OutlineInputBorder _borderStyle({Color borderColor = Colors.grey}) {
+  OutlineInputBorder _borderStyle({Color? borderColor}) {
     return OutlineInputBorder(
-      borderRadius:
-          BorderRadius.circular(widget.borderRadius), // Now customizable!
-      borderSide: BorderSide(color: borderColor, width: 1.5),
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      borderSide: BorderSide(
+        color: borderColor ?? AppColors.textPlaceholder,
+        width: 1.5,
+      ),
     );
   }
 }

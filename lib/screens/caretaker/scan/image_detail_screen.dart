@@ -265,9 +265,9 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: _isLoadingMedicines
-                            ? Column(
+                            ? const Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: const [
+                                children: [
                                   CircularProgressIndicator(),
                                   SizedBox(height: 8),
                                   Text("Fetching medicines..."),

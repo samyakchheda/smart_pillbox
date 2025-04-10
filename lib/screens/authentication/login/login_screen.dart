@@ -7,10 +7,10 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.darkBackground,
+    return Scaffold(
+      backgroundColor: AppColors.background, // Theme-aware background
       resizeToAvoidBottomInset: true,
-      body: Column(
+      body: const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(

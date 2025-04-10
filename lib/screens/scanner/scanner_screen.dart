@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/app_colors.dart'; // Assuming this exists
 import '../../services/scanner_service/scanner_service.dart';
 import 'image_detail_screen.dart';
 
@@ -43,80 +43,122 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _startScanning,
-        child: const Icon(Icons.add, size: 30),
-        backgroundColor: AppColors.buttonColor,
-        foregroundColor: Colors.white,
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: AppColors.background,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.buttonColor,
+          elevation: 0,
+          titleTextStyle: TextStyle(
+            color: AppColors.textOnPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cardTheme: CardTheme(
+          color: isDarkMode
+              ? AppColors.cardBackground.withOpacity(0.8)
+              : AppColors.cardBackground,
+          elevation: 4,
+          margin: const EdgeInsets.all(8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+          ),
+          titleLarge: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
-      appBar: AppBar(
-        title: const Text('Prescrtiption Scanner'),
-        backgroundColor: Color(0xFFE0E0E0),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _scannedDocuments.isEmpty
-                ? const Center(child: Text('No documents scanned yet.'))
-                : ListView.builder(
-                    itemCount: _scannedDocuments.length,
-                    itemBuilder: (context, index) {
-                      final document = _scannedDocuments[index];
-                      return Dismissible(
-                        key: Key(document['id']),
-                        direction: DismissDirection.endToStart,
-                        onDismissed: (direction) {
-                          _deleteDocument(
-                              document['id'], document['cloudinary_url']);
-                        },
-                        background: Container(
-                          color: Colors.red,
-                          child: const Align(
-                            alignment: Alignment.centerRight,
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Icon(Icons.delete, color: Colors.white),
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: _startScanning,
+          backgroundColor: AppColors.buttonColor,
+          foregroundColor: AppColors.buttonText,
+          child: const Icon(Icons.add, size: 30),
+        ),
+        appBar: AppBar(
+          title: const Text('Prescription Scanner'),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: _scannedDocuments.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No documents scanned yet.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: _scannedDocuments.length,
+                      itemBuilder: (context, index) {
+                        final document = _scannedDocuments[index];
+                        return Dismissible(
+                          key: Key(document['id']),
+                          direction: DismissDirection.endToStart,
+                          onDismissed: (direction) {
+                            _deleteDocument(
+                                document['id'], document['cloudinary_url']);
+                          },
+                          background: Container(
+                            color: AppColors.errorColor, // Replace Colors.red
+                            child: const Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Icon(Icons.delete, color: Colors.white),
+                              ),
                             ),
                           ),
-                        ),
-                        child: Card(
-                          color: Colors.white,
-                          margin: const EdgeInsets.all(8),
-                          elevation: 4,
-                          child: ListTile(
-                            leading: document['cloudinary_url'] != null
-                                ? Image.network(
-                                    document['cloudinary_url'],
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                    errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(Icons.error,
-                                                color: Colors.red),
-                                  )
-                                : const Icon(Icons.image, size: 50),
-                            title: Text('Document ${index + 1}'),
-                            trailing: const Icon(Icons.arrow_forward),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ImageDetailScreen(
-                                    documentId: document['id'],
-                                    userId: widget.userId,
+                          child: Card(
+                            child: ListTile(
+                              leading: document['cloudinary_url'] != null
+                                  ? Image.network(
+                                      document['cloudinary_url'],
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) =>
+                                              const Icon(Icons.error,
+                                                  color: Colors.red),
+                                    )
+                                  : const Icon(Icons.image, size: 50),
+                              title: Text(
+                                'Document ${index + 1}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward,
+                                color: AppColors.buttonColor,
+                              ),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ImageDetailScreen(
+                                      documentId: document['id'],
+                                      userId: widget.userId,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

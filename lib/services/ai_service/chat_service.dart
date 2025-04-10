@@ -20,7 +20,10 @@ class ChatService {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    _currentChatId = const Uuid().v4();
+    // Retrieve the existing chat ID if available; otherwise, generate a new one.
+    _currentChatId = _prefs!.getString('currentChatId') ?? const Uuid().v4();
+    // Save the chat ID so it persists for future sessions.
+    _prefs!.setString('currentChatId', _currentChatId);
     await _loadChatHistory();
     _loadSavedChats();
   }

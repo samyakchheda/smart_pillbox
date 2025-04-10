@@ -7,8 +7,11 @@ import 'package:wifi_scan/wifi_scan.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:esp_smartconfig/esp_smartconfig.dart';
 import 'package:http/http.dart' as http;
+import 'package:home/theme/app_colors.dart'; // Assuming this exists
 
 class WiFiScannerScreen extends StatefulWidget {
+  const WiFiScannerScreen({super.key});
+
   @override
   _WiFiScannerScreenState createState() => _WiFiScannerScreenState();
 }
@@ -39,9 +42,12 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
         await _startScan();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Location permission is required to scan Wi-Fi networks.'),
+          SnackBar(
+            content: Text(
+              'Location permission is required to scan Wi-Fi networks.',
+              style: TextStyle(color: AppColors.textOnPrimary),
+            ),
+            backgroundColor: AppColors.cardBackground,
           ),
         );
       }
@@ -51,7 +57,6 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
   }
 
   void _startPeriodicScan() {
-    // Periodically scan for Wi-Fi networks every 3 seconds
     _scanTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       await _startScan();
     });
@@ -59,15 +64,13 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
 
   Future<void> _startScan() async {
     try {
-      // Check if Wi-Fi is enabled
       _isWifiEnabled = await WiFiForIoTPlugin.isEnabled();
-      setState(() {}); // Update UI based on Wi-Fi status
+      setState(() {});
 
       if (!_isWifiEnabled) {
         return;
       }
 
-      // Start the Wi-Fi scan
       await WiFiScan.instance.startScan();
       await _updateWifiList();
     } catch (e) {
@@ -79,7 +82,6 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
     try {
       final scannedResults = await WiFiScan.instance.getScannedResults();
 
-      // Update the Wi-Fi list only if there are changes
       if (!listEquals(scannedResults, _wifiList)) {
         setState(() {
           _wifiList = scannedResults;
@@ -107,14 +109,25 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Provisioning'),
-          content: const Text('Provisioning started. Please wait...'),
+          backgroundColor: AppColors.cardBackground,
+          title: Text(
+            'Provisioning',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
+          content: Text(
+            'Provisioning started. Please wait...',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Stop'),
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.buttonColor,
+              ),
+              child: Text(
+                'Stop',
+                style: TextStyle(color: AppColors.buttonColor),
+              ),
             ),
           ],
         );
@@ -137,24 +150,43 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Device provisioned'),
+          backgroundColor: AppColors.cardBackground,
+          title: Text(
+            'Device provisioned',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
-                  'Device successfully connected to the ${response.bssid} network'),
-              SizedBox.fromSize(size: const Size.fromHeight(20)),
-              const Text('Device:'),
-              Text('IP: ${response.ipAddressText}'),
-              Text('BSSID: ${response.bssidText}'),
+                'Device successfully connected to the ${response.bssid} network',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              SizedBox.fromSize(size: Size.fromHeight(20)),
+              Text(
+                'Device:',
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+              Text(
+                'IP: ${response.ipAddressText}',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+              Text(
+                'BSSID: ${response.bssidText}',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
             ],
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.buttonColor,
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(color: AppColors.buttonColor),
+              ),
             ),
           ],
         );
@@ -163,102 +195,163 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
   }
 
   IconData _getWifiIcon(int level) {
-    if (level >= -50) {
-      return Icons.wifi; // Excellent signal
-    } else if (level >= -70) {
-      return Icons.wifi_outlined; // Good signal
-    } else if (level >= -85) {
-      return Icons.wifi_lock; // Fair signal
-    } else {
-      return Icons.signal_wifi_off; // Weak signal
-    }
+    if (level >= -50)
+      return Icons.wifi;
+    else if (level >= -70)
+      return Icons.wifi_outlined;
+    else if (level >= -85)
+      return Icons.wifi_lock;
+    else
+      return Icons.signal_wifi_off;
   }
 
   int dBmToPercentage(int dBm) {
-    if (dBm <= -100) {
+    if (dBm <= -100)
       return 0;
-    } else if (dBm >= -50) {
+    else if (dBm >= -50)
       return 100;
-    } else {
+    else
       return 2 * (dBm + 100);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wi-Fi Scanner'),
-        backgroundColor: const Color(0xFFE0E0E0),
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    return Theme(
+      data: Theme.of(context).copyWith(
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.buttonColor,
+          elevation: 0,
+          titleTextStyle: const TextStyle(
+            color: AppColors.textOnPrimary,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        scaffoldBackgroundColor: AppColors.background,
+        cardTheme: CardTheme(
+          color: AppColors.cardBackground,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          elevation: 8,
+          shadowColor: AppColors.textSecondary.withOpacity(0.3),
+        ),
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+            fontSize: 16,
+          ),
+          titleLarge: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          titleMedium: TextStyle(
+            color: isDarkMode ? Colors.white54 : Colors.black54,
+            fontSize: 16,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(color: AppColors.textSecondary),
+          hintStyle: TextStyle(color: AppColors.textPlaceholder),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.borderColor),
+          ),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: AppColors.buttonColor),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.buttonColor,
+            foregroundColor: AppColors.buttonText,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+            textStyle: const TextStyle(fontSize: 18),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.buttonColor,
+          ),
+        ),
       ),
-      body: Center(
-        child: _isWifiEnabled
-            ? Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _wifiList.length,
-                      itemBuilder: (context, index) {
-                        _wifiList.sort((a, b) => b.level.compareTo(a.level));
-                        final wifi = _wifiList[index];
-                        if (wifi.ssid.isEmpty) return const SizedBox.shrink();
-                        final signalPercentage = dBmToPercentage(wifi.level);
-                        return Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 5),
-                          elevation: 8,
-                          child: ListTile(
-                            leading: Icon(
-                              _getWifiIcon(wifi.level),
-                              color: Colors.blue,
-                              size: 30,
-                            ),
-                            title: Text(
-                              wifi.ssid,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                                'Signal Strength: ${wifi.level} dBm ($signalPercentage%)'),
-                            onTap: () => showDialog(
-                              context: context,
-                              builder: (context) => Theme(
-                                data: Theme.of(context).copyWith(
-                                    dialogBackgroundColor: Colors.white),
-                                child: AlertDialog(
-                                  title:
-                                      Text('Enter Password for ${wifi.ssid}'),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Wi-Fi Scanner'),
+        ),
+        body: Center(
+          child: _isWifiEnabled
+              ? Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _wifiList.length,
+                        itemBuilder: (context, index) {
+                          _wifiList.sort((a, b) => b.level.compareTo(a.level));
+                          final wifi = _wifiList[index];
+                          if (wifi.ssid.isEmpty) return const SizedBox.shrink();
+                          final signalPercentage = dBmToPercentage(wifi.level);
+                          return Card(
+                            child: ListTile(
+                              leading: Icon(
+                                _getWifiIcon(wifi.level),
+                                color: AppColors.buttonColor,
+                                size: 30,
+                              ),
+                              title: Text(
+                                wifi.ssid,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              subtitle: Text(
+                                'Signal Strength: ${wifi.level} dBm ($signalPercentage%)',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              onTap: () => showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: AppColors.cardBackground,
+                                  title: Text(
+                                    'Enter Password for ${wifi.ssid}',
+                                    style: TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontSize: 20,
+                                    ),
+                                  ),
                                   content: TextField(
                                     controller: _passwordController,
                                     obscureText: true,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       labelText: 'Password',
-                                      labelStyle:
-                                          TextStyle(color: Colors.black),
+                                      labelStyle: TextStyle(
+                                        color: AppColors.textSecondary,
+                                      ),
                                       enabledBorder: UnderlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.black),
+                                        borderSide: BorderSide(
+                                            color: AppColors.borderColor),
                                       ),
                                       focusedBorder: UnderlineInputBorder(
-                                        borderSide:
-                                            BorderSide(color: Colors.black),
+                                        borderSide: BorderSide(
+                                            color: AppColors.buttonColor),
                                       ),
                                     ),
-                                    style: const TextStyle(color: Colors.black),
-                                    cursorColor: Colors.black,
+                                    style: TextStyle(
+                                      color: isDarkMode
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                    cursorColor: AppColors.buttonColor,
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
-                                      child: const Text('Cancel'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        backgroundColor:
-                                            Color(0xFF4276FD), // Text color
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          color: AppColors.buttonColor,
+                                        ),
                                       ),
                                     ),
                                     TextButton(
@@ -269,55 +362,44 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
                                         _startProvisioning(
                                             wifi.ssid ?? '', password);
                                       },
-                                      child: const Text('Connect'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            Colors.white, // Text color
-                                        backgroundColor: Color(0xFF4276FD),
+                                      child: Text(
+                                        'Connect',
+                                        style: TextStyle(
+                                          color: AppColors.buttonColor,
+                                        ),
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Please enable Wi-Fi to continue',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      WiFiForIoTPlugin.setEnabled(true,
-                          shouldOpenSettings: true);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Color(0xFF4276FD), // Blue background color
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 30, vertical: 15), // Increase size
-                      textStyle: const TextStyle(
-                        fontSize: 18,
-                      ), // Larger text
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(30), // Rounded corners
+                          );
+                        },
                       ),
                     ),
-                    child: const Text('Enable Wi-Fi'),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Please enable Wi-Fi to continue',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        WiFiForIoTPlugin.setEnabled(true,
+                            shouldOpenSettings: true);
+                      },
+                      child: const Text('Enable Wi-Fi'),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
