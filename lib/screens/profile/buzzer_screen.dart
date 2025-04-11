@@ -1,4 +1,5 @@
 import 'dart:async'; // Add this import for StreamSubscription
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:home/theme/app_colors.dart';
@@ -21,11 +22,11 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
       _playerCompleteSubscription; // Add this to manage the listener
 
   final List<String> _buzzerTones = [
-    'Beep Beep',
-    'Calm Tune',
-    'Gentle Chime',
-    'Soft Melody',
-    'Relaxing Sound'
+    'Beep Beep'.tr(),
+    'Calm Tune'.tr(),
+    'Gentle Chime'.tr(),
+    'Soft Melody'.tr(),
+    'Relaxing Sound'.tr()
   ];
 
   final Map<String, String> _toneFiles = {
@@ -89,7 +90,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
               ),
               Expanded(
                 child: Text(
-                  "Buzzer Settings",
+                  "Buzzer Settings".tr(),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 22,
@@ -102,7 +103,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            "Select Buzzer Tone",
+            "Select Buzzer Tone".tr(),
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -127,7 +128,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
                   : null,
               icon: const Icon(Icons.save, color: Colors.white),
               label: Text(
-                "Save Selection",
+                "Save Selection".tr(),
                 style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

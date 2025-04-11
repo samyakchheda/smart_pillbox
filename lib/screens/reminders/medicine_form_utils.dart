@@ -124,7 +124,7 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
             margin: const EdgeInsets.only(top: 4),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: AppColors.borderColor.withOpacity(0.3),
               borderRadius: BorderRadius.circular(10),
             ),
             constraints: const BoxConstraints(maxHeight: 200),
@@ -158,7 +158,7 @@ class _MedicineNameInputState extends State<MedicineNameInput> {
                 medicineName,
                 style: TextStyle(color: AppColors.textPrimary),
               ),
-              backgroundColor: AppColors.borderColor.withOpacity(0.2),
+              backgroundColor: AppColors.borderColor.withOpacity(0.7),
               deleteIcon: Icon(Icons.close, color: AppColors.buttonColor),
               onDeleted: () => widget.onRemove(medicineName),
             );
@@ -442,7 +442,7 @@ class _DaySelectorState extends State<DaySelector> {
                             child: Icon(
                               Icons.check,
                               color: isSelected
-                                  ? AppColors.buttonColor
+                                  ? AppColors.kWhiteColor
                                   : AppColors.buttonColor,
                               size: 16,
                             ),

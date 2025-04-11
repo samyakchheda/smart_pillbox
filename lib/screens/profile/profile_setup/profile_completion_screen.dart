@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:home/theme/app_colors.dart'; // Adjust import path
+import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart'; // Adjust import path
 import '../../../routes/routes.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
   const ProfileCompletionScreen({super.key});
@@ -37,7 +38,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              "Crafting Your Profile...",
+              "Crafting Your Profile...".tr(),
               style: AppFonts.headline.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

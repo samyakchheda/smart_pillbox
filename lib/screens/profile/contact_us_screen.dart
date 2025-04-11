@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/screens/ai/chat_screen.dart';
 import 'package:home/theme/app_colors.dart';
@@ -23,7 +24,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      mySnackBar(context, "Could not launch $url", isError: true);
+      mySnackBar(context, "Could not launch $url".tr(), isError: true);
     }
   }
 
@@ -50,7 +51,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    "Contact Us",
+                    "Contact Us".tr(),
                     textAlign: TextAlign.center,
                     style: AppFonts.headline.copyWith(
                       fontSize: 26,
@@ -75,7 +76,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Get in Touch",
+                      "Get in Touch".tr(),
                       style: AppFonts.subHeadline.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,
@@ -84,7 +85,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                     ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
                     const SizedBox(height: 10),
                     Text(
-                      "We’re here to help—reach out anytime.",
+                      "We’re here to help—reach out anytime.".tr(),
                       style: AppFonts.bodyText.copyWith(
                         fontSize: 15,
                         color: AppColors.textSecondary,
@@ -105,21 +106,21 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
               children: [
                 _buildContactCard(
                   icon: Icons.email_outlined,
-                  title: "Email Us",
+                  title: "Email Us".tr(),
                   subtitle: "smartdose.care@gmail.com",
                   onTap: () => _launchUrl(
                       'mailto:smartdose.care@gmail.com?subject=Contact%20Us'),
                 ),
                 _buildContactCard(
                   icon: Icons.phone_outlined,
-                  title: "Call Us",
+                  title: "Call Us".tr(),
                   subtitle: "+91 123 456 7890",
                   onTap: () => _launchUrl('tel:+911234567890'),
                 ),
                 _buildContactCard(
                   icon: Icons.chat_bubble_outline,
-                  title: "Live Chat",
-                  subtitle: "Chat with us now",
+                  title: "Live Chat".tr(),
+                  subtitle: "Chat with us now".tr(),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -129,7 +130,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 ),
                 _buildContactCard(
                   icon: Icons.location_on_outlined,
-                  title: "Visit Us",
+                  title: "Visit Us".tr(),
                   subtitle: "SVKM's SBMPCOE, Vile Parle, Mumbai",
                   onTap: () => _launchUrl(
                       'https://www.google.com/maps/search/?api=1&query=SVKM"s Shri Bhagubhai Mafatlal Polytechnic and College of Engineering'),

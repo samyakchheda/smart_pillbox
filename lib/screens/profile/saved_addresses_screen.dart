@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,7 +19,7 @@ class SavedAddressesScreen extends StatefulWidget {
 class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final User? _user = FirebaseAuth.instance.currentUser;
-  List<String> tags = ["Home", "Work", "Other"];
+  List<String> tags = ["Home".tr(), "Work".tr(), "Other".tr()];
 
   CollectionReference get _addressesRef =>
       _firestore.collection('users').doc(_user!.uid).collection('addresses');
@@ -28,13 +29,13 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
     final address1Controller = TextEditingController();
     final address2Controller = TextEditingController();
     final newTagController = TextEditingController();
-    String selectedTag = "Home";
+    String selectedTag = "Home".tr();
 
     if (address != null) {
       buildingController.text = address["building"] ?? '';
       address1Controller.text = address["address1"] ?? '';
       address2Controller.text = address["address2"] ?? '';
-      selectedTag = address["tag"] ?? 'Home';
+      selectedTag = address["tag"] ?? 'Home'.tr();
     }
 
     showModalBottomSheet(
@@ -113,7 +114,9 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            docId == null ? "Add New Address" : "Edit Address",
+                            docId == null
+                                ? "Add New Address".tr()
+                                : "Edit Address".tr(),
                             style: GoogleFonts.poppins(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -134,19 +137,19 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       const SizedBox(height: 15),
                       MyTextField(
                         controller: buildingController,
-                        hintText: "Building Name & Room Number",
+                        hintText: "Building Name & Room Number".tr(),
                         borderRadius: 8.0,
                       ),
                       const SizedBox(height: 10),
                       MyTextField(
                         controller: address1Controller,
-                        hintText: "Address Line 1",
+                        hintText: "Address Line 1".tr(),
                         borderRadius: 8.0,
                       ),
                       const SizedBox(height: 10),
                       MyTextField(
                         controller: address2Controller,
-                        hintText: "Address Line 2",
+                        hintText: "Address Line 2".tr(),
                         borderRadius: 8.0,
                       ),
                       const SizedBox(height: 15),
@@ -171,7 +174,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       const SizedBox(height: 15),
                       MyTextField(
                         controller: newTagController,
-                        hintText: "New Tag (Optional)",
+                        hintText: "New Tag (Optional)".tr(),
                         borderRadius: 8.0,
                         icon: Icons.add,
                         onChanged: (value) {
@@ -186,7 +189,9 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                       ),
                       const SizedBox(height: 20),
                       MyElevatedButton(
-                        text: docId == null ? "Add Address" : "Save Changes",
+                        text: docId == null
+                            ? "Add Address".tr()
+                            : "Save Changes".tr(),
                         backgroundColor: AppColors.buttonColor,
                         onPressed: () async {
                           if (buildingController.text.isNotEmpty &&
@@ -270,7 +275,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
                   icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
                   onPressed: widget.onBack,
                 ),
-                Text("Saved Addresses",
+                Text("Saved Addresses".tr(),
                     style: GoogleFonts.poppins(
                         fontSize: 20, fontWeight: FontWeight.bold)),
               ],
@@ -347,7 +352,7 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
             Center(
               child: MyElevatedButton(
                 borderRadius: 50,
-                text: "Add Address",
+                text: "Add Address".tr(),
                 height: 50,
                 backgroundColor: AppColors.buttonColor,
                 icon: const Icon(Icons.add, color: Colors.white),

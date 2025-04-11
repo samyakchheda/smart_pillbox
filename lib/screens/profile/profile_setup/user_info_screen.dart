@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -114,7 +115,8 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
         dobController.text.isEmpty ||
         selectedGender == null ||
         phoneNumber == null) {
-      mySnackBar(context, "Please fill all required fields", isError: true);
+      mySnackBar(context, "Please fill all required fields".tr(),
+          isError: true);
       return;
     }
 
@@ -132,7 +134,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                 await CloudinaryService.uploadImage(compressedImage);
             if (profilePictureUrl == null) {
               setState(() => _isUploading = false);
-              mySnackBar(context, "Image upload failed. Please try again.",
+              mySnackBar(context, "Image upload failed. Please try again.".tr(),
                   isError: true);
               return;
             }
@@ -155,7 +157,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       }
     } catch (e) {
       setState(() => _isUploading = false);
-      mySnackBar(context, "Error saving data: $e", isError: true);
+      mySnackBar(context, "Error saving data: $e".tr(), isError: true);
     }
   }
 
@@ -164,7 +166,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Choose Photo Source", style: AppFonts.headline),
+          title: Text("Choose Photo Source".tr(), style: AppFonts.headline),
           backgroundColor: AppColors.cardBackground,
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -172,7 +174,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               ListTile(
                 leading:
                     Icon(Icons.photo_library, color: AppColors.textPrimary),
-                title: Text("Gallery", style: AppFonts.bodyText),
+                title: Text("Gallery".tr(), style: AppFonts.bodyText),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.gallery);
@@ -180,7 +182,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               ),
               ListTile(
                 leading: Icon(Icons.camera_alt, color: AppColors.textPrimary),
-                title: Text("Camera", style: AppFonts.bodyText),
+                title: Text("Camera".tr(), style: AppFonts.bodyText),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
@@ -210,12 +212,12 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Center(
               child: Text.rich(
                 TextSpan(
-                  text: "Tell us about ",
+                  text: "Tell us about ".tr(),
                   style:
                       AppFonts.headline.copyWith(fontWeight: FontWeight.bold),
                   children: [
                     TextSpan(
-                      text: "yourself",
+                      text: "yourself".tr(),
                       style: AppFonts.headline.copyWith(
                         color: AppColors.buttonColor,
                       ),
@@ -269,7 +271,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             // Full Name
             MyTextField(
               controller: nameController,
-              hintText: "Enter your full name",
+              hintText: "Enter your full name".tr(),
               keyboardType: TextInputType.name,
               fillColor: AppColors.cardBackground,
             ),
@@ -277,7 +279,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             // Date of Birth
             MyTextField(
               controller: dobController,
-              hintText: "Select your DOB",
+              hintText: "Select your DOB".tr(),
               // readOnly: true,
               fillColor: AppColors.cardBackground,
               icon: Icons.calendar_today,
@@ -298,7 +300,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
               child: _isUploading
                   ? CircularProgressIndicator(color: AppColors.buttonColor)
                   : MyElevatedButton(
-                      text: 'Save & Continue',
+                      text: 'Save & Continue'.tr(),
                       onPressed: _saveUserData,
                       backgroundColor: AppColors.buttonColor,
                       height: 50,
@@ -319,14 +321,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       child: DropdownButtonFormField<String>(
         value: selectedGender,
         onChanged: (value) => setState(() => selectedGender = value),
-        items: ["Male", "Female", "Prefer not to say"]
+        items: ["Male".tr(), "Female".tr(), "Prefer not to say".tr()]
             .map((gender) => DropdownMenuItem(
                   value: gender,
                   child: Text(gender, style: AppFonts.bodyText),
                 ))
             .toList(),
         decoration: InputDecoration(
-          labelText: "Gender",
+          labelText: "Gender".tr(),
           filled: true,
           fillColor: AppColors.cardBackground,
           border: OutlineInputBorder(
@@ -352,7 +354,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: IntlPhoneField(
         decoration: InputDecoration(
-          labelText: "Contact Number",
+          labelText: "Contact Number".tr(),
           filled: true,
           fillColor: AppColors.cardBackground,
           border: OutlineInputBorder(

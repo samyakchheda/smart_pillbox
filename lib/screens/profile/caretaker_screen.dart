@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,8 +26,9 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
       if (currentUser != null) {
         if (email.toLowerCase() == currentUser.email?.trim().toLowerCase()) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text("You cannot add your own email as caretaker."),
+            SnackBar(
+                content:
+                    Text("You cannot add your own email as caretaker.".tr()),
                 backgroundColor: Colors.red),
           );
           return;
@@ -96,7 +98,7 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
                 onPressed: widget.onBack,
               ),
               Text(
-                "Caretakers",
+                "Caretakers".tr(),
                 style: GoogleFonts.poppins(
                     fontSize: 20, fontWeight: FontWeight.bold),
               ),
@@ -106,14 +108,14 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
           MyTextField(
             icon: Icons.email,
             controller: _emailController,
-            hintText: "Add Caretaker Email",
+            hintText: "Add Caretaker Email".tr(),
             borderRadius: 50,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 35),
           Center(
             child: MyElevatedButton(
-              text: "Add Caretaker",
+              text: "Add Caretaker".tr(),
               onPressed: () async {
                 await _addCaretakerEmail();
                 setState(() {});
@@ -138,7 +140,7 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
           ),
           const SizedBox(height: 30),
           Text(
-            "Caretaker Emails:",
+            "Caretaker Emails:".tr(),
             style:
                 GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
           ),
@@ -155,7 +157,7 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
               if (!snapshot.hasData || snapshot.data?.data() == null) {
                 return Center(
                   child: Text(
-                    "No caretakers added",
+                    "No caretakers added".tr(),
                     style:
                         GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                   ),
@@ -167,7 +169,7 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
               if (caretakerEmails.isEmpty) {
                 return Center(
                   child: Text(
-                    "No caretakers added",
+                    "No caretakers added".tr(),
                     style:
                         GoogleFonts.poppins(fontSize: 16, color: Colors.grey),
                   ),

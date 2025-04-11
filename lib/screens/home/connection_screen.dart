@@ -222,10 +222,10 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
     return Theme(
       data: Theme.of(context).copyWith(
         appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.buttonColor,
+          backgroundColor: AppColors.background,
           elevation: 0,
-          titleTextStyle: const TextStyle(
-            color: AppColors.textOnPrimary,
+          titleTextStyle: TextStyle(
+            color: isDarkMode ? AppColors.kWhiteColor : AppColors.kBlackColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -281,6 +281,7 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
       ),
       child: Scaffold(
         appBar: AppBar(
+          centerTitle: true,
           title: Text('Wi-Fi Scanner'.tr()),
         ),
         body: Center(

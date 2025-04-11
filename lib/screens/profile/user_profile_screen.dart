@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -211,13 +212,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Appearance',
+                'Appearance'.tr(),
                 style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
               ListTile(
                 leading: Icon(Icons.light_mode, color: AppColors.buttonColor),
-                title: Text('Light Theme',
+                title: Text('Light Theme'.tr(),
                     style: AppFonts.bodyText
                         .copyWith(color: AppColors.textPrimary)),
                 trailing: ThemeProvider.themeNotifier.value == ThemeMode.light
@@ -231,7 +232,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               ListTile(
                 leading: Icon(Icons.dark_mode, color: AppColors.buttonColor),
-                title: Text('Dark Theme',
+                title: Text('Dark Theme'.tr(),
                     style: AppFonts.bodyText
                         .copyWith(color: AppColors.textPrimary)),
                 trailing: ThemeProvider.themeNotifier.value == ThemeMode.dark
@@ -246,7 +247,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ListTile(
                 leading: Icon(Icons.settings_system_daydream,
                     color: AppColors.buttonColor),
-                title: Text('System Default',
+                title: Text('System Default'.tr(),
                     style: AppFonts.bodyText
                         .copyWith(color: AppColors.textPrimary)),
                 trailing: ThemeProvider.themeNotifier.value == ThemeMode.system
@@ -273,70 +274,80 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             WidgetsBinding.instance.window.platformBrightness ==
                 Brightness.dark);
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Container(
-                height: 250,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: isDarkMode
-                        ? [
-                            AppColors.buttonColor
-                                .withOpacity(0.8), // Darkened blue
-                            AppColors.darkBackground
-                                .withOpacity(0.9), // Dark gray
-                          ]
-                        : [
-                            AppColors.buttonColor, // Light mode blue
-                            Colors.grey.shade400, // Light mode gray
-                          ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
+    return WillPopScope(
+      onWillPop: () async {
+        if (_selectedOption != ProfileOption.main) {
+          setState(() {
+            _selectedOption = ProfileOption.main;
+          });
+          return false; // Don't pop the screen
+        } else {
+          return true; // Allow the app to close or go back
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isDarkMode
+                          ? [
+                              AppColors.buttonColor.withOpacity(0.8),
+                              AppColors.darkBackground.withOpacity(0.9),
+                            ]
+                          : [
+                              AppColors.buttonColor,
+                              Colors.grey.shade400,
+                            ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'Profile Settings',
-                      style: AppFonts.headline.copyWith(
-                        color: AppColors.textOnPrimary,
-                        fontSize: 24,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        'Profile Settings'.tr(),
+                        style: AppFonts.headline.copyWith(
+                          color: AppColors.textOnPrimary,
+                          fontSize: 24,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          Positioned.fill(
-            top: 165,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(32),
-                topRight: Radius.circular(32),
-              ),
-              child: Container(
-                color: AppColors.background,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Column(
-                    children: [
-                      if (_selectedOption == ProfileOption.main)
-                        _buildProfileCard(),
-                      _buildContent(),
-                      const SizedBox(height: 90),
-                    ],
+              ],
+            ),
+            Positioned.fill(
+              top: 165,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
+                child: Container(
+                  color: AppColors.background,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Column(
+                      children: [
+                        if (_selectedOption == ProfileOption.main)
+                          _buildProfileCard(),
+                        _buildContent(),
+                        const SizedBox(height: 90),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -493,22 +504,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         return Column(
           children: [
             SettingsSection(
-              title: "General",
+              title: "General".tr(),
               items: [
-                _buildListTile(Icons.person, "Edit Profile",
+                _buildListTile(Icons.person, "Edit Profile".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.editProfile)),
-                _buildListTile(Icons.lock, "Change Password",
+                _buildListTile(Icons.lock, "Change Password".tr(),
                     onTap: () =>
                         _onOptionSelected(ProfileOption.changePassword)),
-                _buildListTile(Icons.security, "2-Factor Authentication",
+                _buildListTile(Icons.security, "2-Factor Authentication".tr(),
                     onTap: () =>
                         _onOptionSelected(ProfileOption.twoFactorAuth)),
-                _buildListTile(Icons.location_on, "Saved Addresses",
+                _buildListTile(Icons.location_on, "Saved Addresses".tr(),
                     onTap: () =>
                         _onOptionSelected(ProfileOption.savedAddresses)),
-                _buildListTile(Icons.person_add, "Caretaker/Family Member",
+                _buildListTile(Icons.person_add, "Caretaker/Family Member".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.addCareTaker)),
-                _buildListTile(Icons.receipt_long_sharp, "Reports",
+                _buildListTile(Icons.receipt_long_sharp, "Reports".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.reports)),
               ],
               sectionBackground: AppColors.sectionHeaderBackground,
@@ -518,9 +529,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
-              title: "Preferences",
+              title: "Preferences".tr(),
               items: [
-                _buildListTile(Icons.notifications, "Notification Page",
+                _buildListTile(Icons.notifications, "Notification Page".tr(),
                     trailing: Switch(
                       value: _notificationsEnabled,
                       activeColor: AppColors.buttonColor,
@@ -533,7 +544,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             type: AppSettingsType.notification);
                       },
                     )),
-                _buildListTile(Icons.brightness_6, "Appearance",
+                _buildListTile(Icons.brightness_6, "Appearance".tr(),
                     onTap: _showAppearanceBottomSheet),
               ],
               sectionBackground: AppColors.sectionHeaderBackground,
@@ -543,12 +554,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
-              title: "Smart Pillbox",
+              title: "Smart Pillbox".tr(),
               items: [
-                _buildListTile(Icons.restart_alt, "Reset", onTap: () {}),
-                _buildListTile(Icons.volume_up, "Buzzer",
+                _buildListTile(Icons.restart_alt, "Reset".tr(), onTap: () {}),
+                _buildListTile(Icons.volume_up, "Buzzer".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.buzzer)),
-                _buildListTile(Icons.person, "Smart Diagnosis",
+                _buildListTile(Icons.person, "Smart Diagnosis".tr(),
                     onTap: () =>
                         _onOptionSelected(ProfileOption.smartDiagnosis)),
               ],
@@ -559,15 +570,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               itemIcon: AppColors.buttonColor,
             ),
             SettingsSection(
-              title: "More",
+              title: "More".tr(),
               items: [
-                _buildListTile(Icons.info, "About",
+                _buildListTile(Icons.info, "About".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.about)),
-                _buildListTile(Icons.feedback, "Send Feedback",
+                _buildListTile(Icons.feedback, "Send Feedback".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.feedback)),
-                _buildListTile(Icons.support_agent, "Contact Us",
+                _buildListTile(Icons.support_agent, "Contact Us".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.contactUs)),
-                _buildListTile(Icons.logout, "Log Out",
+                _buildListTile(Icons.logout, "Log Out".tr(),
                     onTap: _handleLogout, trailing: null),
               ],
               sectionBackground: AppColors.sectionHeaderBackground,
@@ -616,7 +627,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ),
               Expanded(
                 child: Text(
-                  "Feedback",
+                  "Feedback".tr(),
                   textAlign: TextAlign.center,
                   style:
                       AppFonts.headline.copyWith(color: AppColors.textPrimary),
@@ -628,7 +639,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 10),
           Center(
             child: Text(
-              "How was your experience?",
+              "How was your experience?".tr(),
               style:
                   AppFonts.subHeadline.copyWith(color: AppColors.textPrimary),
             ),
@@ -650,7 +661,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 20),
           MyTextField(
             controller: feedbackController,
-            hintText: "Tell us more about your experience...",
+            hintText: "Tell us more about your experience...".tr(),
             maxLines: 3,
             borderRadius: 12,
             fillColor: AppColors.cardBackground,
@@ -661,14 +672,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           const SizedBox(height: 20),
           Center(
             child: MyElevatedButton(
-              text: "Submit Feedback",
+              text: "Submit Feedback".tr(),
               onPressed: () {
                 if (_selectedRating != null) {
                   onSubmit(_selectedRating!, feedbackController.text);
                   mySnackBar(context, 'Feedback submitted successfully');
                   _onOptionSelected(ProfileOption.main);
                 } else {
-                  mySnackBar(context, 'Please select a rating', isError: true);
+                  mySnackBar(context, 'Please select a rating'.tr(),
+                      isError: true);
                 }
               },
               icon: Icon(Icons.send, color: AppColors.buttonColor),
@@ -692,9 +704,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: AppColors.cardBackground,
-          title: Text('Log Out',
+          title: Text('Log Out'.tr(),
               style: AppFonts.headline.copyWith(color: AppColors.textPrimary)),
-          content: Text('Are you sure you want to log out?',
+          content: Text('Are you sure you want to log out?'.tr(),
               style:
                   AppFonts.bodyText.copyWith(color: AppColors.textSecondary)),
           actions: [
@@ -706,7 +718,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               ),
               child: Text(
-                'CANCEL',
+                'CANCEL'.tr(),
                 style: AppFonts.buttonText.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.bold, // Increase visibility
@@ -723,7 +735,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               ),
               child: Text(
-                'LOG OUT',
+                'LOG OUT'.tr(),
                 style: AppFonts.buttonText.copyWith(
                   color: AppColors.buttonColor,
                   fontWeight: FontWeight.bold,

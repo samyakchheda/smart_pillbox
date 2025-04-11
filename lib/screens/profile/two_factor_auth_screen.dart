@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
@@ -49,7 +50,7 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
       setState(() {
         _isLoading = false;
       });
-      mySnackBar(context, 'Error fetching 2FA status', isError: true);
+      mySnackBar(context, 'Error fetching 2FA status'.tr(), isError: true);
     }
   }
 
@@ -63,12 +64,14 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
         );
         mySnackBar(
           context,
-          value ? '2FA Enabled Successfully' : '2FA Disabled Successfully',
+          value
+              ? '2FA Enabled Successfully'.tr()
+              : '2FA Disabled Successfully'.tr(),
         );
       }
     } catch (e) {
       print('Error updating 2FA status: $e');
-      mySnackBar(context, 'Error updating 2FA status. Please try again.',
+      mySnackBar(context, 'Error updating 2FA status. Please try again.'.tr(),
           isError: true);
     }
   }
@@ -89,7 +92,7 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
               ),
               Expanded(
                 child: Text(
-                  "2-Factor Authentication",
+                  "2-Factor Authentication".tr(),
                   textAlign: TextAlign.center,
                   style: AppFonts.headline,
                 ),
@@ -110,12 +113,13 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "About 2FA",
+                    "About 2FA".tr(),
                     style: AppFonts.subHeadline,
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    "Two-Factor Authentication (2FA) adds an extra layer of security to your account. In addition to your password, you'll need to provide a second form of verification, such as a code sent to your phone or email.",
+                    "Two-Factor Authentication (2FA) adds an extra layer of security to your account. In addition to your password, you'll need to provide a second form of verification, such as a code sent to your phone or email."
+                        .tr(),
                     style: AppFonts.bodyText.copyWith(
                       color: AppColors.textPlaceholder,
                     ),
@@ -139,7 +143,7 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                   )
                 : ListTile(
                     title: Text(
-                      "Enable 2-Factor Authentication",
+                      "Enable 2-Factor Authentication".tr(),
                       style: AppFonts.bodyText,
                     ),
                     trailing: Switch(
@@ -170,14 +174,15 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "How it Works",
+                    "How it Works".tr(),
                     style: AppFonts.subHeadline,
                   ),
                   const SizedBox(height: 10),
                   Text(
                     "1. Log in with your username and password\n"
-                    "2. Receive a verification code via SMS or email\n"
-                    "3. Enter the code to access your account",
+                            "2. Receive a verification code via SMS or email\n"
+                            "3. Enter the code to access your account"
+                        .tr(),
                     style: AppFonts.bodyText.copyWith(
                       color: AppColors.textPlaceholder,
                     ),

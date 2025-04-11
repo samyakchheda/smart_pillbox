@@ -114,8 +114,8 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: isDarkMode
-                        ? AppColors.cardBackground.withOpacity(0.7)
-                        : AppColors.cardBackground.withOpacity(0.2),
+                        ? AppColors.kBlackColor
+                        : AppColors.kWhiteColor,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: AppColors.borderColor),
                     boxShadow: [

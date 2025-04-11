@@ -1,7 +1,9 @@
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -89,7 +91,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       setState(() {
         _isLoadingImage = false;
       });
-      mySnackBar(context, "Error fetching data: $e", isError: true);
+      mySnackBar(context, "Error fetching data: $e".tr(), isError: true);
     }
   }
 
@@ -157,7 +159,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         dobController.text.trim().isEmpty ||
         selectedGender == null ||
         phoneController.text.trim().isEmpty) {
-      mySnackBar(context, "Please fill all required fields", isError: true);
+      mySnackBar(context, "Please fill all required fields".tr(),
+          isError: true);
       return;
     }
 
@@ -218,7 +221,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       setState(() => _isUploading = false);
-      mySnackBar(context, "Error updating data: $e", isError: true);
+      mySnackBar(context, "Error updating data: $e".tr(), isError: true);
     }
   }
 
@@ -277,14 +280,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             title: Text(
-              "Choose Photo Source",
+              "Choose Photo Source".tr(),
               style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 MyElevatedButton(
-                  text: "Gallery",
+                  text: "Gallery".tr(),
                   onPressed: () {
                     Navigator.pop(context);
                     _pickImage(ImageSource.gallery);
@@ -300,7 +303,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 10),
                 MyElevatedButton(
-                  text: "Camera",
+                  text: "Camera".tr(),
                   onPressed: () {
                     Navigator.pop(context);
                     _pickImage(ImageSource.camera);
@@ -318,7 +321,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             actions: [
               MyElevatedButton(
-                text: "Cancel",
+                text: "Cancel".tr(),
                 onPressed: () => Navigator.pop(context),
                 backgroundColor: AppColors.cardBackground,
                 textColor: AppColors.buttonText,
@@ -351,7 +354,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: widget.onBack,
                 ),
                 Text(
-                  "Edit Profile",
+                  "Edit Profile".tr(),
                   style:
                       AppFonts.headline.copyWith(color: AppColors.textPrimary),
                 ),
@@ -445,14 +448,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 20),
             _buildInputField(
-              label: "Full Name",
-              hint: "Enter your full name",
+              label: "Full Name".tr(),
+              hint: "Enter your full name".tr(),
               controller: nameController,
               keyboardType: TextInputType.name,
             ),
             _buildInputField(
-              label: "Date of Birth",
-              hint: "Select your DOB",
+              label: "Date of Birth".tr(),
+              hint: "Select your DOB".tr(),
               controller: dobController,
               readOnly: true,
               icon: Icons.calendar_today,
@@ -466,7 +469,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ? CircularProgressIndicator(color: AppColors.buttonColor)
                   : MyElevatedButton(
                       onPressed: _saveUserData,
-                      text: 'Save',
+                      text: 'Save'.tr(),
                       backgroundColor: AppColors.buttonColor,
                       textColor: AppColors.buttonText,
                       padding: const EdgeInsets.symmetric(
@@ -512,40 +515,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildDropdown() {
+    const genderOptions = ['Male', 'Female', 'Prefer not to say'];
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: DropdownButtonFormField<String>(
-        value: selectedGender,
+        value: genderOptions.contains(selectedGender) ? selectedGender : null,
         onChanged: (value) => setState(() => selectedGender = value),
-        items: ["Male", "Female", "Prefer not to say"]
+        items: genderOptions
             .map((gender) => DropdownMenuItem(
-                  value: gender,
+                  value: gender, // actual value saved in Firestore
                   child: Text(
-                    gender,
-                    style: AppFonts.bodyText
-                        .copyWith(color: AppColors.textPrimary),
+                    gender.tr(), // only translate for display
+                    style: GoogleFonts.poppins(color: Colors.black),
                   ),
                 ))
             .toList(),
         decoration: InputDecoration(
-          labelText: "Gender",
-          labelStyle: AppFonts.caption.copyWith(color: AppColors.textSecondary),
-          filled: true,
-          fillColor: AppColors.cardBackground,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(color: AppColors.textPlaceholder),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(color: AppColors.textPlaceholder),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(50),
-            borderSide: BorderSide(color: AppColors.buttonColor),
-          ),
+          labelText: "Gender".tr(),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(50)),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         ),
-        dropdownColor: AppColors.cardBackground,
+        style: GoogleFonts.poppins(),
       ),
     );
   }
@@ -555,7 +547,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: MyTextField(
         controller: phoneController,
-        hintText: "Enter phone number",
+        hintText: "Enter phone number".tr(),
         keyboardType: TextInputType.phone,
         icon: Icons.phone,
         fillColor: AppColors.cardBackground,

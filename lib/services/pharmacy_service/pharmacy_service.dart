@@ -9,7 +9,7 @@ import 'package:geolocator/geolocator.dart';
 class PharmacyService {
   static const String _baseUrl = 'https://google-map-places.p.rapidapi.com';
   static const String _apiKey =
-      '5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121';
+      '482e99f096mshef50116a37ccc61p12b962jsnc32558402289';
 
   Future<List<Pharmacy>> getNearbyPharmacies(Position position) async {
     final response = await http.get(

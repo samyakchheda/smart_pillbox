@@ -182,10 +182,10 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
       data: Theme.of(context).copyWith(
         scaffoldBackgroundColor: AppColors.background,
         appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.buttonColor,
+          backgroundColor: AppColors.background,
           elevation: 0,
           titleTextStyle: TextStyle(
-            color: AppColors.textOnPrimary,
+            color: isDarkMode ? AppColors.kWhiteColor : AppColors.kBlackColor,
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),

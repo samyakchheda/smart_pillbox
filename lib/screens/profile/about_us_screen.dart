@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
@@ -25,7 +26,7 @@ class AboutUsScreen extends StatelessWidget {
                   ),
                   Expanded(
                     child: Text(
-                      "About Us",
+                      "About Us".tr(),
                       textAlign: TextAlign.center,
                       style: AppFonts.headline.copyWith(
                         fontSize: 26,
@@ -56,7 +57,7 @@ class AboutUsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        "At Smart PillBox",
+                        "At Smart PillBox".tr(),
                         style: AppFonts.subHeadline.copyWith(
                           fontSize: 20,
                           color: AppColors.buttonColor, // Accent color
@@ -64,9 +65,10 @@ class AboutUsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        "We are dedicated to revolutionizing medication management through cutting-edge technology. "
-                        "Our mission is to enhance medication adherence and elevate the quality of life for individuals, "
-                        "especially the elderly and those managing chronic conditions.",
+                        ("We are dedicated to revolutionizing medication management through cutting-edge technology. " +
+                                "Our mission is to enhance medication adherence and elevate the quality of life for individuals, " +
+                                "especially the elderly and those managing chronic conditions.")
+                            .tr(),
                         textAlign: TextAlign.center,
                         style: AppFonts.bodyText.copyWith(
                           fontSize: 16,
@@ -108,8 +110,9 @@ class AboutUsScreen extends StatelessWidget {
                       const SizedBox(width: 15),
                       Expanded(
                         child: Text(
-                          "Our vision is to create a world where medication non-adherence is a thing of the past. "
-                          "We empower individuals and caregivers with an intelligent, sleek solution for managing daily medications.",
+                          ("Our vision is to create a world where medication non-adherence is a thing of the past. " +
+                                  "We empower individuals and caregivers with an intelligent, sleek solution for managing daily medications.")
+                              .tr(),
                           style: AppFonts.bodyText.copyWith(
                             fontSize: 15,
                             color: AppColors.textPrimary,
@@ -122,7 +125,7 @@ class AboutUsScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
               Text(
-                "Why Choose Smart PillBox?",
+                "Why Choose Smart PillBox?".tr(),
                 style: AppFonts.headline.copyWith(
                   fontSize: 22,
                   color: AppColors.textPrimary,
@@ -138,23 +141,23 @@ class AboutUsScreen extends StatelessWidget {
               const SizedBox(height: 15),
               _featureCard(
                   Icons.alarm,
-                  "Automated Reminders",
-                  "Never miss a dose with stylish, timely alerts.",
+                  "Automated Reminders".tr(),
+                  "Never miss a dose with stylish, timely alerts.".tr(),
                   AppColors.buttonColor),
               _featureCard(
                   Icons.touch_app,
-                  "User-Friendly Design",
-                  "Sleek, intuitive, and perfect for all ages.",
+                  "User-Friendly Design".tr(),
+                  "Sleek, intuitive, and perfect for all ages.".tr(),
                   AppColors.buttonColor),
               _featureCard(
                   Icons.notifications,
-                  "Caregiver Notifications",
-                  "Stay connected with elegant updates.",
+                  "Caregiver Notifications".tr(),
+                  "Stay connected with elegant updates.".tr(),
                   AppColors.buttonColor),
               _featureCard(
                   Icons.security,
-                  "Secure & Portable",
-                  "Compact luxury built for your lifestyle.",
+                  "Secure & Portable".tr(),
+                  "Compact luxury built for your lifestyle.".tr(),
                   AppColors.buttonColor),
             ],
           ),

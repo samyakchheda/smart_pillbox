@@ -19,6 +19,7 @@ import 'package:home/firebase_options.dart';
 import 'package:home/routes/routes.dart';
 import 'package:home/services/medicine_service/medicine_service.dart';
 import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:cron/cron.dart';
@@ -91,6 +92,7 @@ Future<void> _initializeLocationAndPharmacies() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ThemeProvider.init();
   await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -128,23 +130,68 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      localizationsDelegates: context.localizationDelegates,
-      supportedLocales: context.supportedLocales,
-      locale: context.locale,
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-        scaffoldBackgroundColor: AppColors.darkBackground,
-      ),
-      title: 'Smart Pillbox',
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      onGenerateRoute: Routes.generateRoute,
-      // The main route now points to our AuthWrapper.
-      routes: {
-        '/': (context) => const AuthWrapper(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeProvider.themeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          navigatorKey: navigatorKey,
+          title: 'Smart Pillbox',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primaryColor: AppColors.buttonColor,
+            scaffoldBackgroundColor: AppColors.lightBackground,
+            cardColor: AppColors.lightCardBackground,
+            textTheme: ThemeData.light().textTheme.apply(
+                  bodyColor: AppColors.textPrimary,
+                  displayColor: AppColors.textPrimary,
+                ),
+            iconTheme: IconThemeData(color: AppColors.buttonColor),
+            dividerColor: AppColors.textPlaceholder,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonColor,
+                foregroundColor: AppColors.buttonText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primaryColor: AppColors.buttonColor,
+            scaffoldBackgroundColor: AppColors.darkBackground,
+            cardColor: AppColors.darkCardBackground,
+            textTheme: ThemeData.dark().textTheme.apply(
+                  bodyColor: AppColors.textPrimary,
+                  displayColor: AppColors.textPrimary,
+                ),
+            iconTheme: IconThemeData(color: AppColors.buttonColor),
+            dividerColor: AppColors.textPlaceholder,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonColor,
+                foregroundColor: AppColors.buttonText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          themeMode: mode, // This should reflect ThemeProvider's value
+          initialRoute: '/',
+          onGenerateRoute: Routes.generateRoute,
+          routes: {
+            '/': (context) => const AuthWrapper(),
+          },
+        );
       },
     );
   }

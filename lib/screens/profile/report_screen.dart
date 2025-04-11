@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:home/theme/app_colors.dart';
@@ -85,7 +86,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
       if (!docSnapshot.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User document not found.')),
+          SnackBar(content: Text('User document not found.'.tr())),
         );
         return;
       }
@@ -269,7 +270,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
     if (tableData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No records found in this date range.')),
+        SnackBar(content: Text('No records found in this date range.'.tr())),
       );
       return;
     }
@@ -493,7 +494,7 @@ class _ReportScreenState extends State<ReportScreen> {
                     ),
                     Expanded(
                       child: Text(
-                        "Reports",
+                        "Reports".tr(),
                         textAlign: TextAlign.center,
                         style: AppFonts.headline.copyWith(fontSize: 24),
                       ),
@@ -530,7 +531,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                   const SizedBox(height: 24),
                   MyElevatedButton(
-                    text: "Share Med Logs with your Doctor",
+                    text: "Share Med Logs with your Doctor".tr(),
                     icon: const Icon(Icons.ios_share, size: 20),
                     onPressed: () => setState(() => _showCards = true),
                     backgroundColor: AppColors.buttonColor,
@@ -569,7 +570,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      "Medication List",
+                                      "Medication List".tr(),
                                       textAlign: TextAlign.center,
                                       style: AppFonts.bodyText.copyWith(
                                         fontWeight: FontWeight.w600,
@@ -608,7 +609,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
-                                      "Medication Records",
+                                      "Medication Records".tr(),
                                       textAlign: TextAlign.center,
                                       style: AppFonts.bodyText.copyWith(
                                         fontWeight: FontWeight.w600,

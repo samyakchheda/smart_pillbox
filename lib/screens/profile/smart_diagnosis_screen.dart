@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
@@ -47,7 +48,7 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
         ),
         Expanded(
           child: Text(
-            "Smart Diagnosis",
+            "Smart Diagnosis".tr(),
             textAlign: TextAlign.center,
             style: AppFonts.headline.copyWith(fontSize: 24),
           ),
@@ -98,13 +99,14 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  "What is Smart Diagnosis?",
+                  "What is Smart Diagnosis?".tr(),
                   style: AppFonts.subHeadline.copyWith(fontSize: 20),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Smart Diagnosis is an advanced feature that allows you to check the health and performance of your smart pillbox device.",
+                  "Smart Diagnosis is an advanced feature that allows you to check the health and performance of your smart pillbox device."
+                      .tr(),
                   textAlign: TextAlign.center,
                   style: AppFonts.bodyText.copyWith(
                     color: AppColors.textSecondary,
@@ -127,25 +129,27 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
     final features = [
       {
         'icon': Icons.check_circle_outline,
-        'title': "Quick Analysis",
-        'description': "Complete device diagnosis in just a few seconds"
+        'title': "Quick Analysis".tr(),
+        'description': "Complete device diagnosis in just a few seconds".tr()
       },
       {
         'icon': Icons.sensors,
-        'title': "Comprehensive Check",
-        'description': "Tests temperature sensors, motor functions, and more"
+        'title': "Comprehensive Check".tr(),
+        'description':
+            "Tests temperature sensors, motor functions, and more".tr()
       },
       {
         'icon': Icons.healing,
-        'title': "Problem Detection",
+        'title': "Problem Detection".tr(),
         'description':
-            "Identifies potential issues before they affect performance"
+            "Identifies potential issues before they affect performance".tr()
       },
       {
         'icon': Icons.tips_and_updates,
-        'title': "Maintenance Tips",
+        'title': "Maintenance Tips".tr(),
         'description':
             "Provides recommendations to keep your device running optimally"
+                .tr()
       },
     ];
 
@@ -224,7 +228,8 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
             const SizedBox(width: 16),
             Expanded(
               child: Text(
-                "Please ensure your device is powered on and connected to your account before starting the diagnosis.",
+                "Please ensure your device is powered on and connected to your account before starting the diagnosis."
+                    .tr(),
                 style: AppFonts.bodyText.copyWith(
                   color: AppColors.textSecondary,
                   fontSize: 14,
@@ -241,7 +246,7 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: MyElevatedButton(
-        text: "Start Diagnosis",
+        text: "Start Diagnosis".tr(),
         icon: const Icon(Icons.play_arrow, size: 20),
         onPressed: () => _navigateToDiagnosisScreen(context),
         backgroundColor: AppColors.buttonColor,
@@ -290,12 +295,12 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
   bool _isCompleted = false;
 
   final List<String> _diagnosticItems = [
-    "Temperature Sensor",
-    "Evaporator Defrost",
-    "Fan Motor",
-    "Pill Dispenser",
-    "Battery Health",
-    "Connection Status"
+    "Temperature Sensor".tr(),
+    "Evaporator Defrost".tr(),
+    "Fan Motor".tr(),
+    "Pill Dispenser".tr(),
+    "Battery Health".tr(),
+    "Connection Status".tr()
   ];
 
   final Map<String, Map<String, dynamic>> _diagnosisResults = {
@@ -333,24 +338,26 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
 
   final List<Map<String, dynamic>> _recommendations = [
     {
-      "title": "Fan Motor Maintenance",
-      "description": "Clean the fan motor area to improve performance.",
+      "title": "Fan Motor Maintenance".tr(),
+      "description": "Clean the fan motor area to improve performance.".tr(),
       "icon": Icons.cleaning_services,
     },
     {
-      "title": "Regular Cleaning",
-      "description": "Clean the device exterior weekly with a soft, dry cloth.",
+      "title": "Regular Cleaning".tr(),
+      "description":
+          "Clean the device exterior weekly with a soft, dry cloth.".tr(),
       "icon": Icons.cleaning_services,
     },
     {
-      "title": "Software Update",
-      "description": "Keep your app updated for the latest features and fixes.",
+      "title": "Software Update".tr(),
+      "description":
+          "Keep your app updated for the latest features and fixes.".tr(),
       "icon": Icons.system_update,
     },
     {
-      "title": "Battery Care",
+      "title": "Battery Care".tr(),
       "description":
-          "Charge the device when the battery level falls below 20%.",
+          "Charge the device when the battery level falls below 20%.".tr(),
       "icon": Icons.battery_charging_full,
     },
   ];
@@ -440,7 +447,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         ),
         Expanded(
           child: Text(
-            _isCompleted ? "Diagnosis Results" : "Smart Diagnosis",
+            _isCompleted ? "Diagnosis Results".tr() : "Smart Diagnosis".tr(),
             textAlign: TextAlign.center,
             style: AppFonts.headline.copyWith(fontSize: 24),
           ),
@@ -491,7 +498,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         ),
         const SizedBox(height: 40),
         Text(
-          "Diagnosing your device...",
+          "Diagnosing your device...".tr(),
           style: AppFonts.subHeadline.copyWith(fontSize: 18),
           textAlign: TextAlign.center,
         ),
@@ -539,15 +546,18 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              hasIssue ? "Minor Issues Detected" : "All Systems Operational",
+              hasIssue
+                  ? "Minor Issues Detected".tr()
+                  : "All Systems Operational".tr(),
               style: AppFonts.subHeadline.copyWith(fontSize: 20),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               hasIssue
-                  ? "Your device is functioning but needs some attention."
-                  : "Your device is functioning properly with no issues detected.",
+                  ? "Your device is functioning but needs some attention.".tr()
+                  : "Your device is functioning properly with no issues detected."
+                      .tr(),
               textAlign: TextAlign.center,
               style: AppFonts.bodyText.copyWith(
                 color: AppColors.textSecondary,
@@ -565,7 +575,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Detailed Results",
+          "Detailed Results".tr(),
           style: AppFonts.subHeadline.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
@@ -627,7 +637,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Recommendations",
+          "Recommendations".tr(),
           style: AppFonts.subHeadline.copyWith(fontSize: 20),
         ),
         const SizedBox(height: 16),
@@ -688,7 +698,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: MyElevatedButton(
-        text: "Finish",
+        text: "Finish".tr(),
         icon: const Icon(Icons.check, size: 20),
         onPressed: widget.onBack,
         backgroundColor: AppColors.buttonColor,
@@ -755,7 +765,8 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          "Please stay on this screen until the diagnosis is complete.\nLeaving now will cancel the process.",
+          "Please stay on this screen until the diagnosis is complete.\nLeaving now will cancel the process."
+              .tr(),
           textAlign: TextAlign.center,
           style: AppFonts.bodyText.copyWith(
             color: AppColors.textSecondary,
@@ -773,12 +784,13 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         backgroundColor: AppColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          "Cancel Diagnosis?",
+          "Cancel Diagnosis?".tr(),
           style: AppFonts.subHeadline.copyWith(fontSize: 20),
           textAlign: TextAlign.center,
         ),
         content: Text(
-          "The diagnosis is still in progress. Are you sure you want to exit?",
+          "The diagnosis is still in progress. Are you sure you want to exit?"
+              .tr(),
           style: AppFonts.bodyText.copyWith(fontSize: 16),
           textAlign: TextAlign.center,
         ),
@@ -787,7 +799,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
-              "Continue",
+              "Continue".tr(),
               style: AppFonts.buttonText.copyWith(
                 color: AppColors.textSecondary,
                 fontSize: 16,
@@ -795,7 +807,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
             ),
           ),
           MyElevatedButton(
-            text: "Exit",
+            text: "Exit".tr(),
             onPressed: () {
               Navigator.pop(context);
               widget.onBack();
