@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -59,8 +58,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       for (var pharmacy in _pharmacies) {
         await widget.mapController.addMarker(
           GeoPoint(latitude: pharmacy.lat, longitude: pharmacy.lon),
-          markerIcon: const MarkerIcon(
-            icon: Icon(Icons.location_on, color: Colors.red, size: 48),
+          markerIcon: MarkerIcon(
+            icon:
+                Icon(Icons.location_on, color: AppColors.errorColor, size: 48),
           ),
         );
       }
@@ -99,6 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Full-Screen Gradient Background
@@ -108,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               gradient: LinearGradient(
                 colors: [
                   AppColors.buttonColor,
-                  Colors.grey.shade400,
+                  AppColors.borderColor,
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -116,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
           ),
 
-          // Main content with overlapping white background
+          // Main content with overlapping card background
           Column(
             children: [
               // Header with Gradient (Fixed Height)
@@ -125,11 +126,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 padding: const EdgeInsets.only(bottom: 20),
                 alignment: Alignment.bottomCenter,
                 child: Text(
-                  'Nearby Pharmacies'.tr(),
+                  'Nearby Pharmacies',
                   style: GoogleFonts.poppins(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -137,9 +138,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               // Expanded section with fixed map and scrollable list
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBackground,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -151,11 +152,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         margin: const EdgeInsets.all(16),
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.cardBackground,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: AppColors.borderColor.withOpacity(0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -181,17 +182,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       borderRadius: BorderRadius.circular(16),
       child: OSMFlutter(
         controller: widget.mapController,
-        osmOption: const OSMOption(
+        osmOption: OSMOption(
           enableRotationByGesture: true,
-          userTrackingOption: UserTrackingOption(
+          userTrackingOption: const UserTrackingOption(
             enableTracking: false,
             unFollowUser: true,
           ),
-          zoomOption: ZoomOption(
+          zoomOption: const ZoomOption(
             initZoom: 17,
             minZoomLevel: 3,
             maxZoomLevel: 19,
             stepZoom: 1.0,
+          ),
+          roadConfiguration: RoadOption(
+            roadColor: AppColors.buttonColor,
           ),
         ),
       ),
@@ -208,14 +212,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             opacity: _animation.value,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.listItemBackground,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
                   topRight: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
+                    color: AppColors.borderColor.withOpacity(0.5),
                     spreadRadius: 5,
                     blurRadius: 7,
                     offset: const Offset(0, 3),
@@ -231,46 +235,52 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search for a pharmacy',
+                        hintStyle: TextStyle(color: AppColors.textPlaceholder),
                         prefixIcon:
                             Icon(Icons.search, color: AppColors.buttonColor),
                         filled: true,
-                        fillColor: Colors.grey[200],
+                        fillColor: AppColors.cardBackground,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
                           borderSide: BorderSide.none,
                         ),
                       ),
+                      style: TextStyle(color: AppColors.textPrimary),
                       onChanged: _searchPharmacy,
                     ),
                   ),
                   // Expanded scrollable list for pharmacies
                   Expanded(
                     child: ListView.builder(
-                      // Calculate the total number of items (list items + dividers)
                       itemCount: _pharmacies.length * 2 - 1,
                       itemBuilder: (context, index) {
                         if (index.isOdd) {
-                          // For odd indices, return a Divider widget.
-                          return const Divider(
+                          return Divider(
                             height: 1,
-                            color: Colors.grey,
+                            color: AppColors.borderColor,
                           );
                         } else {
-                          // For even indices, calculate the real index in the pharmacies list.
                           final realIndex = index ~/ 2;
                           final pharmacy = _pharmacies[realIndex];
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: AppColors.buttonColor,
                               child: const Icon(Icons.local_pharmacy,
-                                  color: Colors.white),
+                                  color: AppColors.textOnPrimary),
                             ),
                             title: Text(
                               pharmacy.name,
                               style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.bold),
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.listItemText,
+                              ),
                             ),
-                            subtitle: Text(pharmacy.phoneNumber),
+                            subtitle: Text(
+                              pharmacy.phoneNumber,
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -302,5 +312,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _searchController.dispose();
+    super.dispose();
   }
 }

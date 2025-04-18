@@ -129,8 +129,8 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                     child: Text(
                       'SmartDose'.tr(),
                       style: AppFonts.headline.copyWith(
-                        fontSize: 24,
-                        color: AppColors.textOnPrimary,
+                        fontSize: 32,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -159,7 +159,8 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                               child: cube.Cube(
                                 onSceneCreated: (cube.Scene scene) {
                                   final obj = cube.Object(
-                                    fileName: 'assets/cube/jewelry-box-009.obj',
+                                    fileName:
+                                        'assets/box/Blue_Geometric_Box_0417150445_texture.obj',
                                   );
                                   obj.scale.setValues(6.0, 6.0, 6.0);
                                   scene.world.add(obj);
@@ -218,74 +219,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                             ),
                           ),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.setLocale(const Locale('gu', 'IN'));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColor,
-                            foregroundColor: AppColors.buttonText,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            'Switch to Gujarati',
-                            style: AppFonts.buttonText
-                                .copyWith(color: AppColors.buttonText),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.setLocale(const Locale('en', 'US'));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColor,
-                            foregroundColor: AppColors.buttonText,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            'Switch to English',
-                            style: AppFonts.buttonText
-                                .copyWith(color: AppColors.buttonText),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.setLocale(const Locale('hi', 'IN'));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColor,
-                            foregroundColor: AppColors.buttonText,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            'Switch to Hindi',
-                            style: AppFonts.buttonText
-                                .copyWith(color: AppColors.buttonText),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.setLocale(const Locale('mr', 'IN'));
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.buttonColor,
-                            foregroundColor: AppColors.buttonText,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text(
-                            'Switch to Marathi',
-                            style: AppFonts.buttonText
-                                .copyWith(color: AppColors.buttonText),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -328,7 +261,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Icon(Icons.devices, size: 50, color: AppColors.buttonColor),
-              const SizedBox(height: 10),
               Text(
                 deviceName.tr(),
                 textAlign: TextAlign.center,
@@ -337,13 +269,11 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.battery_full,
                       color: battery > 20 ? AppColors.buttonColor : Colors.red),
-                  const SizedBox(width: 5),
                   Text(
                     "$battery%",
                     style: AppFonts.bodyText.copyWith(
@@ -353,7 +283,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -361,7 +290,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                       color: status == "Connected"
                           ? AppColors.buttonColor
                           : Colors.red),
-                  const SizedBox(width: 5),
                   Text(
                     status,
                     style: AppFonts.bodyText.copyWith(
@@ -382,6 +310,9 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
 
   Widget _buildCard(
       String title, String buttonText, IconData icon, VoidCallback onPressed) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 360;
+
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 6,
@@ -406,18 +337,25 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmall ? 12 : 16,
+            vertical: isSmall ? 10 : 12,
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, size: 50, color: AppColors.buttonColor),
+              Icon(
+                icon,
+                size: isSmall ? 40 : 50,
+                color: AppColors.buttonColor,
+              ),
               const SizedBox(height: 10),
               Expanded(
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
                   style: AppFonts.subHeadline.copyWith(
-                    fontSize: 16,
+                    fontSize: isSmall ? 14 : 16,
                     color: AppColors.textPrimary,
                   ),
                   softWrap: true,
@@ -431,14 +369,18 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                     backgroundColor: AppColors.buttonColor,
                     foregroundColor: AppColors.buttonText,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     elevation: 4,
+                    padding: EdgeInsets.symmetric(
+                      vertical: isSmall ? 10 : 14,
+                    ),
                   ),
                   onPressed: onPressed,
                   child: Text(
                     buttonText,
                     style: AppFonts.buttonText.copyWith(
-                      fontSize: 16,
+                      fontSize: isSmall ? 14 : 16,
                       color: AppColors.buttonText,
                     ),
                   ),

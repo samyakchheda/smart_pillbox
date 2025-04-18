@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_emoji_feedback/flutter_emoji_feedback.dart';
 import 'package:home/screens/profile/buzzer_screen.dart';
 import 'package:home/screens/profile/contact_us_screen.dart';
+import 'package:home/screens/profile/language_screen.dart';
 import 'package:home/screens/profile/report_screen.dart';
 import 'package:home/screens/profile/smart_diagnosis_screen.dart';
 import 'package:home/screens/profile/two_factor_auth_screen.dart';
@@ -43,7 +44,8 @@ enum ProfileOption {
   logout,
   addCareTaker,
   contactUs,
-  reports
+  reports,
+  language
 }
 
 class UserProfileScreen extends StatefulWidget {
@@ -314,7 +316,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       child: Text(
                         'Profile Settings'.tr(),
                         style: AppFonts.headline.copyWith(
-                          color: AppColors.textOnPrimary,
+                          color: isDarkMode ? Colors.white : Colors.black87,
                           fontSize: 24,
                         ),
                       ),
@@ -500,6 +502,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       case ProfileOption.reports:
         return ReportScreen(
             onBack: () => _onOptionSelected(ProfileOption.main));
+      case ProfileOption.language:
+        return LanguageScreen(
+            onBack: () => _onOptionSelected(ProfileOption.main));
       default:
         return Column(
           children: [
@@ -546,6 +551,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     )),
                 _buildListTile(Icons.brightness_6, "Appearance".tr(),
                     onTap: _showAppearanceBottomSheet),
+                _buildListTile(Icons.language, "Language".tr(),
+                    onTap: () => _onOptionSelected(ProfileOption.language)),
               ],
               sectionBackground: AppColors.sectionHeaderBackground,
               sectionText: AppColors.sectionHeaderText,

@@ -57,7 +57,7 @@ class PharmacyService {
         uri,
         headers: {
           'x-rapidapi-key':
-              "5a49871c0cmsh9b15b2793087336p143bd4jsn63eda080b121",
+              "482e99f096mshef50116a37ccc61p12b962jsnc32558402289",
           'x-rapidapi-host': 'google-map-places.p.rapidapi.com',
         },
       );

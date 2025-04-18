@@ -65,9 +65,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         final String userEmail = user.email ?? '';
 
         if (userEmail.isNotEmpty) {
-          // Query caretakers where patient matches the current user's email
-          final caretakerQuery =
-              await FirebaseFirestore.instance.collection('caretakers').get();
+          // Query caretakers where patient field matches the current user's email
+          final caretakerQuery = await FirebaseFirestore.instance
+              .collection('caretakers')
+              .where('email', isEqualTo: userEmail)
+              .get();
 
           if (caretakerQuery.docs.isNotEmpty) {
             final caretakerData = caretakerQuery.docs.first.data();

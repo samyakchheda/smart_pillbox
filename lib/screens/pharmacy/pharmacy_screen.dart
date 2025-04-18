@@ -1,7 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:home/screens/pharmacy/home_screen.dart';
 import 'package:home/main.dart';
+import 'package:home/services/pharmacy_service/location_service.dart';
+import 'package:home/services/pharmacy_service/pharmacy_service.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:lottie/lottie.dart';
 
@@ -22,6 +25,19 @@ class _PharmacyScreenState extends State<PharmacyScreen> {
   }
 
   Future<void> _waitForData() async {
+    userLocation = await LocationService.getCurrentLocation();
+    if (userLocation != null) {
+      mapController = MapController(
+        initPosition: GeoPoint(
+          latitude: userLocation!.latitude,
+          longitude: userLocation!.longitude,
+        ),
+      );
+      pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
+      print(
+          "Location fetched: ${userLocation!.latitude}, ${userLocation!.longitude}");
+    }
+
     while (pharmacyData == null || mapController == null) {
       await Future.delayed(const Duration(milliseconds: 100));
     }

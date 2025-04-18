@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/models/pharmacy_model.dart';
@@ -8,6 +7,8 @@ import 'package:home/screens/pharmacy/helper.dart';
 import 'package:sms_mms/sms_mms.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:home/theme/app_colors.dart';
+import '../../widgets/common/my_elevated_button.dart';
+import '../../widgets/common/my_snack_bar.dart';
 
 class MessageScreen extends StatefulWidget {
   final Pharmacy pharmacy;
@@ -76,16 +77,20 @@ class _MessageScreenState extends State<MessageScreen> {
 
   Future<void> _sendMessage() async {
     if (widget.pharmacy.phoneNumber.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Phone number is empty'.tr())),
+      mySnackBar(
+        context,
+        'Phone number is empty',
+        isError: true,
       );
       return;
     }
 
     final String messageText = _messageController.text;
     if (messageText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter a message'.tr())),
+      mySnackBar(
+        context,
+        'Please enter a message',
+        isError: true,
       );
       return;
     }
@@ -113,12 +118,16 @@ class _MessageScreenState extends State<MessageScreen> {
         message: messageText,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Message sent successfully'.tr())),
+      mySnackBar(
+        context,
+        'Message sent successfully',
+        isError: false,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not send message: $e')),
+      mySnackBar(
+        context,
+        'Could not send message: $e',
+        isError: true,
       );
     }
 
@@ -128,12 +137,12 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE0E0E0),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -141,7 +150,7 @@ class _MessageScreenState extends State<MessageScreen> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -154,13 +163,13 @@ class _MessageScreenState extends State<MessageScreen> {
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black26,
+                  color: AppColors.borderColor.withOpacity(0.3),
                   blurRadius: 6,
-                  offset: Offset(0, 2),
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
@@ -168,37 +177,39 @@ class _MessageScreenState extends State<MessageScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Compose your message:'.tr(),
+                  'Compose your message:',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: AppColors.borderColor),
                   ),
                   child: TextField(
                     controller: _messageController,
                     maxLines: 5,
-                    style: const TextStyle(color: Colors.black),
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.all(12),
+                    style: TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.all(12),
                       border: InputBorder.none,
                       hintText: "Type your message here...",
-                      hintStyle: TextStyle(color: Colors.grey),
+                      hintStyle: TextStyle(color: AppColors.textPlaceholder),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Scanned Documents:'.tr(),
+                  'Scanned Documents:',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -210,9 +221,14 @@ class _MessageScreenState extends State<MessageScreen> {
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                        child: Center(child: CircularProgressIndicator()),
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.buttonColor),
+                          ),
+                        ),
                       );
                     }
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -220,8 +236,10 @@ class _MessageScreenState extends State<MessageScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         child: Center(
                           child: Text(
-                            'No scanned documents.'.tr(),
-                            style: GoogleFonts.poppins(),
+                            'No scanned documents.',
+                            style: GoogleFonts.poppins(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ),
                       );
@@ -237,7 +255,7 @@ class _MessageScreenState extends State<MessageScreen> {
                         var doc = _documentList[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 8),
-                          color: const Color(0xFFE0E0E0),
+                          color: AppColors.listItemBackground,
                           child: ListTile(
                             leading: Radio<String>(
                               value: doc.id,
@@ -258,7 +276,11 @@ class _MessageScreenState extends State<MessageScreen> {
                                   fit: BoxFit.cover,
                                 ),
                                 const SizedBox(width: 8),
-                                Text('Document ${index + 1}'),
+                                Text(
+                                  'Document ${index + 1}',
+                                  style:
+                                      TextStyle(color: AppColors.listItemText),
+                                ),
                               ],
                             ),
                           ),
@@ -268,16 +290,20 @@ class _MessageScreenState extends State<MessageScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _sendMessage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.buttonColor,
-                    foregroundColor: Colors.white,
-                    textStyle: GoogleFonts.poppins(fontSize: 20),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    minimumSize: const Size(double.infinity, 60),
+                MyElevatedButton(
+                  text: widget.messageType,
+                  onPressedAsync: _sendMessage,
+                  height: 60,
+                  width: double.infinity,
+                  backgroundColor: AppColors.buttonColor,
+                  textColor: AppColors.textOnPrimary,
+                  borderRadius: 12,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  textStyle: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.normal,
                   ),
-                  child: Text('${widget.messageType}'),
+                  textShift: 0, // Center the text
                 ),
                 const SizedBox(height: 24),
               ],
@@ -286,5 +312,11 @@ class _MessageScreenState extends State<MessageScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
   }
 }

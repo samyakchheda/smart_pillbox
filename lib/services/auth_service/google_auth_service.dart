@@ -15,7 +15,21 @@ class GoogleAuthService {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return "Google sign-in was cancelled";
 
-      // Check if an account with this email already exists.
+      // Normalize the email.
+      final normalizedEmail = googleUser.email.trim().toLowerCase();
+
+      // Check if a user with this email already exists in Firestore.
+      final QuerySnapshot userQuery = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: normalizedEmail)
+          .get();
+
+      if (userQuery.docs.isNotEmpty) {
+        await _googleSignIn.signOut();
+        return "An account with this email already exists. Please login instead.";
+      }
+
+      // Check if an account with this email exists in Firebase Authentication.
       final List<String> signInMethods =
           await _firebaseAuth.fetchSignInMethodsForEmail(googleUser.email);
       if (signInMethods.isNotEmpty) {
@@ -35,8 +49,22 @@ class GoogleAuthService {
       final User? user = userCredential.user;
       if (user == null) return "Authentication failed";
 
-      // Normalize the email.
-      final normalizedEmail = user.email?.trim().toLowerCase() ?? '';
+      // Check if this is a new user.
+      if (!userCredential.additionalUserInfo!.isNewUser) {
+        // If the user is not new, they already exist in Firebase Authentication.
+        await user.delete(); // Delete the newly created user.
+        await _firebaseAuth.signOut();
+        await _googleSignIn.signOut();
+        return "An account with this Google account already exists. Please login instead.";
+      }
+
+      // Store user details in Firestore.
+      await _firestore.collection('users').doc(user.uid).set({
+        'email': normalizedEmail,
+        'uid': user.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        // Add other fields as needed.
+      });
 
       // Query the "caretakers" collection.
       final QuerySnapshot caretakerQuery = await _firestore
@@ -45,11 +73,8 @@ class GoogleAuthService {
           .get();
 
       if (caretakerQuery.docs.isNotEmpty) {
-        // The user is identified as a caretaker.
         print("User is a caretaker: $normalizedEmail");
         // Optionally, implement additional caretaker-specific logic here.
-      } else {
-        // For non-caretaker users, you may store additional user details if needed.
       }
 
       return null; // Sign-up successful.

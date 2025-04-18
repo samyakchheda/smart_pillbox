@@ -199,24 +199,20 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Builder(
-                      builder: (context) => IconButton(
-                        icon: Icon(Icons.menu, color: AppColors.buttonColor),
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
-                        },
-                      ),
-                    ),
-                    Text(
-                      'ChatBot'.tr(),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textOnPrimary,
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          'ChatBot'.tr(),
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textOnPrimary,
+                          ),
+                        ),
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: AppColors.buttonColor),
+                      icon: Icon(Icons.close, color: Colors.white),
                       onPressed: () {
                         Navigator.pop(context);
                       },

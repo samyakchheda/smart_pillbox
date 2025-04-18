@@ -72,22 +72,22 @@ Future<void> _initializeLocationAndPharmacies() async {
   }
 
   // Once permission is granted, fetch the location.
-  try {
-    userLocation = await LocationService.getCurrentLocation();
-    if (userLocation != null) {
-      mapController = MapController(
-        initPosition: GeoPoint(
-          latitude: userLocation!.latitude,
-          longitude: userLocation!.longitude,
-        ),
-      );
-      pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
-      print(
-          "Location fetched: ${userLocation!.latitude}, ${userLocation!.longitude}");
-    }
-  } catch (e) {
-    print("Error fetching location or pharmacies: $e");
-  }
+  // try {
+  //   userLocation = await LocationService.getCurrentLocation();
+  //   if (userLocation != null) {
+  //     mapController = MapController(
+  //       initPosition: GeoPoint(
+  //         latitude: userLocation!.latitude,
+  //         longitude: userLocation!.longitude,
+  //       ),
+  //     );
+  //     pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
+  //     print(
+  //         "Location fetched: ${userLocation!.latitude}, ${userLocation!.longitude}");
+  //   }
+  // } catch (e) {
+  //   print("Error fetching location or pharmacies: $e");
+  // }
 }
 
 void main() async {
