@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:home/widgets/common/my_elevated_button.dart';
 import 'package:home/widgets/common/my_snack_bar.dart';
@@ -60,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0, // Flat design for modern look
         centerTitle: true,
         title: Text(
-          'Forgot Password',
+          'Forgot Password'.tr(),
           style: AppFonts.headline.copyWith(
             color: AppColors.textPrimary,
             fontSize: 24,
@@ -82,7 +83,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Enter your registered email, and we will send a password reset link:',
+                    'Enter your registered email, and we will send a password reset link:'
+                        .tr(),
                     style: AppFonts.bodyText.copyWith(
                       color: AppColors.textSecondary,
                       fontSize: 16,
@@ -128,7 +130,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   TextButton(
                     onPressed: () => Navigator.pop(context),
                     child: Text(
-                      'Sign In',
+                      'Sign In'.tr(),
                       style: AppFonts.buttonText.copyWith(
                         color: AppColors.buttonColor,
                         fontSize: 16,

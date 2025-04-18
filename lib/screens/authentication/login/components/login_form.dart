@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -256,7 +257,7 @@ class _LoginFormState extends State<LoginForm> {
         Padding(
           padding: const EdgeInsets.all(18.0),
           child: Text(
-            "Welcome Back!",
+            "Welcome Back!".tr(),
             style: AppFonts.headline.copyWith(
               fontSize: 25,
               color: AppColors.textPrimary,
@@ -311,7 +312,7 @@ class _LoginFormState extends State<LoginForm> {
               Image.asset("assets/icons/ic_google.png", height: 24),
               const SizedBox(width: 10),
               Text(
-                "Continue With Google",
+                "Continue With Google".tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -335,7 +336,7 @@ class _LoginFormState extends State<LoginForm> {
               Image.asset("assets/icons/ic_fb.png", height: 24),
               const SizedBox(width: 10),
               Text(
-                "Continue With Facebook",
+                "Continue With Facebook".tr(),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -355,7 +356,7 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       children: [
         Text(
-          "Verify Your OTP",
+          "Verify Your OTP".tr(),
           style: AppFonts.headline.copyWith(
             fontSize: 28,
             color: AppColors.textPrimary,
@@ -364,7 +365,7 @@ class _LoginFormState extends State<LoginForm> {
         ),
         const SizedBox(height: 10),
         Text(
-          "Enter the 6-digit code sent to your email",
+          "Enter the 6-digit code sent to your email".tr(),
           style: AppFonts.caption.copyWith(
             fontSize: 16,
             color: AppColors.textSecondary,
@@ -477,7 +478,7 @@ class _LoginFormState extends State<LoginForm> {
             }
           },
           child: Text(
-            "Back to Login",
+            "Back to Login".tr(),
             style: AppFonts.bodyText.copyWith(
               color: AppColors.buttonColor,
               fontSize: 16,
@@ -497,7 +498,7 @@ class _LoginFormState extends State<LoginForm> {
           Navigator.pushNamed(context, Routes.forgotPassword);
         },
         child: Text(
-          "Forgot Password?",
+          "Forgot Password?".tr(),
           style: AppFonts.bodyText.copyWith(
             fontWeight: FontWeight.bold,
             color: AppColors.buttonColor,
@@ -514,7 +515,7 @@ class _LoginFormState extends State<LoginForm> {
       },
       child: RichText(
         text: TextSpan(
-          text: "Don't have an account? ",
+          text: "Don't have an account? ".tr(),
           style: AppFonts.bodyText.copyWith(
             color: AppColors.textPrimary,
             fontSize: 15,
@@ -522,7 +523,7 @@ class _LoginFormState extends State<LoginForm> {
           ),
           children: [
             TextSpan(
-              text: "Sign Up",
+              text: "Sign Up".tr(),
               style: AppFonts.bodyText.copyWith(
                 color: AppColors.buttonColor,
                 fontSize: 15,

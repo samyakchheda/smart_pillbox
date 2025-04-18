@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:home/services/auth_service/password_service.dart';
@@ -128,7 +129,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                   onPressed: widget.onBack,
                 ),
                 Text(
-                  "Change Password",
+                  "Change Password".tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -177,7 +178,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16.0),
                 child: Text(
-                  "Password changes are not available for Google/Facebook accounts",
+                  "Password changes are not available for Google/Facebook accounts"
+                      .tr(),
                   style: GoogleFonts.poppins(
                     color: Colors.grey,
                     fontSize: 14,

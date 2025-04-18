@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/main.dart';
@@ -151,7 +152,7 @@ class _SignupFormState extends State<SignupForm> {
               Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: Text(
-                  "Become a SmartDose Member!",
+                  "Become a SmartDose Member!".tr(),
                   style: AppFonts.headline.copyWith(
                     color: AppColors.textPrimary,
                     fontSize: 30,
@@ -209,7 +210,7 @@ class _SignupFormState extends State<SignupForm> {
                     child: GestureDetector(
                       onTap: () {},
                       child: Text(
-                        "I agree to the Privacy Policy and Terms of Use",
+                        "I agree to the Privacy Policy and Terms of Use".tr(),
                         style: AppFonts.bodyText.copyWith(
                           fontSize: 14,
                           color: AppColors.textSecondary,
@@ -283,7 +284,7 @@ class _SignupFormState extends State<SignupForm> {
       },
       child: RichText(
         text: TextSpan(
-          text: "Already have an account? ",
+          text: "Already have an account? ".tr(),
           style: AppFonts.bodyText.copyWith(
             color: AppColors.textSecondary,
             fontSize: 15,
