@@ -11,8 +11,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:home/screens/ai/chat_screen.dart';
 import 'package:home/helpers/functions/permissions_manager.dart';
 import 'package:home/screens/language/lang_selection_screen.dart';
-import 'package:home/services/pharmacy_service/location_service.dart';
-import 'package:home/services/pharmacy_service/pharmacy_service.dart';
 import 'package:home/screens/caretaker/home/home_screen.dart';
 import 'package:home/screens/home/home_screen.dart';
 import 'package:home/firebase_options.dart';

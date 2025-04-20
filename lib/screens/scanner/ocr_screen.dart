@@ -24,13 +24,13 @@ class _OCRScreenState extends State<OCRScreen> {
       "AIzaSyCU0iHiaA561vAjGUBtQ4_FAhZcR7pf_UA"; // Replace with your Gemini API Key
 
   Map<String, String> medicineDetails = {
-    "name": "N/A",
-    "dosage": "N/A",
-    "uses": "N/A",
-    "side_effects": "N/A",
-    "precautions": "N/A",
-    "interactions": "N/A",
-    "storage": "N/A",
+    "name".tr(): "N/A",
+    "dosage".tr(): "N/A",
+    "uses".tr(): "N/A",
+    "side_effects".tr(): "N/A",
+    "precautions".tr(): "N/A",
+    "interactions".tr(): "N/A",
+    "storage".tr(): "N/A",
   };
 
   Future<void> _pickImage(ImageSource source) async {
@@ -304,12 +304,12 @@ class _OCRScreenState extends State<OCRScreen> {
       children: [
         _customButton(
           icon: Icons.camera_alt,
-          label: "Camera",
+          label: "Camera".tr(),
           onPressed: () => _pickImage(ImageSource.camera),
         ),
         _customButton(
           icon: Icons.photo_library,
-          label: "Gallery",
+          label: "Gallery".tr(),
           onPressed: () => _pickImage(ImageSource.gallery),
         ),
       ],

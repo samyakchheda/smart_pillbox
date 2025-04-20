@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/models/pharmacy_model.dart';
@@ -177,7 +178,7 @@ class _MessageScreenState extends State<MessageScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Compose your message:',
+                  'Compose your message:'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -198,14 +199,14 @@ class _MessageScreenState extends State<MessageScreen> {
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(12),
                       border: InputBorder.none,
-                      hintText: "Type your message here...",
+                      hintText: "Type your message here...".tr(),
                       hintStyle: TextStyle(color: AppColors.textPlaceholder),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Scanned Documents:',
+                  'Scanned Documents:'.tr(),
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -236,7 +237,7 @@ class _MessageScreenState extends State<MessageScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         child: Center(
                           child: Text(
-                            'No scanned documents.',
+                            'No scanned documents.'.tr(),
                             style: GoogleFonts.poppins(
                               color: AppColors.textSecondary,
                             ),

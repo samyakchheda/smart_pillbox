@@ -144,7 +144,7 @@ class _SendIssueScreenState extends State<SendIssueScreen> {
                           color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         decoration: InputDecoration(
-                          hintText: "Enter your issue here...",
+                          hintText: "Enter your issue here...".tr(),
                           border: InputBorder.none,
                         ),
                       ),

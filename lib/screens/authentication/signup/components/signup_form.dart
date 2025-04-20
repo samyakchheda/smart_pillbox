@@ -162,7 +162,7 @@ class _SignupFormState extends State<SignupForm> {
               const SizedBox(height: 20),
               MyTextField(
                 controller: _emailController,
-                hintText: 'Enter Your Email',
+                hintText: 'Enter Your Email'.tr(),
                 icon: Icons.email,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.validateEmail,
@@ -175,7 +175,7 @@ class _SignupFormState extends State<SignupForm> {
               const SizedBox(height: 20),
               MyTextField(
                 controller: _passwordController,
-                hintText: 'Enter Your Password',
+                hintText: 'Enter Your Password'.tr(),
                 icon: Icons.lock,
                 isPassword: true,
                 validator: Validators.validatePassword,
@@ -186,7 +186,7 @@ class _SignupFormState extends State<SignupForm> {
               const SizedBox(height: 20),
               MyTextField(
                 controller: _confirmPasswordController,
-                hintText: 'Confirm Your Password',
+                hintText: 'Confirm Your Password'.tr(),
                 icon: Icons.lock,
                 isPassword: true,
                 validator: (value) => value == _passwordController.text
@@ -227,7 +227,7 @@ class _SignupFormState extends State<SignupForm> {
                       constraints:
                           const BoxConstraints(maxWidth: double.infinity),
                       child: MyElevatedButton(
-                        text: "Register",
+                        text: "Register".tr(),
                         onPressed: () {
                           if (!_isChecked) {
                             mySnackBar(
@@ -248,7 +248,7 @@ class _SignupFormState extends State<SignupForm> {
               const DividerWithOr(),
               const SizedBox(height: 20),
               MyElevatedButton(
-                text: "Continue With Google",
+                text: "Continue With Google".tr(),
                 onPressed: signInWithGoogle,
                 backgroundColor: AppColors.cardBackground,
                 textColor: AppColors.textPrimary,
@@ -259,7 +259,7 @@ class _SignupFormState extends State<SignupForm> {
               ),
               const SizedBox(height: 15),
               MyElevatedButton(
-                text: "Continue With Facebook",
+                text: "Continue With Facebook".tr(),
                 onPressed: signInWithFacebook,
                 backgroundColor: AppColors.cardBackground,
                 textColor: AppColors.textPrimary,
@@ -292,7 +292,7 @@ class _SignupFormState extends State<SignupForm> {
           ),
           children: [
             TextSpan(
-              text: "Login",
+              text: "Login".tr(),
               style: AppFonts.bodyText.copyWith(
                 color: AppColors.buttonColor,
                 fontSize: 15,

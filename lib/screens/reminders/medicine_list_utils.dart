@@ -412,7 +412,7 @@ class MedicineList extends StatelessWidget {
               if (!snapshot.hasData || snapshot.data == null) {
                 return Center(
                   child: Text(
-                    'No medicines found. Click "+" to add one.'.tr(),
+                    'No medicines found. Click + to add one.'.tr(),
                     style: TextStyle(color: AppColors.textPrimary),
                   ),
                 );
@@ -433,7 +433,7 @@ class MedicineList extends StatelessWidget {
     if (medicines.isEmpty) {
       return Center(
         child: Text(
-          'No medicines found. Click "+" to add one.'.tr(),
+          'No medicines found. Click + to add one.'.tr(),
           style: TextStyle(color: AppColors.textPrimary),
         ),
       );

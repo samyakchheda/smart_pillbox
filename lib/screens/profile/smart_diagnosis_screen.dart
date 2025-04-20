@@ -41,7 +41,8 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
     return Row(
       children: [
         IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.buttonColor, size: 28),
+          icon: Icon(Icons.arrow_back_ios_new,
+              color: AppColors.buttonColor, size: 28),
           onPressed: onBack,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(),
@@ -295,41 +296,35 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
   bool _isCompleted = false;
 
   final List<String> _diagnosticItems = [
-    "Temperature Sensor".tr(),
-    "Evaporator Defrost".tr(),
-    "Fan Motor".tr(),
-    "Pill Dispenser".tr(),
-    "Battery Health".tr(),
-    "Connection Status".tr()
+    "Motor".tr(),
+    "LCD".tr(),
+    "Camera".tr(),
+    "Microcontroller".tr(),
+    "Battery".tr(),
   ];
 
   final Map<String, Map<String, dynamic>> _diagnosisResults = {
-    "Temperature Sensor": {
+    "Motor": {
       "status": "Good",
       "icon": Icons.check_circle,
       "color": Colors.green
     },
-    "Evaporator Defrost": {
+    "LCD": {
       "status": "Good",
       "icon": Icons.check_circle,
       "color": Colors.green
     },
-    "Fan Motor": {
+    "Camera": {
       "status": "Attention Needed",
       "icon": Icons.warning,
       "color": Colors.orange
     },
-    "Pill Dispenser": {
+    "Microcontroller": {
       "status": "Good",
       "icon": Icons.check_circle,
       "color": Colors.green
     },
-    "Battery Health": {
-      "status": "Good",
-      "icon": Icons.check_circle,
-      "color": Colors.green
-    },
-    "Connection Status": {
+    "Battery": {
       "status": "Good",
       "icon": Icons.check_circle,
       "color": Colors.green
@@ -338,15 +333,19 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
 
   final List<Map<String, dynamic>> _recommendations = [
     {
-      "title": "Fan Motor Maintenance".tr(),
-      "description": "Clean the fan motor area to improve performance.".tr(),
+      "title": "Motor Maintenance".tr(),
+      "description": "Clean the motor area to improve performance.".tr(),
       "icon": Icons.cleaning_services,
     },
     {
-      "title": "Regular Cleaning".tr(),
-      "description":
-          "Clean the device exterior weekly with a soft, dry cloth.".tr(),
+      "title": "LCD Cleaning".tr(),
+      "description": "Clean the LCD screen with a soft, dry cloth.".tr(),
       "icon": Icons.cleaning_services,
+    },
+    {
+      "title": "Camera Check".tr(),
+      "description": "Ensure the camera lens is clean and unobstructed.".tr(),
+      "icon": Icons.camera_alt,
     },
     {
       "title": "Software Update".tr(),
@@ -705,8 +704,8 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         borderRadius: 50,
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
         textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
-        height: 60, // Increased height to prevent text cutoff
-        textShift: 0, // Adjusted to center text when icon is present
+        height: 60,
+        textShift: 0,
       ),
     );
   }
@@ -750,7 +749,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         Expanded(
           child: Text(
             label,
-            style: AppFonts.bodyText.copyWith(fontSize: 14),
+            style: AppFonts.bodyText.copyWith(fontSize: 17),
           ),
         ),
       ],
@@ -816,8 +815,8 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
             borderRadius: 50,
             padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
             textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
-            height: 60, // Increased height to prevent text cutoff
-            textShift: 0, // No icon, so center text
+            height: 60,
+            textShift: 0,
           ),
         ],
       ),

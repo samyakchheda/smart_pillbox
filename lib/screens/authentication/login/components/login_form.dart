@@ -267,7 +267,7 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: 20),
         MyTextField(
           controller: _emailController,
-          hintText: 'Enter Your Email',
+          hintText: 'Enter Your Email'.tr(),
           icon: Icons.email,
           keyboardType: TextInputType.emailAddress,
           validator: Validators.validateEmail,
@@ -277,7 +277,7 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: 20),
         MyTextField(
           controller: _passwordController,
-          hintText: 'Enter Your Password',
+          hintText: 'Enter Your Password'.tr(),
           icon: Icons.lock,
           isPassword: true,
           validator: Validators.validatePassword,
@@ -289,7 +289,7 @@ class _LoginFormState extends State<LoginForm> {
         _isLoading
             ? CircularProgressIndicator(color: AppColors.buttonColor)
             : MyElevatedButton(
-                text: "Login",
+                text: "Login".tr(),
                 backgroundColor: AppColors.buttonColor,
                 onPressed: loginUser,
                 height: 60,

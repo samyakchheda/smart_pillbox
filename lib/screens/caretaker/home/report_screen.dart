@@ -73,35 +73,51 @@ class _ReportScreenState extends State<ReportScreen> {
     _fetchCalendarData();
   }
 
-  // -------------------------------------------------
-  // 1) SHARE MEDICATION LIST PDF (unchanged)
-  // -------------------------------------------------
-  Future<void> shareMedicationPdf(BuildContext context) async {
+  Future<Map<String, dynamic>?> getPatientDataFromCaretaker() async {
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No user is currently signed in.')),
-        );
-        return;
-      }
-      final userId = user.uid;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return null;
 
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
+      final caretakerEmail = currentUser.email;
+      if (caretakerEmail == null) return null;
+
+      final caretakerSnapshot = await FirebaseFirestore.instance
+          .collection('caretakers')
+          .where('email', isEqualTo: caretakerEmail)
+          .limit(1)
           .get();
 
-      if (!docSnapshot.exists) {
+      if (caretakerSnapshot.docs.isEmpty) return null;
+
+      final patientEmail = caretakerSnapshot.docs.first['patient'];
+      if (patientEmail == null) return null;
+
+      final patientSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: patientEmail)
+          .limit(1)
+          .get();
+
+      if (patientSnapshot.docs.isEmpty) return null;
+
+      return patientSnapshot.docs.first.data() as Map<String, dynamic>;
+    } catch (e) {
+      print('Error getting patient data: $e');
+      return null;
+    }
+  }
+
+  Future<void> shareMedicationPdf(BuildContext context) async {
+    try {
+      final data = await getPatientDataFromCaretaker();
+      if (data == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User document not found.')),
+          const SnackBar(content: Text('No patient data found.')),
         );
         return;
       }
 
-      final data = docSnapshot.data() as Map<String, dynamic>? ?? {};
       final List<dynamic> medicinesArray = data['medicines'] ?? [];
-
       if (medicinesArray.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No medication data found.')),
@@ -110,32 +126,19 @@ class _ReportScreenState extends State<ReportScreen> {
       }
 
       final pdf = pw.Document();
-
-      final tableData = medicinesArray
-          .where((item) => item is Map<String, dynamic>)
-          .map((item) {
-        final map = item as Map<String, dynamic>;
-
-        final String doseFrequency = map['doseFrequency']?.toString() ?? 'N/A';
-        final String startDate = parseTimestampAsDate(map['startDate']);
-        final String endDate = parseTimestampAsDate(map['endDate']);
-
-        final dynamic medNamesData = map['medicineNames'];
-        String medicineName;
-        if (medNamesData is List) {
-          medicineName = medNamesData.join(', ');
-        } else {
-          medicineName = medNamesData?.toString() ?? 'Unknown';
-        }
-
-        final dynamic timesList = map['medicineTimes'];
-        String timesString;
-        if (timesList is List) {
-          timesString =
-              timesList.map((e) => parseTimestampAsTime(e)).join(', ');
-        } else {
-          timesString = timesList?.toString() ?? 'N/A';
-        }
+      final tableData =
+          medicinesArray.whereType<Map<String, dynamic>>().map((map) {
+        final doseFrequency = map['doseFrequency']?.toString() ?? 'N/A';
+        final startDate = parseTimestampAsDate(map['startDate']);
+        final endDate = parseTimestampAsDate(map['endDate']);
+        final medicineName = (map['medicineNames'] is List)
+            ? (map['medicineNames'] as List).join(', ')
+            : map['medicineNames']?.toString() ?? 'Unknown';
+        final timesString = (map['medicineTimes'] is List)
+            ? (map['medicineTimes'] as List)
+                .map((e) => parseTimestampAsTime(e))
+                .join(', ')
+            : map['medicineTimes']?.toString() ?? 'N/A';
 
         return [
           medicineName,
@@ -151,10 +154,8 @@ class _ReportScreenState extends State<ReportScreen> {
           build: (pw.Context context) {
             return pw.Column(
               children: [
-                pw.Text(
-                  "Medication List",
-                  style: const pw.TextStyle(fontSize: 24),
-                ),
+                pw.Text("Medication List",
+                    style: const pw.TextStyle(fontSize: 24)),
                 pw.SizedBox(height: 20),
                 pw.Table.fromTextArray(
                   headers: [
@@ -169,14 +170,6 @@ class _ReportScreenState extends State<ReportScreen> {
                   cellAlignment: pw.Alignment.centerLeft,
                   headerDecoration:
                       const pw.BoxDecoration(color: PdfColors.grey300),
-                  cellHeight: 30,
-                  cellAlignments: {
-                    0: pw.Alignment.centerLeft,
-                    1: pw.Alignment.centerLeft,
-                    2: pw.Alignment.centerLeft,
-                    3: pw.Alignment.centerLeft,
-                    4: pw.Alignment.centerLeft,
-                  },
                 ),
               ],
             );
@@ -185,26 +178,17 @@ class _ReportScreenState extends State<ReportScreen> {
       );
 
       final pdfBytes = await pdf.save();
-      final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/medications.pdf';
-      final file = File(filePath)
-        ..createSync(recursive: true)
-        ..writeAsBytesSync(pdfBytes);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/medications.pdf');
+      await file.writeAsBytes(pdfBytes);
 
-      await Share.shareXFiles(
-        [XFile(file.path)],
-        text: "Medication List PDF",
-      );
+      await Share.shareXFiles([XFile(file.path)], text: "Medication List PDF");
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
-  // -------------------------------------------------
-  // 2) SHARE MEDICATION RECORDS PDF (WITH DATE RANGE, LOCAL FILTER)
-  // -------------------------------------------------
   Future<void> shareMedicationRecordsPdf(BuildContext context) async {
     final DateTimeRange? dateRange = await showDateRangePicker(
       context: context,
@@ -217,235 +201,206 @@ class _ReportScreenState extends State<ReportScreen> {
     );
     if (dateRange == null) return;
 
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No user is currently signed in.')),
-      );
-      return;
-    }
-    final userId = user.uid;
-
-    final docSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
-
-    if (!docSnapshot.exists) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('User document not found.')),
-      );
-      return;
-    }
-    final data = docSnapshot.data() as Map<String, dynamic>? ?? {};
-    final List<dynamic> medicinesArray = data['medicines'] ?? [];
-    if (medicinesArray.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No medication data found.')),
-      );
-      return;
-    }
-
-    final List<List<String>> tableData = [];
-    DateTime currentDay = DateTime(
-      dateRange.start.year,
-      dateRange.start.month,
-      dateRange.start.day,
-    );
-    final DateTime endDay = DateTime(
-      dateRange.end.year,
-      dateRange.end.month,
-      dateRange.end.day,
-    );
-
-    while (!currentDay.isAfter(endDay)) {
-      final String dayLabel = DateFormat('dd MMM yyyy').format(currentDay);
-      // The key to lookup in the `status` map (e.g. "25-03-2025")
-      final String dayKey = DateFormat('dd-MM-yyyy').format(currentDay);
-
-      for (final item in medicinesArray) {
-        if (item is! Map<String, dynamic>) continue;
-        final map = item;
-
-        // --- Get the medicine name(s) ---
-        final dynamic medNamesData = map['medicineNames'];
-        String medicineName;
-        if (medNamesData is List) {
-          medicineName = medNamesData.join(', ');
-        } else {
-          medicineName = medNamesData?.toString() ?? 'Unknown';
-        }
-
-        // --- Check date range ---
-        final DateTime? medStart = parseCustomDateString(map['startDate']);
-        final DateTime? medEnd = parseCustomDateString(map['endDate']);
-        if (medStart == null || medEnd == null) continue;
-
-        final DateTime medStartDate =
-            DateTime(medStart.year, medStart.month, medStart.day);
-        final DateTime medEndDate =
-            DateTime(medEnd.year, medEnd.month, medEnd.day);
-
-        if (currentDay.isBefore(medStartDate) ||
-            currentDay.isAfter(medEndDate)) {
-          continue;
-        }
-
-        // --- Retrieve daily status from `status` map ---
-        String dosageStatus = 'Not Taken'; // default
-        if (map.containsKey('status')) {
-          final statusMap = map['status'];
-          if (statusMap is Map<String, dynamic>) {
-            final dayValue = statusMap[dayKey]?.toString().toLowerCase();
-            if (dayValue == 'taken') {
-              dosageStatus = 'Taken';
-            }
-          }
-        }
-
-        // --- Retrieve times (if any) ---
-        final dynamic timesList = map['medicineTimes'];
-        if (timesList is List && timesList.isNotEmpty) {
-          for (final t in timesList) {
-            String timeStr;
-            if (t is Timestamp) {
-              timeStr = parseTimestampAsTime(t);
-            } else {
-              timeStr = t.toString();
-            }
-            tableData.add([
-              dayLabel,
-              medicineName,
-              timeStr,
-              dosageStatus,
-            ]);
-          }
-        } else {
-          tableData.add([
-            dayLabel,
-            medicineName,
-            '-',
-            dosageStatus,
-          ]);
-        }
+    try {
+      final data = await getPatientDataFromCaretaker();
+      if (data == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No patient data found.')),
+        );
+        return;
       }
 
-      // Move to next day
-      currentDay = currentDay.add(const Duration(days: 1));
-    }
+      final List<dynamic> medicinesArray = data['medicines'] ?? [];
+      if (medicinesArray.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No medication data found.')),
+        );
+        return;
+      }
 
-    if (tableData.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No records found in this date range.')),
+      final List<List<String>> tableData = [];
+      DateTime currentDay = DateTime(
+        dateRange.start.year,
+        dateRange.start.month,
+        dateRange.start.day,
       );
-      return;
-    }
+      final DateTime endDay = DateTime(
+        dateRange.end.year,
+        dateRange.end.month,
+        dateRange.end.day,
+      );
 
-    final pdf = pw.Document();
+      while (!currentDay.isAfter(endDay)) {
+        final String dayLabel = DateFormat('dd MMM yyyy').format(currentDay);
+        final String dayKey = DateFormat('dd-MM-yyyy').format(currentDay);
 
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        // Optionally add a header that repeats on every page:
-        header: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              "Medication Records",
-              style: const pw.TextStyle(fontSize: 24),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text(
-              "From ${DateFormat('dd MMM yyyy').format(dateRange.start)} "
-              "to ${DateFormat('dd MMM yyyy').format(dateRange.end)}",
-              style: const pw.TextStyle(fontSize: 14),
-            ),
-            pw.SizedBox(height: 20),
-          ],
+        for (final item in medicinesArray) {
+          if (item is! Map<String, dynamic>) continue;
+
+          final map = item;
+          final medStart = parseCustomDateString(map['startDate']);
+          final medEnd = parseCustomDateString(map['endDate']);
+          if (medStart == null || medEnd == null) continue;
+
+          final medStartDate =
+              DateTime(medStart.year, medStart.month, medStart.day);
+          final medEndDate = DateTime(medEnd.year, medEnd.month, medEnd.day);
+          if (currentDay.isBefore(medStartDate) ||
+              currentDay.isAfter(medEndDate)) {
+            continue;
+          }
+
+          final medicineName = (map['medicineNames'] is List)
+              ? (map['medicineNames'] as List).join(', ')
+              : map['medicineNames']?.toString() ?? 'Unknown';
+
+          String dosageStatus = 'Not Taken';
+          if (map['status'] is Map<String, dynamic>) {
+            final dayValue = map['status'][dayKey]?.toString().toLowerCase();
+            if (dayValue == 'taken') dosageStatus = 'Taken';
+          }
+
+          final timesList = map['medicineTimes'];
+          if (timesList is List && timesList.isNotEmpty) {
+            for (final t in timesList) {
+              final timeStr =
+                  (t is Timestamp) ? parseTimestampAsTime(t) : t.toString();
+              tableData.add([dayLabel, medicineName, timeStr, dosageStatus]);
+            }
+          } else {
+            tableData.add([dayLabel, medicineName, '-', dosageStatus]);
+          }
+        }
+
+        currentDay = currentDay.add(const Duration(days: 1));
+      }
+
+      if (tableData.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No records found in this date range.')),
+        );
+        return;
+      }
+
+      final pdf = pw.Document();
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          header: (context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text("Medication Records",
+                  style: const pw.TextStyle(fontSize: 24)),
+              pw.SizedBox(height: 10),
+              pw.Text(
+                "From ${DateFormat('dd MMM yyyy').format(dateRange.start)} "
+                "to ${DateFormat('dd MMM yyyy').format(dateRange.end)}",
+                style: const pw.TextStyle(fontSize: 14),
+              ),
+              pw.SizedBox(height: 20),
+            ],
+          ),
+          build: (pw.Context context) {
+            return [
+              pw.Table.fromTextArray(
+                headers: ["Date", "Medicine Name", "Time", "Dosage Status"],
+                data: tableData,
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                cellAlignment: pw.Alignment.centerLeft,
+                headerDecoration:
+                    const pw.BoxDecoration(color: PdfColors.grey300),
+              ),
+            ];
+          },
         ),
-        build: (pw.Context context) {
-          return [
-            pw.Table.fromTextArray(
-              headers: ["Date", "Medicine Name", "Time", "Dosage Status"],
-              data: tableData,
-              headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-              cellAlignment: pw.Alignment.centerLeft,
-              headerDecoration:
-                  const pw.BoxDecoration(color: PdfColors.grey300),
-              cellHeight: 30,
-              cellAlignments: {
-                0: pw.Alignment.centerLeft,
-                1: pw.Alignment.centerLeft,
-                2: pw.Alignment.centerLeft,
-                3: pw.Alignment.centerLeft,
-              },
-            ),
-          ];
-        },
-      ),
-    );
+      );
 
-    final pdfBytes = await pdf.save();
-    final directory = await getTemporaryDirectory();
-    final filePath = '${directory.path}/medication_records.pdf';
-    final file = File(filePath)
-      ..createSync(recursive: true)
-      ..writeAsBytesSync(pdfBytes);
+      final pdfBytes = await pdf.save();
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/medication_records.pdf');
+      await file.writeAsBytes(pdfBytes);
 
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: "Medication Records PDF",
-    );
+      await Share.shareXFiles([XFile(file.path)],
+          text: "Medication Records PDF");
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   Map<DateTime, double> _dailyTakenRatio = {};
 
   Future<void> _fetchCalendarData() async {
     try {
+      // 1️⃣ Get current caretaker user
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        // No user is signed in.
+        print("No caretaker is signed in.");
         return;
       }
-      final userId = user.uid;
 
-      // Retrieve the user document.
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
+      final caretakerEmail = user.email;
+      if (caretakerEmail == null || caretakerEmail.isEmpty) {
+        print("Caretaker email is null.");
+        return;
+      }
+
+      // 2️⃣ Fetch the patient email from the 'caretakers' collection
+      final caretakerSnapshot = await FirebaseFirestore.instance
+          .collection('caretakers')
+          .where('email', isEqualTo: caretakerEmail)
+          .limit(1)
           .get();
 
-      if (!docSnapshot.exists) {
-        // Document not found.
+      if (caretakerSnapshot.docs.isEmpty) {
+        print("Caretaker record not found.");
         return;
       }
 
-      final data = docSnapshot.data() as Map<String, dynamic>? ?? {};
-      final List<dynamic> medicinesArray = data['medicines'] ?? [];
+      final patientEmail = caretakerSnapshot.docs.first['patient'];
+      if (patientEmail == null || patientEmail.isEmpty) {
+        print("Patient email not found in caretaker document.");
+        return;
+      }
 
-      // Temporary maps to count scheduled vs. taken for each date.
+      // 3️⃣ Fetch the patient’s document from the 'users' collection
+      final patientSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: patientEmail)
+          .limit(1)
+          .get();
+
+      if (patientSnapshot.docs.isEmpty) {
+        print("Patient document not found.");
+        return;
+      }
+
+      final patientData = patientSnapshot.docs.first.data();
+      final List<dynamic> medicinesArray = patientData['medicines'] ?? [];
+
+      // 📅 Process medicines for calendar data
       final Map<DateTime, int> dailyScheduledCount = {};
       final Map<DateTime, int> dailyTakenCount = {};
 
       for (final item in medicinesArray) {
         if (item is Map<String, dynamic>) {
-          // Start and end date of this medicine
           final DateTime? startDate = parseCustomDateString(item['startDate']);
           final DateTime? endDate = parseCustomDateString(item['endDate']);
           final statusMap = item['status'];
 
           if (startDate == null || endDate == null) continue;
 
-          // Go day by day from startDate to endDate
           DateTime currentDay =
               DateTime(startDate.year, startDate.month, startDate.day);
           final DateTime endDay =
               DateTime(endDate.year, endDate.month, endDate.day);
 
           while (!currentDay.isAfter(endDay)) {
-            // For each day in the medicine's range, increment the scheduled count
             dailyScheduledCount[currentDay] =
                 (dailyScheduledCount[currentDay] ?? 0) + 1;
 
-            // Check if statusMap indicates "taken" for this day
             if (statusMap is Map<String, dynamic>) {
               final dayKey = DateFormat('dd-MM-yyyy').format(currentDay);
               final dayValue = statusMap[dayKey]?.toString().toLowerCase();
@@ -455,31 +410,23 @@ class _ReportScreenState extends State<ReportScreen> {
               }
             }
 
-            // Move to next day
             currentDay = currentDay.add(const Duration(days: 1));
           }
         }
       }
 
-      // Now compute the ratio of (taken / scheduled) for each date.
-      // Clear the old map before filling new data:
+      // 🔄 Update _dailyTakenRatio map
       _dailyTakenRatio.clear();
-
       for (final day in dailyScheduledCount.keys) {
         final scheduled = dailyScheduledCount[day] ?? 0;
         final taken = dailyTakenCount[day] ?? 0;
-        if (scheduled > 0) {
-          _dailyTakenRatio[day] = taken / scheduled; // e.g. 0.5 => 50% taken
-        } else {
-          _dailyTakenRatio[day] = 0.0;
-        }
+        _dailyTakenRatio[day] = scheduled > 0 ? taken / scheduled : 0.0;
       }
 
       setState(() {
-        // Trigger UI rebuild after fetching data
+        // Refresh UI
       });
     } catch (e) {
-      // Handle errors if needed
       debugPrint('Error in _fetchCalendarData: $e');
     }
   }
