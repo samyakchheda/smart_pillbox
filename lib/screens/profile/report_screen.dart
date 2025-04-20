@@ -531,7 +531,7 @@ class _ReportScreenState extends State<ReportScreen> {
                   ),
                   const SizedBox(height: 24),
                   MyElevatedButton(
-                    text: "Share Med Logs with your Doctor".tr(),
+                    text: "Share Med Logs\nwith your Doctor".tr(),
                     icon: const Icon(Icons.ios_share, size: 20),
                     onPressed: () => setState(() => _showCards = true),
                     backgroundColor: AppColors.buttonColor,

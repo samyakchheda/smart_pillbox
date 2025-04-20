@@ -56,7 +56,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                     style: AppFonts.headline.copyWith(
                       fontSize: 26,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textOnPrimary,
+                      color: AppColors.textPrimary,
                     ),
                   ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.15),
                 ),
