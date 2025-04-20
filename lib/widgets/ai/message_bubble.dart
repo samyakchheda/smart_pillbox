@@ -3,6 +3,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:home/theme/app_colors.dart';
 import '../../models/chat_message.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../theme/theme_provider.dart';
 
 class MessageBubble extends StatefulWidget {
   final ChatMessage message;
@@ -59,56 +60,75 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: widget.message.isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!widget.message.isUser) ...[
-            CircleAvatar(
-              backgroundColor: AppColors.buttonColor,
-              child: const Text('SD'),
-              foregroundColor: Colors.white,
-            ),
-            const SizedBox(width: 10),
-          ],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: widget.message.isUser
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.message.isUser ? 'Rishi' : 'SmartDose',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeProvider.themeNotifier,
+      builder: (context, themeMode, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+          child: Row(
+            mainAxisAlignment: widget.message.isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!widget.message.isUser) ...[
+                CircleAvatar(
+                  backgroundColor: AppColors.buttonColor,
+                  child: const Text('SD'),
+                  foregroundColor: AppColors.textOnPrimary,
                 ),
-                const SizedBox(height: 5),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: widget.message.isUser
-                      ? _buildUserMessage()
-                      : _buildAnimatedMessage(),
+                const SizedBox(width: 10),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: widget.message.isUser
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.message.isUser ? 'Rishi' : 'SmartDose',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppColors.cardBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.borderColor,
+                          width: 1.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.borderColor.withOpacity(0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: widget.message.isUser
+                          ? _buildUserMessage()
+                          : _buildAnimatedMessage(),
+                    ),
+                  ],
+                ),
+              ),
+              if (widget.message.isUser) ...[
+                const SizedBox(width: 10),
+                CircleAvatar(
+                  backgroundColor: AppColors.kBlackColor,
+                  foregroundColor: AppColors.textOnPrimary,
+                  child: const Text('R'),
                 ),
               ],
-            ),
+            ],
           ),
-          if (widget.message.isUser) ...[
-            const SizedBox(width: 10),
-            CircleAvatar(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              child: const Text('R'),
-            ),
-          ],
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -120,7 +140,10 @@ class _MessageBubbleState extends State<MessageBubble> {
         animatedTexts: [
           TypewriterAnimatedText(
             widget.message.text,
-            textStyle: const TextStyle(fontSize: 16.0, color: Colors.black),
+            textStyle: TextStyle(
+              fontSize: 16.0,
+              color: AppColors.textPrimary,
+            ),
             speed: const Duration(milliseconds: 25),
           ),
         ],
@@ -140,7 +163,10 @@ class _MessageBubbleState extends State<MessageBubble> {
     // If animation is already done, simply display the static text.
     return Text(
       widget.message.text,
-      style: const TextStyle(fontSize: 16.0, color: Colors.black),
+      style: TextStyle(
+        fontSize: 16.0,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 
@@ -160,23 +186,51 @@ class _MessageBubbleState extends State<MessageBubble> {
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 5),
-            Text(widget.message.text),
+            Text(
+              widget.message.text,
+              style: TextStyle(
+                fontSize: 16.0,
+                color: AppColors.textPrimary,
+              ),
+            ),
             if (widget.message.metadata != null &&
                 widget.message.metadata!['description'] != null)
-              Text('Description: ${widget.message.metadata!['description']}'),
+              Text(
+                'Description: ${widget.message.metadata!['description']}',
+                style: TextStyle(
+                  fontSize: 14.0,
+                  color: AppColors.textSecondary,
+                ),
+              ),
           ],
         );
       } else if (filePath.endsWith('.aac')) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.audio_file, size: 50),
+            Icon(
+              Icons.audio_file,
+              size: 50,
+              color: AppColors.buttonColor,
+            ),
             const SizedBox(height: 5),
-            Text(widget.message.text),
+            Text(
+              widget.message.text,
+              style: TextStyle(
+                fontSize: 16.0,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ],
         );
       }
     }
-    return Text(widget.message.text);
+    return Text(
+      widget.message.text,
+      style: TextStyle(
+        fontSize: 16.0,
+        color: AppColors.textPrimary,
+      ),
+    );
   }
 }
