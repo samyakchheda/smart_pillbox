@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
 import 'package:home/widgets/common/my_elevated_button.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class SmartDiagnosisInfoScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -261,6 +263,8 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (context) => DiagnosisInProgressScreen(
+          esp32Ip: "192.168.1.106",
+          userId: "5Y9cxbLbz1SdGL7zwOHTEHVuP5s2",
           onBack: () => Navigator.pop(context),
           onComplete: () {},
         ),
@@ -272,11 +276,15 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
 class DiagnosisInProgressScreen extends StatefulWidget {
   final VoidCallback onComplete;
   final VoidCallback onBack;
+  final String esp32Ip;
+  final String userId;
 
   const DiagnosisInProgressScreen({
     super.key,
     required this.onComplete,
     required this.onBack,
+    required this.esp32Ip,
+    required this.userId,
   });
 
   @override
@@ -284,49 +292,24 @@ class DiagnosisInProgressScreen extends StatefulWidget {
       _DiagnosisInProgressScreenState();
 }
 
-class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
-    with SingleTickerProviderStateMixin {
+class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
   double _progress = 0.0;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
   bool _isCompleted = false;
 
-  final List<String> _diagnosticItems = [
-    "Motor",
-    "LCD",
-    "Camera",
-    "Microcontroller",
-    "Battery",
+  // the 6 diagnostic steps
+  final List<String> _steps = [
+    "microcontroller",
+    "reset",
+    "camera",
+    "lcd",
+    "motor",
+    "battery",
   ];
 
-  final Map<String, Map<String, dynamic>> _diagnosisResults = {
-    "Motor": {
-      "status": "Good",
-      "icon": Icons.check_circle,
-      "color": Colors.green
-    },
-    "LCD": {
-      "status": "Good",
-      "icon": Icons.check_circle,
-      "color": Colors.green
-    },
-    "Camera": {
-      "status": "Attention Needed",
-      "icon": Icons.warning,
-      "color": Colors.orange
-    },
-    "Microcontroller": {
-      "status": "Good",
-      "icon": Icons.check_circle,
-      "color": Colors.green
-    },
-    "Battery": {
-      "status": "Good",
-      "icon": Icons.check_circle,
-      "color": Colors.green
-    },
-  };
+  // store the result of each step
+  final Map<String, _StepResult> _diagnosisResults = {};
 
+  // static recommendations data
   final List<Map<String, dynamic>> _recommendations = [
     {
       "title": "Motor Maintenance",
@@ -359,35 +342,51 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
   @override
   void initState() {
     super.initState();
-    _setupAnimation();
+    _runDiagnostics();
   }
 
-  void _setupAnimation() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    );
+  Future<void> _runDiagnostics() async {
+    for (var i = 0; i < _steps.length; i++) {
+      final step = _steps[i];
+      bool success = false;
+      String msg = "";
 
-    _animation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    )..addListener(() {
-        setState(() {
-          _progress = _animation.value;
-        });
-        if (_animation.isCompleted && !_isCompleted) {
-          setState(() {
-            _isCompleted = true;
-          });
+      try {
+        final resp = await http.post(
+          Uri.parse("https://rishixd-api.hf.space/command/$step"),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "esp32_ip": widget.esp32Ip.replaceAll(RegExp(r'https?://'), ""),
+            "user": widget.userId,
+          }),
+        );
+        if (resp.statusCode == 200) {
+          success = true;
+          final data = jsonDecode(resp.body);
+          msg = data["message"] ?? "OK";
+        } else {
+          msg = "Error ${resp.statusCode}";
         }
+      } catch (e) {
+        msg = e.toString();
+      }
+
+      setState(() {
+        final label = step[0].toUpperCase() + step.substring(1);
+        _diagnosisResults[label] = _StepResult(
+          name: label,
+          success: success,
+          message: msg,
+        );
+        _progress = (i + 1) / _steps.length;
       });
 
-    _animationController.forward(from: 0);
-  }
+      // small pause so each icon update is visible
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+    setState(() => _isCompleted = true);
+    widget.onComplete();
   }
 
   @override
@@ -406,7 +405,6 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
                 const SizedBox(height: 32),
@@ -492,7 +490,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
         ),
         const SizedBox(height: 40),
         Text(
-          "Diagnosing your device...",
+          "Diagnosing your device...".tr(),
           style: AppFonts.subHeadline.copyWith(fontSize: 18),
           textAlign: TextAlign.center,
         ),
@@ -504,13 +502,91 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     );
   }
 
+  Widget _buildDiagnosticItems() {
+    return Column(
+      children: _steps.map((step) {
+        final label = step[0].toUpperCase() + step.substring(1);
+        final result = _diagnosisResults[label];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              Icon(
+                result == null
+                    ? Icons.hourglass_empty
+                    : (result.success ? Icons.check_circle : Icons.error),
+                color: result == null
+                    ? AppColors.textPlaceholder
+                    : (result.success ? Colors.green : Colors.red),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppFonts.bodyText.copyWith(fontSize: 17),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                result?.message ?? "Pending".tr(),
+                style: AppFonts.bodyText.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget _buildDiagnosisResults() {
+    final hasIssue = _diagnosisResults.values.any((r) => r.success == false);
+
     return SingleChildScrollView(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
-          _buildResultSummary(),
+          Card(
+            color: AppColors.cardBackground,
+            elevation: 4,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Icon(
+                    hasIssue ? Icons.warning_amber_rounded : Icons.check_circle,
+                    size: 60,
+                    color: hasIssue ? Colors.orange : Colors.green,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    hasIssue
+                        ? "Minor Issues Detected".tr()
+                        : "All Systems Operational".tr(),
+                    style: AppFonts.subHeadline.copyWith(fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    hasIssue
+                        ? "Your device is functioning but needs some attention."
+                            .tr()
+                        : "Your device is functioning properly with no issues detected."
+                            .tr(),
+                    textAlign: TextAlign.center,
+                    style: AppFonts.bodyText.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 32),
           _buildDetailedResults(),
           const SizedBox(height: 32),
@@ -521,108 +597,37 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     );
   }
 
-  Widget _buildResultSummary() {
-    final hasIssue =
-        _diagnosisResults.values.any((result) => result["status"] != "Good");
-
-    return Card(
-      color: AppColors.cardBackground,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Icon(
-              hasIssue ? Icons.warning_amber_rounded : Icons.check_circle,
-              size: 60,
-              color: hasIssue ? Colors.orange : Colors.green,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              hasIssue ? "Minor Issues Detected" : "All Systems Operational",
-              style: AppFonts.subHeadline.copyWith(fontSize: 20),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              hasIssue
-                  ? "Your device is functioning but needs some attention."
-                  : "Your device is functioning properly with no issues detected.",
-              textAlign: TextAlign.center,
-              style: AppFonts.bodyText.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildDetailedResults() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Detailed Results",
-          style: AppFonts.subHeadline.copyWith(fontSize: 20),
-        ),
+        Text("Detailed Results".tr(),
+            style: AppFonts.subHeadline.copyWith(fontSize: 20)),
         const SizedBox(height: 16),
-        ...List.generate(
-          _diagnosticItems.length,
-          (index) => _buildResultItem(_diagnosticItems[index]),
-        ),
+        ..._steps.map((step) {
+          final label = step[0].toUpperCase() + step.substring(1);
+          final r = _diagnosisResults[label]!;
+          return _buildResultItem(label, r);
+        }).toList(),
       ],
     );
   }
 
-  Widget _buildResultItem(String item) {
-    final result = _diagnosisResults[item];
-
-    if (result == null) {
-      return const SizedBox.shrink();
-    }
-
+  Widget _buildResultItem(String item, _StepResult r) {
     return Card(
       color: AppColors.cardBackground,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(
-              result["icon"] as IconData,
-              color: result["color"] as Color,
-              size: 28,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item,
-                    style: AppFonts.bodyText.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    result["status"] as String,
-                    style: AppFonts.bodyText.copyWith(
-                      color: (result["color"] as Color).withOpacity(0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+      child: ListTile(
+        leading: Icon(
+          r.success ? Icons.check_circle : Icons.error,
+          color: r.success ? Colors.green : Colors.red,
+          size: 28,
         ),
+        title: Text(item, style: AppFonts.bodyText.copyWith(fontSize: 16)),
+        subtitle: Text(r.message,
+            style: AppFonts.bodyText.copyWith(color: AppColors.textSecondary)),
       ),
     );
   }
@@ -631,59 +636,67 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Recommendations",
-          style: AppFonts.subHeadline.copyWith(fontSize: 20),
-        ),
+        Text("Recommendations".tr(),
+            style: AppFonts.subHeadline.copyWith(fontSize: 20)),
         const SizedBox(height: 16),
-        ...List.generate(
-          _recommendations.length,
-          (index) => _buildRecommendationItem(_recommendations[index]),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecommendationItem(Map<String, dynamic> recommendation) {
-    return Card(
-      color: AppColors.cardBackground,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              recommendation["icon"] as IconData,
-              color: AppColors.buttonColor,
-              size: 28,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
+        ..._recommendations.map((rec) {
+          return Card(
+            color: AppColors.cardBackground,
+            elevation: 2,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.only(bottom: 10),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    recommendation["title"] as String,
-                    style: AppFonts.bodyText.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+                  Icon(
+                    rec["icon"] as IconData,
+                    color: AppColors.buttonColor,
+                    size: 28,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    recommendation["description"] as String,
-                    style: AppFonts.bodyText.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(rec["title"] as String,
+                            style: AppFonts.bodyText.copyWith(
+                                fontWeight: FontWeight.w600, fontSize: 16)),
+                        const SizedBox(height: 6),
+                        Text(rec["description"] as String,
+                            style: AppFonts.bodyText.copyWith(
+                                color: AppColors.textSecondary, fontSize: 14)),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _buildWarningText() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmall = screenWidth < 600;
+    return Card(
+      color: AppColors.cardBackground,
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: EdgeInsets.all(isSmall ? 12 : 16),
+        child: Text(
+          "Please stay on this screen until the diagnosis is complete.\nLeaving now will cancel the process."
+              .tr(),
+          textAlign: TextAlign.center,
+          style: AppFonts.bodyText.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: isSmall ? 13 : 14,
+          ),
         ),
       ),
     );
@@ -693,7 +706,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: MyElevatedButton(
-        text: "Finish",
+        text: "Finish".tr(),
         icon: const Icon(Icons.check, size: 20),
         onPressed: widget.onBack,
         backgroundColor: AppColors.buttonColor,
@@ -706,103 +719,33 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
     );
   }
 
-  Widget _buildDiagnosticItems() {
-    return Column(
-      children: [
-        for (int i = 0; i < _diagnosticItems.length; i += 2)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Row(
-              children: [
-                Expanded(child: _buildCheckItem(_diagnosticItems[i])),
-                const SizedBox(width: 20),
-                if (i + 1 < _diagnosticItems.length)
-                  Expanded(child: _buildCheckItem(_diagnosticItems[i + 1]))
-                else
-                  const Spacer(),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildCheckItem(String label) {
-    return Row(
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: _progress > 0.2
-                ? AppColors.buttonColor
-                : AppColors.textPlaceholder,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: AppFonts.bodyText.copyWith(fontSize: 17),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWarningText() {
-    return Card(
-      color: AppColors.cardBackground,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          "Please stay on this screen until the diagnosis is complete.\nLeaving now will cancel the process.",
-          textAlign: TextAlign.center,
-          style: AppFonts.bodyText.copyWith(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showExitConfirmation(BuildContext context) {
+  void _showExitConfirmation(BuildContext ctx) {
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: ctx,
+      builder: (_) => AlertDialog(
         backgroundColor: AppColors.cardBackground,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          "Cancel Diagnosis?",
-          style: AppFonts.subHeadline.copyWith(fontSize: 20),
-          textAlign: TextAlign.center,
-        ),
+        title: Text("Cancel Diagnosis?".tr(),
+            style: AppFonts.subHeadline.copyWith(fontSize: 20),
+            textAlign: TextAlign.center),
         content: Text(
-          "The diagnosis is still in progress. Are you sure you want to exit?",
+          "The diagnosis is still in progress. Are you sure you want to exit?"
+              .tr(),
           style: AppFonts.bodyText.copyWith(fontSize: 16),
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              "Continue",
-              style: AppFonts.buttonText.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
-            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: Text("Continue".tr(),
+                style: AppFonts.buttonText
+                    .copyWith(color: AppColors.textSecondary, fontSize: 16)),
           ),
           MyElevatedButton(
-            text: "Exit",
+            text: "Exit".tr(),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               widget.onBack();
             },
             backgroundColor: AppColors.buttonColor,
@@ -816,4 +759,16 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen>
       ),
     );
   }
+}
+
+class _StepResult {
+  final String name;
+  final bool success;
+  final String message;
+
+  _StepResult({
+    required this.name,
+    required this.success,
+    required this.message,
+  });
 }

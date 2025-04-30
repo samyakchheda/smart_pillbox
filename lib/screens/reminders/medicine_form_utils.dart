@@ -1215,8 +1215,12 @@ Map<String, dynamic> createMedicineData(
   };
 }
 
-Future<void> saveMedicineData(String userId, Map<String, dynamic> medicineData,
-    Map<String, dynamic>? existingData) async {
+Future<void> saveMedicineData(
+  String userId,
+  String esp32Ip,
+  Map<String, dynamic> medicineData,
+  Map<String, dynamic>? existingData,
+) async {
   try {
     final docRef = FirebaseFirestore.instance.collection('users').doc(userId);
     final docSnapshot = await docRef.get();
@@ -1224,35 +1228,65 @@ Future<void> saveMedicineData(String userId, Map<String, dynamic> medicineData,
     print("📌 Medicine Data to Save: $medicineData");
 
     if (!docSnapshot.exists) {
-      print("🆕 Document does not exist, creating new user entry...");
+      print("🆕 Creating new user document with one medicine entry...");
       await docRef.set({
         'medicines': [medicineData]
       });
-      print("✅ New user document created with medicine data.");
     } else {
       print("📄 Document exists, updating medicine list...");
       final medicines = List.from(docSnapshot.data()?['medicines'] ?? []);
 
       if (existingData != null) {
-        final index = medicines
-            .indexWhere((medicine) => medicine['id'] == existingData['id']);
+        final index =
+            medicines.indexWhere((m) => m['id'] == existingData['id']);
         if (index != -1) {
-          print("🔄 Updating existing medicine entry...");
+          print("🔄 Replacing existing entry at index $index");
           medicines[index] = medicineData;
         } else {
-          print("⚠ Existing medicine ID not found, adding as new entry...");
+          print("➕ ID not found—adding as new entry");
           medicines.add(medicineData);
         }
       } else {
-        print("➕ Adding new medicine entry...");
+        print("➕ No existingData passed—adding new entry");
         medicines.add(medicineData);
       }
 
       await docRef.update({'medicines': medicines});
-      print("✅ Medicine data updated successfully in Firestore.");
     }
-  } catch (e, stackTrace) {
-    print("❌ Error saving medicine data: $e");
-    print(stackTrace);
+
+    print("✅ Medicine data updated in Firestore.");
+
+    // --- Call the API without blocking the UI ---
+    _sendMedicineDataToEsp32(userId, esp32Ip);
+  } catch (e, st) {
+    print("❌ Error in saveMedicineData: $e");
+    print(st);
+  }
+}
+
+/// Separate background API call function
+Future<void> _sendMedicineDataToEsp32(String userId, String esp32Ip) async {
+  try {
+    final cleanedIp = esp32Ip.replaceAll(RegExp(r'https?://'), '');
+    final payload = {
+      'esp32_ip': cleanedIp,
+      'user': userId,
+    };
+
+    final response = await http.post(
+      Uri.parse('https://a4be-183-87-183-2.ngrok-free.app/send_medicineData'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      print("📤 Credentials sent to API successfully.");
+    } else {
+      print(
+          "⚠ Failed to send to API (${response.statusCode}): ${response.body}");
+    }
+  } catch (e, st) {
+    print("❌ Error in _sendMedicineDataToEsp32: $e");
+    print(st);
   }
 }

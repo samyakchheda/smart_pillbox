@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -36,6 +37,7 @@ List<dynamic>? pharmacyData; // Global pharmacy data
 MapController mapController = MapController(
   initPosition: GeoPoint(latitude: 0, longitude: 0),
 );
+final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 void callMedicineCheck() async {
   // Get the current user
@@ -97,6 +99,12 @@ void main() async {
   // Initialize Gemini with your API key.
   const apiKey = 'AIzaSyD3psw8M8hiX2mnwGoXxc-0-ZvBxPa0IYY';
   Gemini.init(apiKey: apiKey);
+
+  // 1) Initialize the plugin
+  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+  await flutterLocalNotificationsPlugin.initialize(
+    InitializationSettings(android: androidInit),
+  );
 
   // Create a Cron instance and schedule a job (e.g., at midnight).
   final cron = Cron();

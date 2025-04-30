@@ -150,6 +150,9 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+
     return GestureDetector(
       onTap: onTap,
       child: MouseRegion(
@@ -158,7 +161,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
           decoration: BoxDecoration(
             color: AppColors.cardBackground,
             borderRadius: BorderRadius.circular(12),
@@ -193,7 +196,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             children: [
               Icon(
                 icon,
-                size: 36,
+                size: isSmallScreen ? 28 : 36,
                 color: AppColors.buttonColor,
               ).animate().scale(delay: 100.ms, duration: 300.ms),
               const SizedBox(height: 10),
@@ -201,7 +204,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 title,
                 textAlign: TextAlign.center,
                 style: AppFonts.subHeadline.copyWith(
-                  fontSize: 16,
+                  fontSize: isSmallScreen ? 14 : 16,
                   fontWeight: FontWeight.w500,
                   color: AppColors.textPrimary,
                 ),
@@ -211,7 +214,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                 subtitle,
                 textAlign: TextAlign.center,
                 style: AppFonts.bodyText.copyWith(
-                  fontSize: 13,
+                  fontSize: isSmallScreen ? 12 : 13,
                   color: AppColors.textSecondary,
                 ),
                 maxLines: 2,

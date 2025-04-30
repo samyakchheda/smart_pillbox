@@ -664,6 +664,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
       );
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
+      final esp32Ip = "192.168.1.106:80";
       if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -677,7 +678,8 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
         return;
       }
 
-      await saveMedicineData(userId, medicineData, widget.existingData);
+      await saveMedicineData(
+          userId, esp32Ip, medicineData, widget.existingData);
 
       if (mounted) {
         Navigator.pop(context, medicineData);
