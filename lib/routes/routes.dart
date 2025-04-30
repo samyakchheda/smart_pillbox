@@ -3,6 +3,7 @@ import 'package:home/screens/authentication/login/login_screen.dart';
 import 'package:home/screens/authentication/password/forgot_password_screen.dart';
 import 'package:home/screens/authentication/signup/signup_screen.dart';
 import 'package:home/screens/caretaker/home/home_screen.dart';
+import 'package:home/screens/home/connection_screen.dart';
 import 'package:home/screens/home/home_screen.dart';
 import 'package:home/screens/onboarding/onboarding_screen.dart';
 import 'package:home/screens/profile/profile_setup/profile_completion_screen.dart';
@@ -23,6 +24,7 @@ class Routes {
   // static const String changePassword = '/changePassword';
   static const String userinfoscreen = '/userinfoscreen';
   static const String profileCompletion = '/profileCompletion';
+  static const String connectionScreen = '/connectionScreen';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -56,6 +58,9 @@ class Routes {
 
       case userProfile:
         return MaterialPageRoute(builder: (_) => const UserProfileScreen());
+
+      case connectionScreen:
+        return MaterialPageRoute(builder: (_) => const WiFiScannerScreen());
 
       // case changePassword:
       //   return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());

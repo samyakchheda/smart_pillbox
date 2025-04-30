@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:home/routes/routes.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:wifi_iot/wifi_iot.dart';
@@ -180,10 +181,11 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.buttonColor,
-              ),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pushReplacementNamed(
+                    context, Routes.home); // <-- ADD THIS
+              },
               child: Text(
                 'OK'.tr(),
                 style: TextStyle(color: AppColors.buttonColor),
@@ -283,6 +285,20 @@ class _WiFiScannerScreenState extends State<WiFiScannerScreen> {
         appBar: AppBar(
           centerTitle: true,
           title: Text('Wi-Fi Scanner'.tr()),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacementNamed(context, Routes.home);
+              },
+              child: Text(
+                'Skip'.tr(),
+                style: TextStyle(
+                  color: AppColors.buttonColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
         body: Center(
           child: _isWifiEnabled
