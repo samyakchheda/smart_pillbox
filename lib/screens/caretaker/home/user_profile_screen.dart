@@ -65,7 +65,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         final String userEmail = user.email ?? '';
 
         if (userEmail.isNotEmpty) {
-          // Query caretakers where patient field matches the current user's email
           final caretakerQuery = await FirebaseFirestore.instance
               .collection('caretakers')
               .where('email', isEqualTo: userEmail)
@@ -102,6 +101,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background, // Theme-aware background
       body: Stack(
         children: [
           Column(
@@ -110,7 +110,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 height: 250,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.buttonColor, Colors.grey.shade400],
+                    colors: [
+                      AppColors.buttonColor,
+                      AppColors.cardBackground.withOpacity(0.7),
+                    ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -123,7 +126,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
@@ -139,7 +142,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 topRight: Radius.circular(40),
               ),
               child: Container(
-                color: const Color(0xFFE0E0E0),
+                color: AppColors.background,
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.only(top: 10),
                   child: Column(
@@ -151,7 +154,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ),
@@ -176,7 +179,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         clipBehavior: Clip.none,
         children: [
           Card(
-            color: Colors.white,
+            color: AppColors.cardBackground,
             elevation: 4,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
@@ -193,7 +196,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: AppColors.cardText,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -221,7 +224,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       case ProfileOption.contactUs:
         return ContactUsScreen(
             onBack: () => _onOptionSelected(ProfileOption.main));
-
       case ProfileOption.feedback:
         return _feedback(
           onSubmit: (rating, feedback) async {
@@ -229,7 +231,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             print("User Feedback: $feedback");
           },
         );
-
       default:
         return Column(
           children: [
@@ -262,7 +263,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                 onPressed: () =>
                     setState(() => _selectedOption = ProfileOption.main),
               ),
@@ -271,7 +272,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   "Feedback",
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                      fontSize: 22, fontWeight: FontWeight.bold),
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               const SizedBox(width: 48),
@@ -282,7 +286,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             child: Text(
               "How was your experience?",
               style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.bold),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -305,46 +312,60 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText: "Tell us more about your experience...",
-              hintStyle: GoogleFonts.poppins(color: Colors.grey.shade600),
+              hintStyle: GoogleFonts.poppins(color: AppColors.textPlaceholder),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: AppColors.buttonColor),
               ),
               filled: true,
-              fillColor: Colors.grey.shade200,
+              fillColor: AppColors.cardBackground,
             ),
+            style: TextStyle(color: AppColors.textPrimary),
           ),
           const SizedBox(height: 20),
           Center(
             child: ElevatedButton.icon(
               onPressed: () {
                 if (_selectedRating != null) {
-                  // Submit the feedback
                   onSubmit(_selectedRating!, feedbackController.text);
-                  // Show confirmation
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Feedback submitted successfully'),
+                    SnackBar(
+                      content: Text(
+                        'Feedback submitted successfully',
+                        style: TextStyle(color: AppColors.textPrimary),
+                      ),
+                      backgroundColor: AppColors.cardBackground,
                       duration: Duration(seconds: 2),
                     ),
                   );
-                  // Navigate back to main profile screen
                   _onOptionSelected(ProfileOption.main);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please select a rating')),
+                    SnackBar(
+                      content: Text(
+                        'Please select a rating',
+                        style: TextStyle(color: AppColors.textPrimary),
+                      ),
+                      backgroundColor: AppColors.cardBackground,
+                    ),
                   );
                 }
               },
-              icon: const Icon(Icons.send, color: Colors.white),
+              icon: Icon(Icons.send, color: AppColors.buttonText),
               label: Text(
                 "Submit Feedback",
                 style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.buttonText,
+                ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: AppColors.buttonColor,
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                 shape: RoundedRectangleBorder(
@@ -362,16 +383,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Log Out'),
-          content: const Text('Are you sure you want to log out?'),
+          backgroundColor: AppColors.cardBackground,
+          title: Text(
+            'Log Out',
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
+          content: Text(
+            'Are you sure you want to log out?',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('CANCEL'),
+              child: Text(
+                'CANCEL',
+                style: TextStyle(color: AppColors.buttonColor),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('LOG OUT'),
+              child: Text(
+                'LOG OUT',
+                style: TextStyle(color: AppColors.errorColor),
+              ),
             ),
           ],
         );
@@ -388,9 +422,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       {VoidCallback? onTap, Widget? trailing}) {
     return ListTile(
       leading: Icon(icon, color: AppColors.buttonColor),
-      title: Text(title, style: GoogleFonts.poppins(fontSize: 14)),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(
+          fontSize: 14,
+          color: AppColors.textPrimary,
+        ),
+      ),
       trailing: trailing ??
-          const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
       onTap: onTap,
     );
   }

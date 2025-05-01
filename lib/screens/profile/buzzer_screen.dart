@@ -85,7 +85,8 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: AppColors.buttonColor),
                 onPressed: widget.onBack,
               ),
               Expanded(

@@ -22,7 +22,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   late ScrollController _scrollController;
   int _selectedIndex = 0;
 
-  // Add ValueNotifier to track SpeedDial open/close state
   late ValueNotifier<bool> _isSpeedDialOpen;
 
   @override
@@ -31,7 +30,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
     today = DateTime.now();
     selectedDate = today;
     _scrollController = ScrollController();
-    _isSpeedDialOpen = ValueNotifier<bool>(false); // Initialize ValueNotifier
+    _isSpeedDialOpen = ValueNotifier<bool>(false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToDate();
     });
@@ -40,7 +39,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _isSpeedDialOpen.dispose(); // Dispose of the ValueNotifier
+    _isSpeedDialOpen.dispose();
     super.dispose();
   }
 
@@ -61,31 +60,34 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
 
     if (userId == null) {
       return Scaffold(
+        backgroundColor: AppColors.background, // Theme-aware background
         body: Center(
-          child: Text('User is not authenticated'.tr()),
+          child: Text(
+            'User is not authenticated'.tr(),
+            style: TextStyle(color: AppColors.textPrimary),
+          ),
         ),
       );
     }
 
     return Scaffold(
       key: scaffoldMessengerKey,
+      backgroundColor: AppColors.background, // Theme-aware background
       body: Stack(
         children: [
-          // Existing background and main UI
           Container(
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   AppColors.buttonColor,
-                  Colors.grey.shade400,
+                  AppColors.cardBackground.withOpacity(0.7),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
-
           Column(
             children: [
               Container(
@@ -104,9 +106,9 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               ),
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -120,7 +122,6 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
               ),
             ],
           ),
-          // Custom gradient overlay for SpeedDial
           ValueListenableBuilder<bool>(
             valueListenable: _isSpeedDialOpen,
             builder: (context, value, child) {
@@ -135,7 +136,7 @@ class _MedicineListScreenState extends State<MedicineListScreen> {
                               center: Alignment.bottomRight,
                               radius: 2.5,
                               colors: [
-                                const Color(0xFF4276FD).withOpacity(0.4),
+                                AppColors.buttonColor.withOpacity(0.4),
                                 Colors.transparent,
                               ],
                               stops: const [0.1, 1.0],

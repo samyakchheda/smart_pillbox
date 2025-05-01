@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:home/services/ai_service/image_service.dart';
-import 'package:home/screens/reminders/medicine_form_screen.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
@@ -29,9 +28,8 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
   Timestamp? uploadedAt;
   bool _isLoadingMedicines = true;
   List<String> _medicineNames = [];
-  final Set<String> _addedMedicines = {}; // Medicines confirmed in Firebase
+  final Set<String> _addedMedicines = {};
 
-  // Cache medicine names per document using documentId as key in memory.
   static final Map<String, List<String>> _cachedMedicineNames = {};
 
   @override
@@ -56,7 +54,7 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
         });
         if (imageUrl != null) {
           await _loadMedicineNames();
-          await _checkAddedMedicinesInFirebase(); // Check Firebase for added medicines
+          await _checkAddedMedicinesInFirebase();
         }
       }
     } catch (e) {
@@ -64,7 +62,6 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
     }
   }
 
-  /// Downloads the image from the network and saves it to a temporary file.
   Future<File> _downloadImage(String url) async {
     final response = await http.get(Uri.parse(url));
     final documentDirectory = await getTemporaryDirectory();
@@ -75,7 +72,6 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
     return file;
   }
 
-  /// Loads the medicine names by first checking SharedPreferences and the in-memory cache.
   Future<void> _loadMedicineNames() async {
     if (_cachedMedicineNames.containsKey(widget.documentId)) {
       setState(() {
@@ -128,7 +124,6 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
     }
   }
 
-  /// Check Firebase for medicines already added under the user's reminders collection.
   Future<void> _checkAddedMedicinesInFirebase() async {
     try {
       final userDocSnapshot = await FirebaseFirestore.instance
@@ -140,18 +135,15 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
       final existingMedicines = <String>{};
 
       if (data != null) {
-        // Assuming reminders is stored as an array in the user document.
         final medicines = data['medicines'] as List<dynamic>?;
 
         if (medicines != null) {
           for (final medicine in medicines) {
-            // Each reminder is expected to be a Map.
             final reminderMap = medicine as Map<String, dynamic>;
             final medicineNames =
                 reminderMap['medicineNames'] as List<dynamic>?;
 
             if (medicineNames != null) {
-              // Convert each medicine name to String before adding to the set.
               existingMedicines.addAll(medicineNames.map((e) => e.toString()));
             }
           }
@@ -177,13 +169,17 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
         : 'Unknown';
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Prescription Details'),
-        backgroundColor: const Color(0xFFE0E0E0),
+        title: Text('Prescription Details',
+            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.cardBackground,
         elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textPrimary),
       ),
       body: imageUrl == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(color: AppColors.buttonColor))
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -196,12 +192,12 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => Scaffold(
-                              backgroundColor: Colors.white,
+                              backgroundColor: AppColors.background,
                               appBar: AppBar(
-                                backgroundColor: Colors.transparent,
+                                backgroundColor: AppColors.cardBackground,
                                 elevation: 0,
                                 iconTheme:
-                                    const IconThemeData(color: Colors.black),
+                                    IconThemeData(color: AppColors.textPrimary),
                               ),
                               body: Center(
                                 child: InteractiveViewer(
@@ -211,14 +207,14 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                                     loadingBuilder:
                                         (context, child, loadingProgress) {
                                       if (loadingProgress == null) return child;
-                                      return const Center(
-                                          child: CircularProgressIndicator());
+                                      return Center(
+                                          child: CircularProgressIndicator(
+                                              color: AppColors.buttonColor));
                                     },
                                     errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(
+                                        (context, error, stackTrace) => Icon(
                                       Icons.error,
-                                      color: Colors.red,
+                                      color: AppColors.errorColor,
                                       size: 50,
                                     ),
                                   ),
@@ -237,13 +233,13 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                           height: MediaQuery.of(context).size.height * 0.4,
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
-                            return const Center(
-                                child: CircularProgressIndicator());
+                            return Center(
+                                child: CircularProgressIndicator(
+                                    color: AppColors.buttonColor));
                           },
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
+                          errorBuilder: (context, error, stackTrace) => Icon(
                             Icons.error,
-                            color: Colors.red,
+                            color: AppColors.errorColor,
                             size: 50,
                           ),
                         ),
@@ -252,12 +248,15 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                     const SizedBox(height: 24),
                     Text(
                       "Uploaded on: ${formattedDate}",
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
                     Card(
-                      color: Colors.white,
+                      color: AppColors.cardBackground,
                       elevation: 3,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -265,31 +264,36 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: _isLoadingMedicines
-                            ? const Column(
+                            ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: 8),
-                                  Text("Fetching medicines..."),
+                                  CircularProgressIndicator(
+                                      color: AppColors.buttonColor),
+                                  const SizedBox(height: 8),
+                                  Text("Fetching medicines...",
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary)),
                                 ],
                               )
                             : _medicineNames.isEmpty
-                                ? const Center(
+                                ? Center(
                                     child: Text(
                                       "No medicine names found.",
-                                      style: TextStyle(fontSize: 16),
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary,
+                                          fontSize: 16),
                                     ),
                                   )
                                 : Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
+                                      Text(
                                         "Detected Medicines",
                                         style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                            color: AppColors.textPrimary,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold),
                                       ),
                                       const SizedBox(height: 12),
                                       ListView.separated(
@@ -298,7 +302,9 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                                             const NeverScrollableScrollPhysics(),
                                         itemCount: _medicineNames.length,
                                         separatorBuilder: (context, index) =>
-                                            const Divider(),
+                                            Divider(
+                                          color: AppColors.borderColor,
+                                        ),
                                         itemBuilder: (context, index) {
                                           final medicine =
                                               _medicineNames[index];
@@ -312,10 +318,12 @@ class _ImageDetailScreenState extends State<ImageDetailScreen> {
                                               Expanded(
                                                 child: Text(
                                                   medicine,
-                                                  style: const TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w500,
-                                                  ),
+                                                  style: TextStyle(
+                                                      color:
+                                                          AppColors.textPrimary,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.w500),
                                                 ),
                                               ),
                                             ],

@@ -13,7 +13,15 @@ import 'package:lottie/lottie.dart';
 import '../../theme/app_colors.dart';
 import 'medicine_form_screen.dart';
 
-// Utility Functions (unchanged)
+// Preload Lottie Animation Globally (kept for compatibility with main.dart)
+LottieComposition? _loadingComposition;
+
+Future<void> preloadLottieAnimation() async {
+  _loadingComposition =
+      await AssetLottie('assets/animations/loading.json').load();
+}
+
+// Utility Functions
 List<DateTime> generateDateRange(DateTime today) {
   return List.generate(
     21,
@@ -61,14 +69,14 @@ String formatDate(Timestamp timestamp) {
 }
 
 String formatMedicineTimes(List<dynamic> timestamps) {
-  if (timestamps.isEmpty) return "No Time Set";
+  if (timestamps.isEmpty) return "No Time Set".tr();
 
   List<String> formattedTimes = timestamps.map((timestamp) {
     if (timestamp is Timestamp) {
       DateTime dateTime = timestamp.toDate();
       return DateFormat.jm().format(dateTime);
     }
-    return "Invalid Time";
+    return "Invalid Time".tr();
   }).toList();
 
   return formattedTimes.join(", ");
@@ -91,7 +99,7 @@ Future<void> deleteMedicine(
   }
 }
 
-// DateSelector (Updated for Theming)
+// DateSelector
 class DateSelector extends StatelessWidget {
   final List<DateTime> dateRange;
   final DateTime selectedDate;
@@ -280,8 +288,8 @@ class DateSelector extends StatelessWidget {
   }
 }
 
-// MedicineList (Updated for Theming)
-class MedicineList extends StatelessWidget {
+// MedicineList
+class MedicineList extends StatefulWidget {
   final FirebaseFirestore firestore;
   final String userId;
   final DateTime selectedDate;
@@ -296,6 +304,17 @@ class MedicineList extends StatelessWidget {
     required this.onDelete,
     required this.onEdit,
   });
+
+  @override
+  _MedicineListState createState() => _MedicineListState();
+}
+
+class _MedicineListState extends State<MedicineList> {
+  @override
+  void initState() {
+    super.initState();
+    // No need to assign _loadingComposition here; it's preloaded globally
+  }
 
   DateTime getNextScheduledTime(
       List<Timestamp> times, DateTime selectedDate, DateTime now) {
@@ -331,20 +350,25 @@ class MedicineList extends StatelessWidget {
         FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase() ?? '';
 
     return FutureBuilder<QuerySnapshot>(
-      future: firestore
+      future: widget.firestore
           .collection('caretakers')
           .where('email', isEqualTo: currentUserEmail)
           .get(),
       builder: (context, caretakerSnapshot) {
         if (caretakerSnapshot.connectionState == ConnectionState.waiting) {
           return Center(
-            child: Lottie.asset(
-              'assets/animations/loading.json',
-              width: 200,
-              height: 200,
-              fit: BoxFit.contain,
-              repeat: true,
-            ),
+            child: _loadingComposition != null
+                ? Lottie(
+                    composition: _loadingComposition,
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                    repeat: true,
+                  )
+                : CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
+                  ),
           );
         }
         if (caretakerSnapshot.hasData &&
@@ -361,20 +385,25 @@ class MedicineList extends StatelessWidget {
             );
           }
           return StreamBuilder<QuerySnapshot>(
-            stream: firestore
+            stream: widget.firestore
                 .collection('users')
                 .where('email', isEqualTo: patientEmail.trim().toLowerCase())
                 .snapshots(),
             builder: (context, patientSnapshot) {
               if (patientSnapshot.connectionState == ConnectionState.waiting) {
                 return Center(
-                  child: Lottie.asset(
-                    'assets/animations/loading.json',
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.contain,
-                    repeat: true,
-                  ),
+                  child: _loadingComposition != null
+                      ? Lottie(
+                          composition: _loadingComposition,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.contain,
+                          repeat: true,
+                        )
+                      : CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.buttonColor),
+                        ),
                 );
               }
               if (!patientSnapshot.hasData ||
@@ -396,17 +425,25 @@ class MedicineList extends StatelessWidget {
           );
         } else {
           return StreamBuilder<DocumentSnapshot>(
-            stream: firestore.collection('users').doc(userId).snapshots(),
+            stream: widget.firestore
+                .collection('users')
+                .doc(widget.userId)
+                .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(
-                  child: Lottie.asset(
-                    'assets/animations/loading.json',
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.contain,
-                    repeat: true,
-                  ),
+                  child: _loadingComposition != null
+                      ? Lottie(
+                          composition: _loadingComposition,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.contain,
+                          repeat: true,
+                        )
+                      : CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.buttonColor),
+                        ),
                 );
               }
               if (!snapshot.hasData || snapshot.data == null) {
@@ -439,13 +476,15 @@ class MedicineList extends StatelessWidget {
       );
     }
 
-    DateTime selectedDayUtc =
-        DateTime.utc(selectedDate.year, selectedDate.month, selectedDate.day);
-    String selectedWeekday = DateFormat('EEE').format(selectedDate);
-    String selectedDateString = DateFormat('dd-MM-yyyy').format(selectedDate);
+    DateTime selectedDayUtc = DateTime.utc(widget.selectedDate.year,
+        widget.selectedDate.month, widget.selectedDate.day);
+    String selectedWeekday = DateFormat('EEE').format(widget.selectedDate);
+    String selectedDateString =
+        DateFormat('dd-MM-yyyy').format(widget.selectedDate);
 
     var filteredMedicines = medicines.where((medicine) {
-      List<String> scheduledDays = List<String>.from(medicine['selectedDays']);
+      List<String> scheduledDays =
+          List<String>.from(medicine['selectedDays'] ?? []);
       DateTime startDate =
           (medicine['startDate'] as Timestamp).toDate().toLocal();
       DateTime endDate = (medicine['endDate'] as Timestamp)
@@ -472,11 +511,13 @@ class MedicineList extends StatelessWidget {
 
     DateTime now = DateTime.now().toLocal();
     filteredMedicines.sort((a, b) {
-      List<Timestamp> timesA = List<Timestamp>.from(a['medicineTimes']);
-      List<Timestamp> timesB = List<Timestamp>.from(b['medicineTimes']);
+      List<Timestamp> timesA = List<Timestamp>.from(a['medicineTimes'] ?? []);
+      List<Timestamp> timesB = List<Timestamp>.from(b['medicineTimes'] ?? []);
 
-      DateTime nextTimeA = getNextScheduledTime(timesA, selectedDate, now);
-      DateTime nextTimeB = getNextScheduledTime(timesB, selectedDate, now);
+      DateTime nextTimeA =
+          getNextScheduledTime(timesA, widget.selectedDate, now);
+      DateTime nextTimeB =
+          getNextScheduledTime(timesB, widget.selectedDate, now);
 
       return nextTimeA.compareTo(nextTimeB);
     });
@@ -494,8 +535,8 @@ class MedicineList extends StatelessWidget {
         String startDate = formatDate(medicine['startDate']);
         String endDate = formatDate(medicine['endDate']);
         DateTime nextScheduledTime = getNextScheduledTime(
-          List<Timestamp>.from(medicine['medicineTimes']),
-          selectedDate,
+          List<Timestamp>.from(medicine['medicineTimes'] ?? []),
+          widget.selectedDate,
           now,
         );
 
@@ -505,7 +546,7 @@ class MedicineList extends StatelessWidget {
           key: Key(medicine['id']),
           direction: DismissDirection.endToStart,
           onDismissed: (direction) async {
-            await onDelete(medicine['id']);
+            await widget.onDelete(medicine['id']);
           },
           confirmDismiss: (direction) async {
             return await showDialog(
@@ -517,7 +558,8 @@ class MedicineList extends StatelessWidget {
                   style: TextStyle(color: AppColors.textPrimary),
                 ),
                 content: Text(
-                  'Are you sure you want to delete ${medicine['medicineNames'].first}?',
+                  'Are you sure you want to delete ${medicine['medicineNames'].first}?'
+                      .tr(),
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
                 actions: [
@@ -570,7 +612,7 @@ class MedicineList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 16),
               indicator: dailyStatus == 'taken'
                   ? const Icon(Icons.check_circle,
-                      color: Colors.green, size: 30) // Kept as is for clarity
+                      color: Colors.green, size: 30)
                   : Icon(Icons.remove_circle_outline,
                       color: AppColors.errorColor, size: 30),
             ),
@@ -665,7 +707,7 @@ class MedicineList extends StatelessWidget {
                           ),
                           child: Text(
                             'Delete'.tr(),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textOnPrimary,
@@ -682,15 +724,15 @@ class MedicineList extends StatelessWidget {
                   },
                 );
                 if (confirmDelete == true) {
-                  onDelete(medicine['id']);
+                  widget.onDelete(medicine['id']);
                 }
               },
               child: AnimatedMedicineCard(
                 medicine: medicine,
                 startDate: startDate,
                 endDate: endDate,
-                onEdit: () => onEdit(medicine),
-                onDelete: () => onDelete(medicine['id']),
+                onEdit: () => widget.onEdit(medicine),
+                onDelete: () => widget.onDelete(medicine['id']),
               ),
             ),
           ),
@@ -700,7 +742,7 @@ class MedicineList extends StatelessWidget {
   }
 }
 
-// AnimatedMedicineCard (Updated for Theming)
+// AnimatedMedicineCard
 class AnimatedMedicineCard extends StatefulWidget {
   final Map<String, dynamic> medicine;
   final String startDate;
@@ -760,7 +802,10 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
     final double paddingScale = scaleFactor.clamp(0.8, 1.5);
 
     String formattedTimes = DateFormat('hh:mm a').format(
-      DateTime.parse(widget.medicine['medicineTimes'][0].toDate().toString()),
+      widget.medicine['medicineTimes'] != null &&
+              widget.medicine['medicineTimes'].isNotEmpty
+          ? (widget.medicine['medicineTimes'][0] as Timestamp).toDate()
+          : DateTime.now(),
     );
     List<String> timeParts = formattedTimes.split(' ');
     String time = timeParts[0];
@@ -814,7 +859,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                       Text(
                         widget.medicine['medicineNames']?.isNotEmpty == true
                             ? widget.medicine['medicineNames'][0]
-                            : 'Unnamed',
+                            : 'Unnamed'.tr(),
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20 * scaleFactor,
@@ -883,7 +928,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                           ),
                           SizedBox(width: 12 * scaleFactor),
                           Text(
-                            'Edit',
+                            'Edit'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
                               color: AppColors.textPrimary,
@@ -904,7 +949,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                           ),
                           SizedBox(width: 12 * scaleFactor),
                           Text(
-                            'Delete',
+                            'Delete'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
                               color: AppColors.textPrimary,
@@ -925,7 +970,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
   }
 }
 
-// buildSpeedDial (Updated for Theming)
+// buildSpeedDial
 Widget buildSpeedDial(
     BuildContext context, String userId, ValueNotifier<bool> isOpen) {
   return SpeedDial(

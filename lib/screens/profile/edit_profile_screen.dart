@@ -350,7 +350,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                  icon: Icon(Icons.arrow_back_ios_new,
+                      color: AppColors.buttonColor),
                   onPressed: widget.onBack,
                 ),
                 Text(
@@ -527,7 +528,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   value: gender, // actual value saved in Firestore
                   child: Text(
                     gender.tr(), // only translate for display
-                    style: GoogleFonts.poppins(color: Colors.black),
+                    style: GoogleFonts.poppins(color: AppColors.textPrimary),
                   ),
                 ))
             .toList(),

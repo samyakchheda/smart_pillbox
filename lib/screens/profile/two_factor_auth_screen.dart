@@ -79,7 +79,7 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.background, // Theme-aware background
+      color: AppColors.background,
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +87,8 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: AppColors.buttonColor),
                 onPressed: widget.onBack,
               ),
               Expanded(
@@ -97,7 +98,7 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                   style: AppFonts.headline,
                 ),
               ),
-              const SizedBox(width: 48), // Spacer for alignment
+              const SizedBox(width: 48),
             ],
           ),
           const SizedBox(height: 20),
@@ -117,12 +118,22 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                     style: AppFonts.subHeadline,
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    "Two-Factor Authentication (2FA) adds an extra layer of security to your account. In addition to your password, you'll need to provide a second form of verification, such as a code sent to your phone or email."
-                        .tr(),
-                    style: AppFonts.bodyText.copyWith(
-                      color: AppColors.textPlaceholder,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.security,
+                          color: AppColors.buttonColor, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Adds extra security with a second verification. "
+                              .tr(),
+                          style: AppFonts.bodyText.copyWith(
+                            color: AppColors.textPlaceholder,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -135,31 +146,45 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            child: _isLoading
-                ? Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.buttonColor,
-                    ),
-                  )
-                : ListTile(
-                    title: Text(
-                      "Enable 2-Factor Authentication".tr(),
-                      style: AppFonts.bodyText,
-                    ),
-                    trailing: Switch(
-                      value: _is2FAEnabled,
-                      activeColor: AppColors.buttonColor,
-                      inactiveThumbColor: AppColors.textPlaceholder,
-                      inactiveTrackColor:
-                          AppColors.textPlaceholder.withOpacity(0.5),
-                      onChanged: (value) async {
-                        setState(() {
-                          _is2FAEnabled = value;
-                        });
-                        await _update2FAStatus(value);
-                      },
-                    ),
-                  ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.buttonColor,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                "Enable 2-Factor \nAuthentication".tr(),
+                                style: AppFonts.bodyText,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Switch(
+                              value: _is2FAEnabled,
+                              activeColor: AppColors.buttonColor,
+                              inactiveThumbColor: AppColors.textPlaceholder,
+                              inactiveTrackColor:
+                                  AppColors.textPlaceholder.withOpacity(0.5),
+                              onChanged: (value) async {
+                                setState(() {
+                                  _is2FAEnabled = value;
+                                });
+                                await _update2FAStatus(value);
+                              },
+                            ),
+                          ],
+                        ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           Card(
@@ -178,14 +203,60 @@ class _TwoFactorAuthScreenState extends State<TwoFactorAuthScreen> {
                     style: AppFonts.subHeadline,
                   ),
                   const SizedBox(height: 10),
-                  Text(
-                    "1. Log in with your username and password\n"
-                            "2. Receive a verification code via SMS or email\n"
-                            "3. Enter the code to access your account"
-                        .tr(),
-                    style: AppFonts.bodyText.copyWith(
-                      color: AppColors.textPlaceholder,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.login,
+                              color: AppColors.buttonColor, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "1. Log in with your password".tr(),
+                              style: AppFonts.bodyText.copyWith(
+                                color: AppColors.textPlaceholder,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.sms,
+                              color: AppColors.buttonColor, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "2. Enter code sent via SMS/email".tr(),
+                              style: AppFonts.bodyText.copyWith(
+                                color: AppColors.textPlaceholder,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.check_circle,
+                              color: AppColors.buttonColor, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "3. Access your account".tr(),
+                              style: AppFonts.bodyText.copyWith(
+                                color: AppColors.textPlaceholder,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),

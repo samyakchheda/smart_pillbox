@@ -17,7 +17,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 9, milliseconds: 500), () {
+    Future.delayed(const Duration(seconds: 5, milliseconds: 500), () {
       Navigator.pushReplacementNamed(
           context, Routes.connectionScreen); // Adjust route name
     });

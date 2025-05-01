@@ -17,7 +17,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   List<Map<String, dynamic>> _scannedDocuments = [];
   String? userId;
   String? userEmail;
-  String? targetUserId; // The actual user whose documents will be fetched
+  String? targetUserId;
 
   @override
   void initState() {
@@ -25,7 +25,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
     _fetchUserDetails();
   }
 
-  // Fetch current user details and determine if they are a caretaker or a patient
   void _fetchUserDetails() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -36,14 +35,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
     userId = user.uid;
     userEmail = user.email ?? '';
 
-    // Determine if user is a caretaker
     final caretakerQuery = await FirebaseFirestore.instance
         .collection('caretakers')
         .where('email', isEqualTo: userEmail)
         .get();
 
     if (caretakerQuery.docs.isNotEmpty) {
-      // If caretaker, fetch patient's userId
       final caretakerData = caretakerQuery.docs.first.data();
       final String patientEmail = caretakerData['patient'] ?? '';
 
@@ -59,7 +56,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
       }
     }
 
-    // If user is not a caretaker, use their own userId
     targetUserId ??= userId;
 
     _fetchScannedDocuments();
@@ -90,21 +86,24 @@ class _ScannerScreenState extends State<ScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       floatingActionButton: FloatingActionButton(
         onPressed: _startScanning,
-        child: const Icon(Icons.add, size: 30),
         backgroundColor: AppColors.buttonColor,
-        foregroundColor: Colors.white,
+        child: Icon(Icons.add, size: 30, color: AppColors.buttonText),
       ),
       appBar: AppBar(
-        title: const Text('Prescription Scanner'),
-        backgroundColor: const Color(0xFFE0E0E0),
+        title: Text('Prescription Scanner',
+            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.cardBackground,
       ),
       body: Column(
         children: [
           Expanded(
             child: _scannedDocuments.isEmpty
-                ? const Center(child: Text('No documents scanned yet.'))
+                ? Center(
+                    child: Text('No documents scanned yet.',
+                        style: TextStyle(color: AppColors.textPrimary)))
                 : ListView.builder(
                     itemCount: _scannedDocuments.length,
                     itemBuilder: (context, index) {
@@ -117,17 +116,18 @@ class _ScannerScreenState extends State<ScannerScreen> {
                               document['id'], document['cloudinary_url']);
                         },
                         background: Container(
-                          color: Colors.red,
-                          child: const Align(
+                          color: AppColors.errorColor,
+                          child: Align(
                             alignment: Alignment.centerRight,
                             child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Icon(Icons.delete, color: Colors.white),
+                              padding: const EdgeInsets.all(16.0),
+                              child: Icon(Icons.delete,
+                                  color: AppColors.buttonText),
                             ),
                           ),
                         ),
                         child: Card(
-                          color: Colors.white,
+                          color: AppColors.cardBackground,
                           margin: const EdgeInsets.all(8),
                           elevation: 4,
                           child: ListTile(
@@ -138,13 +138,16 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                     height: 50,
                                     fit: BoxFit.cover,
                                     errorBuilder:
-                                        (context, error, stackTrace) =>
-                                            const Icon(Icons.error,
-                                                color: Colors.red),
+                                        (context, error, stackTrace) => Icon(
+                                            Icons.error,
+                                            color: AppColors.errorColor),
                                   )
-                                : const Icon(Icons.image, size: 50),
-                            title: Text('Document ${index + 1}'),
-                            trailing: const Icon(Icons.arrow_forward),
+                                : Icon(Icons.image,
+                                    size: 50, color: AppColors.textPrimary),
+                            title: Text('Document ${index + 1}',
+                                style: TextStyle(color: AppColors.textPrimary)),
+                            trailing: Icon(Icons.arrow_forward,
+                                color: AppColors.textPrimary),
                             onTap: () {
                               Navigator.push(
                                 context,

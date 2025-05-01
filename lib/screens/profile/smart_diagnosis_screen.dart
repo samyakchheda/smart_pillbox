@@ -303,7 +303,6 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
     "camera",
     "lcd",
     "motor",
-    "battery",
   ];
 
   // store the result of each step
@@ -331,12 +330,6 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
       "description": "Keep your app updated for the latest features and fixes.",
       "icon": Icons.system_update,
     },
-    {
-      "title": "Battery Care",
-      "description":
-          "Charge the device when the battery level falls below 20%.",
-      "icon": Icons.battery_charging_full,
-    },
   ];
 
   @override
@@ -353,7 +346,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
 
       try {
         final resp = await http.post(
-          Uri.parse("https://rishixd-api.hf.space/command/$step"),
+          Uri.parse("https://6617-183-87-183-2.ngrok-free.app/command/$step"),
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "esp32_ip": widget.esp32Ip.replaceAll(RegExp(r'https?://'), ""),
@@ -364,6 +357,7 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
           success = true;
           final data = jsonDecode(resp.body);
           msg = data["message"] ?? "OK";
+          debugPrint("Response: $msg");
         } else {
           msg = "Error ${resp.statusCode}";
         }
@@ -380,6 +374,31 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
         );
         _progress = (i + 1) / _steps.length;
       });
+
+      // if the very first step fails with "not reachable", stop everything:
+      if (step == "microcontroller" &&
+          msg.toLowerCase().contains("not reachable")) {
+        // tell the user to reconnect, then pop this screen
+        await showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text("Device Unreachable".tr()),
+            content: Text(
+                "Please power on and connect your microcontroller, then try again."
+                    .tr()),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // close dialog
+                  widget.onBack(); // pop diagnosis screen
+                },
+                child: Text("OK".tr()),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
 
       // small pause so each icon update is visible
       await Future.delayed(const Duration(milliseconds: 300));
@@ -450,65 +469,88 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
   }
 
   Widget _buildDiagnosisInProgress() {
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        Center(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.buttonColor.withOpacity(0.2),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    double progressSize = screenWidth < 360 ? 140 : 180;
+    double progressStroke = screenWidth < 360 ? 8 : 12;
+    double percentageFontSize = screenWidth < 360 ? 28 : 36;
+    double diagnosingTextFontSize = screenWidth < 360 ? 16 : 18;
+    double topSpacing = screenWidth < 360 ? 30 : 40;
+    double bottomSpacing = screenWidth < 360 ? 24 : 32;
+
+    return Expanded(
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: topSpacing),
+            Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: progressSize,
+                    height: progressSize,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.buttonColor.withOpacity(0.2),
+                          blurRadius: 20,
+                          spreadRadius: 5,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: CircularProgressIndicator(
-                  value: _progress,
-                  strokeWidth: 12,
-                  backgroundColor: AppColors.textPlaceholder.withOpacity(0.2),
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
-                ),
+                    child: CircularProgressIndicator(
+                      value: _progress,
+                      strokeWidth: progressStroke,
+                      backgroundColor:
+                          AppColors.textPlaceholder.withOpacity(0.2),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.buttonColor),
+                    ),
+                  ),
+                  Text(
+                    "${(_progress * 100).toInt()}%",
+                    style: AppFonts.headline.copyWith(
+                      color: AppColors.buttonColor,
+                      fontSize: percentageFontSize,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                "${(_progress * 100).toInt()}%",
-                style: AppFonts.headline.copyWith(
-                  color: AppColors.buttonColor,
-                  fontSize: 36,
-                ),
-              ),
-            ],
-          ),
+            ),
+            SizedBox(height: topSpacing),
+            Text(
+              "Diagnosing your device...".tr(),
+              style: AppFonts.subHeadline
+                  .copyWith(fontSize: diagnosingTextFontSize),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: bottomSpacing),
+            _buildDiagnosticItems(),
+            SizedBox(height: 40), // Give some bottom space
+            _buildWarningText(),
+          ],
         ),
-        const SizedBox(height: 40),
-        Text(
-          "Diagnosing your device...".tr(),
-          style: AppFonts.subHeadline.copyWith(fontSize: 18),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-        _buildDiagnosticItems(),
-        const Spacer(),
-        _buildWarningText(),
-      ],
+      ),
     );
   }
 
   Widget _buildDiagnosticItems() {
+    final screenWidth =
+        MediaQuery.of(context).size.width; // Access context directly
+
+    double fontSizeMain = screenWidth < 360 ? 15 : 17;
+    double fontSizeSecondary = screenWidth < 360 ? 12 : 14;
+    double iconSize = screenWidth < 360 ? 20 : 24;
+    double spacing = screenWidth < 360 ? 8 : 12;
+
     return Column(
       children: _steps.map((step) {
         final label = step[0].toUpperCase() + step.substring(1);
         final result = _diagnosisResults[label];
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: spacing / 2),
           child: Row(
             children: [
               Icon(
@@ -518,20 +560,27 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
                 color: result == null
                     ? AppColors.textPlaceholder
                     : (result.success ? Colors.green : Colors.red),
+                size: iconSize,
               ),
-              const SizedBox(width: 12),
-              Expanded(
+              SizedBox(width: spacing),
+              Flexible(
                 child: Text(
                   label,
-                  style: AppFonts.bodyText.copyWith(fontSize: 17),
+                  softWrap: true,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppFonts.bodyText.copyWith(fontSize: fontSizeMain),
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                result?.message ?? "Pending".tr(),
-                style: AppFonts.bodyText.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 14,
+              SizedBox(width: spacing),
+              Flexible(
+                child: Text(
+                  result?.message ?? "Pending".tr(),
+                  style: AppFonts.bodyText.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: fontSizeSecondary,
+                  ),
+                  overflow:
+                      TextOverflow.ellipsis, // Ensure the text doesn't overflow
                 ),
               ),
             ],
@@ -542,8 +591,55 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
   }
 
   Widget _buildDiagnosisResults() {
-    final hasIssue = _diagnosisResults.values.any((r) => r.success == false);
+    final micro = _diagnosisResults['Microcontroller'];
+    final isMicroError = micro != null &&
+        !micro.success &&
+        micro.message.toLowerCase().contains('not reachable');
 
+    if (isMicroError) {
+      return SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 24),
+            Card(
+              color: AppColors.cardBackground,
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(Icons.error_outline, size: 60, color: Colors.red),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Device Unreachable'.tr(),
+                      style: AppFonts.subHeadline.copyWith(fontSize: 20),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Please power on and connect your microcontroller, then retry.'
+                          .tr(),
+                      textAlign: TextAlign.center,
+                      style: AppFonts.bodyText.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildDetailedResults(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      );
+    }
+
+    final hasIssue = _diagnosisResults.values.any((r) => r.success == false);
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -565,17 +661,17 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
                   const SizedBox(height: 16),
                   Text(
                     hasIssue
-                        ? "Minor Issues Detected".tr()
-                        : "All Systems Operational".tr(),
+                        ? 'Minor Issues Detected'.tr()
+                        : 'All Systems Operational'.tr(),
                     style: AppFonts.subHeadline.copyWith(fontSize: 20),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     hasIssue
-                        ? "Your device is functioning but needs some attention."
+                        ? 'Your device is functioning but needs some attention.'
                             .tr()
-                        : "Your device is functioning properly with no issues detected."
+                        : 'Your device is functioning properly with no issues detected.'
                             .tr(),
                     textAlign: TextAlign.center,
                     style: AppFonts.bodyText.copyWith(
@@ -598,18 +694,34 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
   }
 
   Widget _buildDetailedResults() {
+    final micro = _diagnosisResults['Microcontroller'];
+    final isMicroError = micro != null &&
+        !micro.success &&
+        micro.message.toLowerCase().contains('not reachable');
+
+    final children = <Widget>[
+      Text(
+        'Detailed Results'.tr(),
+        style: AppFonts.subHeadline.copyWith(fontSize: 20),
+      ),
+      const SizedBox(height: 16),
+    ];
+
+    if (isMicroError) {
+      children.add(_buildResultItem('Microcontroller', micro!));
+    } else {
+      for (final step in _steps) {
+        final label = step[0].toUpperCase() + step.substring(1);
+        final r = _diagnosisResults[label];
+        if (r != null) {
+          children.add(_buildResultItem(label, r));
+        }
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Detailed Results".tr(),
-            style: AppFonts.subHeadline.copyWith(fontSize: 20)),
-        const SizedBox(height: 16),
-        ..._steps.map((step) {
-          final label = step[0].toUpperCase() + step.substring(1);
-          final r = _diagnosisResults[label]!;
-          return _buildResultItem(label, r);
-        }).toList(),
-      ],
+      children: children,
     );
   }
 
@@ -626,8 +738,10 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
           size: 28,
         ),
         title: Text(item, style: AppFonts.bodyText.copyWith(fontSize: 16)),
-        subtitle: Text(r.message,
-            style: AppFonts.bodyText.copyWith(color: AppColors.textSecondary)),
+        subtitle: Text(
+          r.message,
+          style: AppFonts.bodyText.copyWith(color: AppColors.textSecondary),
+        ),
       ),
     );
   }

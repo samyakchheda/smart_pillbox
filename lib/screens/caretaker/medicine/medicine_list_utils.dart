@@ -7,7 +7,6 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:home/screens/caretaker/scan/ocr_screen.dart';
 import 'package:home/screens/caretaker/scan/scanner_screen.dart';
-import 'package:home/screens/home/loading.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 import 'package:timeline_tile/timeline_tile.dart';
@@ -30,20 +29,17 @@ void scrollToDate(BuildContext context, ScrollController scrollController,
       date.month == selectedDate.month &&
       date.year == selectedDate.year);
 
-  if (selectedDateIndex == -1) return; // Prevent errors if date not found
+  if (selectedDateIndex == -1) return;
 
   double screenWidth = MediaQuery.of(context).size.width;
-  double itemWidth = 54.0; // 50 width + 2 margin on each side
-
-  // Calculate target scroll offset while keeping the selected date centered
-  double maxScrollExtent = scrollController.position.maxScrollExtent;
-  double minScrollExtent = scrollController.position.minScrollExtent;
+  double itemWidth = 54.0;
 
   double targetOffset =
       (selectedDateIndex * itemWidth) - (screenWidth / 3) + (itemWidth / 2);
 
-  // Ensure offset is within valid scroll bounds
-  double finalOffset = targetOffset.clamp(minScrollExtent, maxScrollExtent);
+  double finalOffset = targetOffset.clamp(
+      scrollController.position.minScrollExtent,
+      scrollController.position.maxScrollExtent);
 
   if (scrollController.hasClients) {
     scrollController.animateTo(
@@ -68,12 +64,12 @@ String formatMedicineTimes(List<dynamic> timestamps) {
   List<String> formattedTimes = timestamps.map((timestamp) {
     if (timestamp is Timestamp) {
       DateTime dateTime = timestamp.toDate();
-      return DateFormat.jm().format(dateTime); // Example: "10:30 AM"
+      return DateFormat.jm().format(dateTime);
     }
     return "Invalid Time";
   }).toList();
 
-  return formattedTimes.join(", "); // Join times with a comma
+  return formattedTimes.join(", ");
 }
 
 Future<void> deleteMedicine(
@@ -120,32 +116,28 @@ class DateSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Text above the calendar with dynamic date
           Padding(
             padding: const EdgeInsets.only(top: 5.0),
             child: Text(
               DateFormat('E, d\'th\' MMM').format(selectedDate),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 28,
-                color: Colors.black,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
-          // const SizedBox(height: 16),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: scrollController,
             child: Row(
               children: [
-                // Calendar Button
                 GestureDetector(
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate:
-                          dateRange.first, // Keep the earliest available date
-                      lastDate: DateTime(2125), // Allow selecting future dates
+                      firstDate: dateRange.first,
+                      lastDate: DateTime(2125),
                     );
 
                     if (pickedDate != null) {
@@ -157,18 +149,16 @@ class DateSelector extends StatelessWidget {
                     height: 50.0,
                     margin: const EdgeInsets.only(left: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                          15), // Adjust the radius for roundness
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.calendar_today,
-                      color: Colors.black,
+                      color: AppColors.textPrimary,
                       size: 24,
                     ),
                   ),
                 ),
-                // Generate Date Items
                 ...List.generate(dateRange.length, (index) {
                   DateTime date = dateRange[index];
                   bool isSelected = date.day == selectedDate.day &&
@@ -184,7 +174,7 @@ class DateSelector extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           vertical: 12, horizontal: 12),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : null,
+                        color: isSelected ? AppColors.cardBackground : null,
                         borderRadius: BorderRadius.circular(40),
                       ),
                       child: Column(
@@ -193,8 +183,9 @@ class DateSelector extends StatelessWidget {
                             DateFormat('E').format(date)[0],
                             style: TextStyle(
                               fontSize: 18,
-                              color:
-                                  isFutureDate ? Colors.black54 : Colors.black,
+                              color: isFutureDate
+                                  ? AppColors.textPlaceholder
+                                  : AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -205,8 +196,9 @@ class DateSelector extends StatelessWidget {
                                   ? FontWeight.normal
                                   : FontWeight.bold,
                               fontSize: 14,
-                              color:
-                                  isFutureDate ? Colors.black54 : Colors.black,
+                              color: isFutureDate
+                                  ? AppColors.textPlaceholder
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -214,16 +206,13 @@ class DateSelector extends StatelessWidget {
                     ),
                   );
                 }),
-
-                // Calendar Button
                 GestureDetector(
                   onTap: () async {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
                       initialDate: selectedDate,
-                      firstDate:
-                          dateRange.first, // Keep the earliest available date
-                      lastDate: DateTime(2125), // Allow selecting future dates
+                      firstDate: dateRange.first,
+                      lastDate: DateTime(2125),
                     );
 
                     if (pickedDate != null) {
@@ -235,13 +224,12 @@ class DateSelector extends StatelessWidget {
                     height: 50.0,
                     margin: const EdgeInsets.only(left: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(
-                          15), // Adjust the radius for roundness
+                      color: AppColors.cardBackground,
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.calendar_today,
-                      color: Colors.black,
+                      color: AppColors.textPrimary,
                       size: 24,
                     ),
                   ),
@@ -267,10 +255,8 @@ class MedicineList extends StatelessWidget {
     required this.selectedDate,
   });
 
-  // Helper function to get the next scheduled time on the selected date.
   DateTime getNextScheduledTime(
       List<Timestamp> times, DateTime selectedDate, DateTime now) {
-    // Map each Timestamp to a DateTime on the selected day.
     List<DateTime> scheduledTimes = times.map((ts) {
       final DateTime dt = ts.toDate().toLocal();
       return DateTime(
@@ -283,7 +269,6 @@ class MedicineList extends StatelessWidget {
       );
     }).toList();
 
-    // If the selected date is today, try to pick a time that is still in the future.
     if (selectedDate.year == now.year &&
         selectedDate.month == now.month &&
         selectedDate.day == now.day) {
@@ -294,18 +279,15 @@ class MedicineList extends StatelessWidget {
         return upcoming.first;
       }
     }
-    // Otherwise (or if all times today have passed), return the earliest time of the day.
     scheduledTimes.sort((a, b) => a.compareTo(b));
     return scheduledTimes.first;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Fetch the current user's email from FirebaseAuth.
     final String currentUserEmail =
         FirebaseAuth.instance.currentUser?.email?.trim().toLowerCase() ?? '';
 
-    // First, check if there's a caretaker document for the current user's email.
     return FutureBuilder<QuerySnapshot>(
       future: firestore
           .collection('caretakers')
@@ -313,9 +295,12 @@ class MedicineList extends StatelessWidget {
           .get(),
       builder: (context, caretakerSnapshot) {
         if (caretakerSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: RotatingPillAnimation());
+          return Center(
+            child: CircularProgressIndicator(
+              color: AppColors.buttonColor,
+            ),
+          );
         }
-        // If caretaker doc exists, treat this user as a caretaker.
         if (caretakerSnapshot.hasData &&
             caretakerSnapshot.data!.docs.isNotEmpty) {
           final caretakerDoc = caretakerSnapshot.data!.docs.first;
@@ -323,9 +308,9 @@ class MedicineList extends StatelessWidget {
           final String patientEmail = caretakerData['patient'] ?? '';
           if (patientEmail.isEmpty) {
             return Center(
-                child: Text('Patient email not found in caretaker data.'.tr()));
+                child: Text('Patient email not found in caretaker data.'.tr(),
+                    style: TextStyle(color: AppColors.textPrimary)));
           }
-          // Query the "users" collection for the patient document using patientEmail.
           return StreamBuilder<QuerySnapshot>(
             stream: firestore
                 .collection('users')
@@ -333,12 +318,17 @@ class MedicineList extends StatelessWidget {
                 .snapshots(),
             builder: (context, patientSnapshot) {
               if (patientSnapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.buttonColor,
+                  ),
+                );
               }
               if (!patientSnapshot.hasData ||
                   patientSnapshot.data!.docs.isEmpty) {
                 return Center(
-                    child: Text('No medicines found for patient.'.tr()));
+                    child: Text('No medicines found for patient.'.tr(),
+                        style: TextStyle(color: AppColors.textPrimary)));
               }
               final patientDoc = patientSnapshot.data!.docs.first;
               Map<String, dynamic> data =
@@ -349,17 +339,21 @@ class MedicineList extends StatelessWidget {
             },
           );
         } else {
-          // No caretaker document found – use the normal user's document.
           return StreamBuilder<DocumentSnapshot>(
             stream: firestore.collection('users').doc(userId).snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(
+                  child: CircularProgressIndicator(
+                    color: AppColors.buttonColor,
+                  ),
+                );
               }
               if (!snapshot.hasData || snapshot.data == null) {
                 return Center(
-                    child:
-                        Text('No medicines found. Click "+" to add one.'.tr()));
+                    child: Text(
+                        'No medicines found. Click "+" to add one.'.tr(),
+                        style: TextStyle(color: AppColors.textPrimary)));
               }
               Map<String, dynamic> data =
                   snapshot.data!.data() as Map<String, dynamic>;
@@ -376,11 +370,11 @@ class MedicineList extends StatelessWidget {
   Widget buildMedicineList(BuildContext context, List<dynamic> medicines) {
     if (medicines.isEmpty) {
       return Center(
-        child: Text('No medicines found. Click "+" to add one.'.tr()),
+        child: Text('No medicines found. Click "+" to add one.'.tr(),
+            style: TextStyle(color: AppColors.textPrimary)),
       );
     }
 
-    // Ensure selectedDate uses the same timezone by converting to UTC.
     DateTime selectedDayUtc = DateTime.utc(
       selectedDate.year,
       selectedDate.month,
@@ -388,11 +382,7 @@ class MedicineList extends StatelessWidget {
     );
     String selectedWeekday = DateFormat('EEE').format(selectedDate);
 
-    // Format the selected date to match how it's stored in Firestore
-    // e.g., "02-04-2025"
-    // ------------------------------------------ // ADDED
     String selectedDateString = DateFormat('dd-MM-yyyy').format(selectedDate);
-    // ------------------------------------------
 
     var filteredMedicines = medicines.where((medicine) {
       List<String> scheduledDays = List<String>.from(medicine['selectedDays']);
@@ -412,10 +402,11 @@ class MedicineList extends StatelessWidget {
     }).toList();
 
     if (filteredMedicines.isEmpty) {
-      return Center(child: Text('No medicines scheduled for this day.'.tr()));
+      return Center(
+          child: Text('No medicines scheduled for this day.'.tr(),
+              style: TextStyle(color: AppColors.textPrimary)));
     }
 
-    // Sorting based on next scheduled medicine time for the selected day.
     DateTime now = DateTime.now().toLocal();
     filteredMedicines.sort((a, b) {
       List<Timestamp> timesA = List<Timestamp>.from(a['medicineTimes']);
@@ -432,14 +423,10 @@ class MedicineList extends StatelessWidget {
       itemBuilder: (context, index) {
         var medicine = filteredMedicines[index];
 
-        // Safely extract daily status for this selectedDateString
-        // ------------------------------------------ // ADDED
-        String dailyStatus = 'not taken'; // default
+        String dailyStatus = 'not taken';
         if (medicine['status'] != null && medicine['status'] is Map) {
-          // Example: medicine['status']['02-04-2025'] -> "taken" or "not taken"
           dailyStatus = medicine['status'][selectedDateString] ?? 'not taken';
         }
-        // ------------------------------------------
 
         String startDate = formatDate(medicine['startDate']);
         String endDate = formatDate(medicine['endDate']);
@@ -449,7 +436,6 @@ class MedicineList extends StatelessWidget {
           now,
         );
 
-        // Format the scheduled time
         String time = DateFormat('hh:mm a').format(nextScheduledTime);
 
         return TimelineTile(
@@ -460,18 +446,17 @@ class MedicineList extends StatelessWidget {
           indicatorStyle: IndicatorStyle(
             width: 30,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            // Use the dailyStatus to decide the icon color
             indicator: dailyStatus == 'taken'
-                ? const Icon(Icons.check_circle, color: Colors.green, size: 30)
-                : const Icon(Icons.remove_circle_outline,
-                    color: Colors.red, size: 30),
+                ? Icon(Icons.check_circle, color: Colors.green, size: 30)
+                : Icon(Icons.remove_circle_outline,
+                    color: AppColors.errorColor, size: 30),
           ),
-          beforeLineStyle: const LineStyle(
-            color: Colors.grey,
+          beforeLineStyle: LineStyle(
+            color: AppColors.borderColor,
             thickness: 2,
           ),
-          afterLineStyle: const LineStyle(
-            color: Colors.grey,
+          afterLineStyle: LineStyle(
+            color: AppColors.borderColor,
             thickness: 2,
           ),
           endChild: GestureDetector(
@@ -496,7 +481,7 @@ class MedicineList extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.warning_amber_rounded,
-                          color: Colors.redAccent,
+                          color: AppColors.errorColor,
                           size: 30,
                         ),
                         SizedBox(width: 12),
@@ -505,7 +490,7 @@ class MedicineList extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -516,7 +501,7 @@ class MedicineList extends StatelessWidget {
                           .tr(),
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.black54,
+                        color: AppColors.textSecondary,
                         height: 1.5,
                         fontWeight: FontWeight.w400,
                       ),
@@ -547,8 +532,8 @@ class MedicineList extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.errorColor,
+                          foregroundColor: AppColors.buttonText,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -561,6 +546,7 @@ class MedicineList extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: AppColors.buttonText,
                           ),
                         ),
                       ),
@@ -573,6 +559,9 @@ class MedicineList extends StatelessWidget {
                   );
                 },
               );
+              if (confirmDelete == true) {
+                await deleteMedicine(firestore, userId, medicine['id']);
+              }
             },
             child: AnimatedMedicineCard(
               medicine: medicine,
@@ -631,20 +620,15 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size using MediaQuery
     final size = MediaQuery.of(context).size;
     final double screenWidth = size.width;
     final double screenHeight = size.height;
 
-    // Responsive scaling factors
-    final double scaleFactor =
-        screenWidth / 375.0; // Based on standard mobile width
-    final double verticalMargin = screenHeight * 0.015; // 1.5% of screen height
-    final double horizontalMargin = screenWidth * 0.04; // 4% of screen width
-    final double paddingScale =
-        scaleFactor.clamp(0.8, 1.5); // Limit scaling range
+    final double scaleFactor = screenWidth / 375.0;
+    final double verticalMargin = screenHeight * 0.015;
+    final double horizontalMargin = screenWidth * 0.04;
+    final double paddingScale = scaleFactor.clamp(0.8, 1.5);
 
-    // Format the times in 12-hour format with AM/PM
     String formattedTimes = DateFormat('hh:mm a').format(
       DateTime.parse(widget.medicine['medicineTimes'][0].toDate().toString()),
     );
@@ -658,11 +642,11 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
         child: Card(
           color: AppColors.cardBackground,
           margin: EdgeInsets.symmetric(
-            vertical: verticalMargin, // Responsive vertical margin
-            horizontal: horizontalMargin, // Responsive horizontal margin
+            vertical: verticalMargin,
+            horizontal: horizontalMargin,
           ),
-          elevation: 8 * scaleFactor, // Scale elevation
-          shadowColor: Colors.black26,
+          elevation: 8 * scaleFactor,
+          shadowColor: AppColors.borderColor.withOpacity(0.26),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(60 * scaleFactor),
           ),
@@ -674,7 +658,6 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Medicine image with responsive size
                 Container(
                   width: 70 * scaleFactor,
                   height: 70 * scaleFactor,
@@ -688,12 +671,11 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                   ),
                   child: Icon(
                     FontAwesomeIcons.pills,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     size: 36 * scaleFactor,
                   ),
                 ),
                 SizedBox(width: 20 * scaleFactor),
-                // Medicine details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -706,7 +688,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20 * scaleFactor,
-                          color: Colors.black87,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       SizedBox(height: 6 * scaleFactor),
@@ -715,7 +697,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                           Icon(
                             Icons.access_time,
                             size: 18 * scaleFactor,
-                            color: Colors.black87,
+                            color: AppColors.textPrimary,
                           ),
                           SizedBox(width: 6 * scaleFactor),
                           Text(
@@ -723,7 +705,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                             style: TextStyle(
                               fontSize: 16 * scaleFactor,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                             ),
                           ),
                         ],
@@ -735,17 +717,16 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                             : '',
                         style: TextStyle(
                           fontSize: 16 * scaleFactor,
-                          color: Colors.grey[600],
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // PopupMenuButton
                 PopupMenuButton<String>(
                   icon: Icon(
                     Icons.more_vert,
-                    color: Colors.black87,
+                    color: AppColors.textPrimary,
                     size: 30 * scaleFactor,
                   ),
                   shape: RoundedRectangleBorder(
@@ -768,7 +749,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                             'Edit'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -781,7 +762,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                         children: [
                           Icon(
                             Icons.delete,
-                            color: Colors.redAccent,
+                            color: AppColors.errorColor,
                             size: 30 * scaleFactor,
                           ),
                           SizedBox(width: 12 * scaleFactor),
@@ -789,7 +770,7 @@ class _AnimatedMedicineCardState extends State<AnimatedMedicineCard>
                             'Delete'.tr(),
                             style: TextStyle(
                               fontSize: 18 * scaleFactor,
-                              color: Colors.black87,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -813,24 +794,23 @@ Widget buildSpeedDial(
     icon: Icons.add,
     activeIcon: Icons.close,
     backgroundColor: AppColors.buttonColor,
-    foregroundColor: Colors.white,
+    foregroundColor: AppColors.buttonText,
     buttonSize: const Size(60, 60),
-    openCloseDial: isOpen, // Bind the ValueNotifier
-    renderOverlay: false, // Disable default overlay
-    closeDialOnPop: true, // Ensure SpeedDial closes on navigation
+    openCloseDial: isOpen,
+    renderOverlay: false,
+    closeDialOnPop: true,
     children: [
       SpeedDialChild(
         child: const Icon(Icons.qr_code_scanner, color: Colors.white),
-        backgroundColor: const Color(0xFF4276FD),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.buttonColor,
+        foregroundColor: AppColors.buttonText,
         label: 'Scanner',
-        labelBackgroundColor: const Color(0xFF4276FD),
-        labelStyle: const TextStyle(color: Colors.white, fontSize: 20),
+        labelBackgroundColor: AppColors.buttonColor,
+        labelStyle: TextStyle(color: AppColors.buttonText, fontSize: 20),
         onTap: () {
-          // Show a modal bottom sheet with two additional scanner options
           showModalBottomSheet(
             context: context,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.cardBackground,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
@@ -841,17 +821,17 @@ Widget buildSpeedDial(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.medical_services,
-                          color: Color(0xFF4276FD)),
+                      leading: Icon(Icons.medical_services,
+                          color: AppColors.buttonColor),
                       title: Text(
                         'Scan Medicine'.tr(),
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.black,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       onTap: () {
-                        Navigator.pop(context); // Dismiss bottom sheet
+                        Navigator.pop(context);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -862,17 +842,17 @@ Widget buildSpeedDial(
                     ),
                     const Divider(),
                     ListTile(
-                      leading: const Icon(Icons.receipt_long,
-                          color: Color(0xFF4276FD)),
+                      leading: Icon(Icons.receipt_long,
+                          color: AppColors.buttonColor),
                       title: Text(
                         'Scan Prescription'.tr(),
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.black,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       onTap: () {
-                        Navigator.pop(context); // Dismiss bottom sheet
+                        Navigator.pop(context);
                         Navigator.push(
                           context,
                           MaterialPageRoute(

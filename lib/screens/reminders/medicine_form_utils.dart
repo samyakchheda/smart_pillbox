@@ -1274,7 +1274,7 @@ Future<void> _sendMedicineDataToEsp32(String userId, String esp32Ip) async {
     };
 
     final response = await http.post(
-      Uri.parse('https://a4be-183-87-183-2.ngrok-free.app/send_medicineData'),
+      Uri.parse('https://6617-183-87-183-2.ngrok-free.app/send_medicineData'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(payload),
     );

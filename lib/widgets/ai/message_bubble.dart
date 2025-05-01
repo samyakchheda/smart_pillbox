@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:home/theme/app_colors.dart';
@@ -22,6 +24,9 @@ class _MessageBubbleState extends State<MessageBubble> {
 
   bool _animationCompleted = false;
 
+  String? _username;
+  bool _loadingUsername = true;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +38,26 @@ class _MessageBubbleState extends State<MessageBubble> {
         });
       }
     });
+    _loadPersistentAnimatedMessages();
+    _fetchUsername();
+  }
+
+  Future<void> _fetchUsername() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      try {
+        final doc =
+            await FirebaseFirestore.instance.collection('users').doc(uid).get();
+        setState(() {
+          _username = doc.data()?['name'] as String? ?? 'Unknown';
+        });
+      } catch (e) {
+        setState(() => _username = 'Unknown');
+      }
+    } else {
+      setState(() => _username = 'Unknown');
+    }
+    setState(() => _loadingUsername = false);
   }
 
   Future<void> _loadPersistentAnimatedMessages() async {
@@ -86,7 +111,9 @@ class _MessageBubbleState extends State<MessageBubble> {
                       : CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.message.isUser ? 'Rishi' : 'SmartDose',
+                      widget.message.isUser
+                          ? (_loadingUsername ? '…' : (_username ?? 'Unknown'))
+                          : 'SmartDose',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -122,7 +149,16 @@ class _MessageBubbleState extends State<MessageBubble> {
                 CircleAvatar(
                   backgroundColor: AppColors.kBlackColor,
                   foregroundColor: AppColors.textOnPrimary,
-                  child: const Text('R'),
+                  child: Text(
+                    // while we’re still loading, show a placeholder
+                    _loadingUsername
+                        ? '…'
+                        // once loaded, use the first letter or '?' if somehow empty
+                        : (_username != null && _username!.isNotEmpty
+                            ? _username![0].toUpperCase()
+                            : '?'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ],

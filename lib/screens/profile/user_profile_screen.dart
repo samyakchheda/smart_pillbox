@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,13 +19,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:home/widgets/common/my_elevated_button.dart';
 import 'package:home/widgets/common/my_text_field.dart';
 import 'package:home/widgets/common/my_snack_bar.dart';
-import '../../main.dart';
 import '../authentication/password/change_password_screen.dart';
 import 'edit_profile_screen.dart';
 import 'saved_addresses_screen.dart';
 import 'about_us_screen.dart';
 import 'caretaker_screen.dart';
 import 'settings_section.dart';
+import 'package:http/http.dart' as http;
 
 enum ProfileOption {
   main,
@@ -91,7 +92,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     });
   }
 
-  void _fetchUserProfile() async {
+  Future<void> _fetchUserProfile() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -267,6 +268,117 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         );
       },
     );
+  }
+
+  Future<void> _handleReset() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.cardBackground,
+          title: Text(
+            'Reset Smart Pillbox'.tr(),
+            style: AppFonts.headline.copyWith(color: AppColors.textPrimary),
+          ),
+          content: Text(
+            'Are you sure you want to reset the Smart Pillbox? This action will clear all current settings and data on the device.'
+                .tr(),
+            style: AppFonts.bodyText.copyWith(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              ),
+              child: Text(
+                'NO'.tr(),
+                style: AppFonts.buttonText.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                backgroundColor: AppColors.buttonColor.withOpacity(0.1),
+                foregroundColor: AppColors.buttonColor,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              ),
+              child: Text(
+                'YES'.tr(),
+                style: AppFonts.buttonText.copyWith(
+                  color: AppColors.buttonColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      try {
+        // Fetch the user's ESP32 IP from Firestore
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          mySnackBar(context, 'User not logged in'.tr(), isError: true);
+          return;
+        }
+
+        final docSnapshot = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (!docSnapshot.exists) {
+          mySnackBar(context, 'User data not found'.tr(), isError: true);
+          return;
+        }
+
+        final esp32Ip = docSnapshot.data()?['esp32_ip'];
+        if (esp32Ip == null || esp32Ip.isEmpty) {
+          mySnackBar(context, 'ESP32 IP not configured'.tr(), isError: true);
+          return;
+        }
+
+        // Make the API call to reset the device
+        final response = await http.post(
+          Uri.parse('https://6617-183-87-183-2.ngrok-free.app/command/reset'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'esp32_ip': esp32Ip,
+            'user': user.uid,
+          }),
+        );
+
+        // Parse the API response
+        final responseData = jsonDecode(response.body);
+        if (response.statusCode == 200) {
+          // Show success message from API
+          mySnackBar(
+              context,
+              responseData['message']?.toString() ??
+                  'Smart Pillbox reset successfully'.tr());
+        } else {
+          // Show error message from API
+          mySnackBar(
+            context,
+            responseData['error']?.toString() ??
+                'Failed to reset Smart Pillbox'.tr(),
+            isError: true,
+          );
+        }
+      } catch (e) {
+        print("Error resetting Smart Pillbox: $e");
+        mySnackBar(context, 'Error resetting Smart Pillbox: $e'.tr(),
+            isError: true);
+      }
+    }
   }
 
   @override
@@ -563,7 +675,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             SettingsSection(
               title: "Smart Pillbox".tr(),
               items: [
-                _buildListTile(Icons.restart_alt, "Reset".tr(), onTap: () {}),
+                _buildListTile(Icons.restart_alt, "Reset".tr(),
+                    onTap: _handleReset),
                 _buildListTile(Icons.volume_up, "Buzzer".tr(),
                     onTap: () => _onOptionSelected(ProfileOption.buzzer)),
                 _buildListTile(Icons.person, "Smart Diagnosis".tr(),
@@ -628,7 +741,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: AppColors.buttonColor),
                 onPressed: () =>
                     setState(() => _selectedOption = ProfileOption.main),
               ),
@@ -728,15 +842,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 'CANCEL'.tr(),
                 style: AppFonts.buttonText.copyWith(
                   color: AppColors.textSecondary,
-                  fontWeight: FontWeight.bold, // Increase visibility
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: TextButton.styleFrom(
-                backgroundColor:
-                    AppColors.buttonColor.withOpacity(0.1), // Subtle background
+                backgroundColor: AppColors.buttonColor.withOpacity(0.1),
                 foregroundColor: AppColors.buttonColor,
                 padding:
                     const EdgeInsets.symmetric(vertical: 12, horizontal: 20),

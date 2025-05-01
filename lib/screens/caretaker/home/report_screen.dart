@@ -19,14 +19,10 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  // Toggle for showing the medication cards.
   bool _showCards = false;
-
-  // Focused day for the calendar.
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // Helper functions for Firestore Timestamps.
   String parseTimestampAsDate(dynamic value) {
     if (value is Timestamp) {
       return DateFormat('dd MMM yyyy').format(value.toDate());
@@ -112,7 +108,9 @@ class _ReportScreenState extends State<ReportScreen> {
       final data = await getPatientDataFromCaretaker();
       if (data == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No patient data found.')),
+          SnackBar(
+              content: Text('No patient data found.',
+                  style: TextStyle(color: AppColors.textPrimary))),
         );
         return;
       }
@@ -120,7 +118,9 @@ class _ReportScreenState extends State<ReportScreen> {
       final List<dynamic> medicinesArray = data['medicines'] ?? [];
       if (medicinesArray.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No medication data found.')),
+          SnackBar(
+              content: Text('No medication data found.',
+                  style: TextStyle(color: AppColors.textPrimary))),
         );
         return;
       }
@@ -184,8 +184,11 @@ class _ReportScreenState extends State<ReportScreen> {
 
       await Share.shareXFiles([XFile(file.path)], text: "Medication List PDF");
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Error: $e',
+                style: TextStyle(color: AppColors.textPrimary))),
+      );
     }
   }
 
@@ -198,6 +201,21 @@ class _ReportScreenState extends State<ReportScreen> {
         start: DateTime.now().subtract(const Duration(days: 7)),
         end: DateTime.now(),
       ),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.fromSwatch(
+              primarySwatch: Colors.blue,
+              backgroundColor: AppColors.background,
+              cardColor: AppColors.cardBackground,
+            ),
+            textTheme: TextTheme(
+              bodyMedium: TextStyle(color: AppColors.textPrimary),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (dateRange == null) return;
 
@@ -205,7 +223,9 @@ class _ReportScreenState extends State<ReportScreen> {
       final data = await getPatientDataFromCaretaker();
       if (data == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No patient data found.')),
+          SnackBar(
+              content: Text('No patient data found.',
+                  style: TextStyle(color: AppColors.textPrimary))),
         );
         return;
       }
@@ -213,7 +233,9 @@ class _ReportScreenState extends State<ReportScreen> {
       final List<dynamic> medicinesArray = data['medicines'] ?? [];
       if (medicinesArray.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No medication data found.')),
+          SnackBar(
+              content: Text('No medication data found.',
+                  style: TextStyle(color: AppColors.textPrimary))),
         );
         return;
       }
@@ -277,7 +299,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
       if (tableData.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No records found in this date range.')),
+          SnackBar(
+              content: Text('No records found in this date range.',
+                  style: TextStyle(color: AppColors.textPrimary))),
         );
         return;
       }
@@ -325,7 +349,9 @@ class _ReportScreenState extends State<ReportScreen> {
           text: "Medication Records PDF");
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(
+            content: Text('Error: $e',
+                style: TextStyle(color: AppColors.textPrimary))),
       );
     }
   }
@@ -334,7 +360,6 @@ class _ReportScreenState extends State<ReportScreen> {
 
   Future<void> _fetchCalendarData() async {
     try {
-      // 1️⃣ Get current caretaker user
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         print("No caretaker is signed in.");
@@ -347,7 +372,6 @@ class _ReportScreenState extends State<ReportScreen> {
         return;
       }
 
-      // 2️⃣ Fetch the patient email from the 'caretakers' collection
       final caretakerSnapshot = await FirebaseFirestore.instance
           .collection('caretakers')
           .where('email', isEqualTo: caretakerEmail)
@@ -365,7 +389,6 @@ class _ReportScreenState extends State<ReportScreen> {
         return;
       }
 
-      // 3️⃣ Fetch the patient’s document from the 'users' collection
       final patientSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('email', isEqualTo: patientEmail)
@@ -380,7 +403,6 @@ class _ReportScreenState extends State<ReportScreen> {
       final patientData = patientSnapshot.docs.first.data();
       final List<dynamic> medicinesArray = patientData['medicines'] ?? [];
 
-      // 📅 Process medicines for calendar data
       final Map<DateTime, int> dailyScheduledCount = {};
       final Map<DateTime, int> dailyTakenCount = {};
 
@@ -415,7 +437,6 @@ class _ReportScreenState extends State<ReportScreen> {
         }
       }
 
-      // 🔄 Update _dailyTakenRatio map
       _dailyTakenRatio.clear();
       for (final day in dailyScheduledCount.keys) {
         final scheduled = dailyScheduledCount[day] ?? 0;
@@ -423,17 +444,12 @@ class _ReportScreenState extends State<ReportScreen> {
         _dailyTakenRatio[day] = scheduled > 0 ? taken / scheduled : 0.0;
       }
 
-      setState(() {
-        // Refresh UI
-      });
+      setState(() {});
     } catch (e) {
       debugPrint('Error in _fetchCalendarData: $e');
     }
   }
 
-  // -------------------------------------------------
-  // Build the Calendar using TableCalendar.
-  // -------------------------------------------------
   Widget _buildCalendar() {
     return TableCalendar(
       firstDay: DateTime.utc(2020, 1, 1),
@@ -448,39 +464,64 @@ class _ReportScreenState extends State<ReportScreen> {
           _focusedDay = focusedDay;
         });
       },
+      calendarStyle: CalendarStyle(
+        defaultTextStyle: TextStyle(color: AppColors.textPrimary),
+        weekendTextStyle: TextStyle(color: AppColors.textSecondary),
+        outsideTextStyle: TextStyle(color: AppColors.textPlaceholder),
+        selectedDecoration: BoxDecoration(
+          color: AppColors.buttonColor,
+          shape: BoxShape.circle,
+        ),
+        todayDecoration: BoxDecoration(
+          color: AppColors.buttonColor.withOpacity(0.5),
+          shape: BoxShape.circle,
+        ),
+      ),
+      headerStyle: HeaderStyle(
+        titleTextStyle: TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 17,
+          fontWeight: FontWeight.bold,
+        ),
+        formatButtonVisible: false,
+        leftChevronIcon: Icon(Icons.chevron_left, color: AppColors.textPrimary),
+        rightChevronIcon:
+            Icon(Icons.chevron_right, color: AppColors.textPrimary),
+      ),
       calendarBuilders: CalendarBuilders(
         defaultBuilder: (context, day, focusedDay) {
           final dateOnly = DateTime(day.year, day.month, day.day);
 
-          // If no medicines are scheduled for this day, show a default color.
           if (!_dailyTakenRatio.containsKey(dateOnly)) {
             return Container(
               margin: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Center(child: Text(day.day.toString())),
+              child: Center(
+                child: Text(
+                  day.day.toString(),
+                  style: TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
             );
           }
 
           final ratio = _dailyTakenRatio[dateOnly]!;
-
-          // Determine the box color based on the ratio.
           Color? boxColor;
           if (ratio == 0.0) {
-            // Scheduled, but none taken (0%).
-            boxColor = Colors.blue.shade50;
+            boxColor = AppColors.lightPillBubble.withOpacity(0.1);
           } else if (ratio < 0.25) {
-            boxColor = Colors.blue.shade100;
+            boxColor = AppColors.lightPillBubble.withOpacity(0.25);
           } else if (ratio < 0.50) {
-            boxColor = Colors.blue.shade200;
+            boxColor = AppColors.lightPillBubble.withOpacity(0.5);
           } else if (ratio < 0.75) {
-            boxColor = Colors.blue.shade300;
+            boxColor = AppColors.lightPillBubble.withOpacity(0.75);
           } else if (ratio < 1.0) {
-            boxColor = Colors.blue.shade400;
+            boxColor = AppColors.lightPillBubble.withOpacity(0.9);
           } else {
-            boxColor = Colors.blue.shade500;
+            boxColor = AppColors.lightPillBubble;
           }
 
           return Container(
@@ -489,168 +530,176 @@ class _ReportScreenState extends State<ReportScreen> {
               color: boxColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Center(child: Text(day.day.toString())),
+            child: Center(
+              child: Text(
+                day.day.toString(),
+                style: TextStyle(color: AppColors.textPrimary),
+              ),
+            ),
           );
         },
       ),
     );
   }
 
-  // -------------------------------------------------
-  // Build Method: Includes Calendar, Share Button, and Cards.
-  // -------------------------------------------------
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Back button and centered title.
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Reports",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.poppins(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
+    return Container(
+      color: AppColors.background,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "Reports",
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 48),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // Calendar at the top.
-            // In your build method's Column, replace the calendar and button section with:
-
-            if (!_showCards) ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildLegendItem(Colors.blue.shade50!, "0%"),
-                  _buildLegendItem(Colors.blue.shade100!, "25%"),
-                  _buildLegendItem(Colors.blue.shade200!, "50%"),
-                  _buildLegendItem(Colors.blue.shade300!, "75%"),
-                  _buildLegendItem(Colors.blue.shade400!, "100%"),
+                  const SizedBox(width: 48),
                 ],
               ),
-              const SizedBox(height: 8),
-              _buildCalendar(),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.ios_share, color: Colors.black),
-                  label: const Text("Share Med Logs with your Doctor"),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    textStyle: GoogleFonts.poppins(
-                      fontSize: 14,
-                    ),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _showCards = true;
-                    });
-                  },
+              if (!_showCards) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildLegendItem(
+                        AppColors.lightPillBubble.withOpacity(0.1), "0%"),
+                    _buildLegendItem(
+                        AppColors.lightPillBubble.withOpacity(0.25), "25%"),
+                    _buildLegendItem(
+                        AppColors.lightPillBubble.withOpacity(0.5), "50%"),
+                    _buildLegendItem(
+                        AppColors.lightPillBubble.withOpacity(0.75), "75%"),
+                    _buildLegendItem(AppColors.lightPillBubble, "100%"),
+                  ],
                 ),
-              ),
-            ] else ...[
-              // Replace calendar and button with the two cards.
-              Row(
-                children: [
-                  // Medication List card.
-                  Expanded(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: GestureDetector(
-                        onTap: () => shareMedicationPdf(context),
-                        child: Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 3,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.medical_services, // Medicine icon
-                                  size: 36,
-                                  color: AppColors.buttonColor,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Medication List",
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
+                const SizedBox(height: 8),
+                _buildCalendar(),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.ios_share, color: AppColors.buttonText),
+                    label: Text(
+                      "Share Med Logs with your Doctor",
+                      style: TextStyle(color: AppColors.buttonText),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppColors.buttonColor,
+                      foregroundColor: AppColors.buttonText,
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: AppColors.borderColor),
+                      ),
+                      textStyle: GoogleFonts.poppins(
+                        fontSize: 14,
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _showCards = true;
+                      });
+                    },
+                  ),
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: GestureDetector(
+                          onTap: () => shareMedicationPdf(context),
+                          child: Card(
+                            color: AppColors.cardBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 3,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.medical_services,
+                                    size: 36,
+                                    color: AppColors.buttonColor,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Medication List",
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.cardText,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Medication Records card.
-                  Expanded(
-                    child: AspectRatio(
-                      aspectRatio: 1,
-                      child: GestureDetector(
-                        onTap: () => shareMedicationRecordsPdf(context),
-                        child: Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 3,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.receipt_long, // Records/logs icon
-                                  size: 36,
-                                  color: AppColors.buttonColor,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  "Medication Records",
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: AspectRatio(
+                        aspectRatio: 1,
+                        child: GestureDetector(
+                          onTap: () => shareMedicationRecordsPdf(context),
+                          child: Card(
+                            color: AppColors.cardBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 3,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long,
+                                    size: 36,
+                                    color: AppColors.buttonColor,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Medication Records",
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.cardText,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -669,7 +718,10 @@ class _ReportScreenState extends State<ReportScreen> {
           ),
         ),
         const SizedBox(width: 4),
-        Text(label),
+        Text(
+          label,
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
       ],
     );
   }

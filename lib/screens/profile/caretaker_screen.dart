@@ -94,7 +94,8 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
           Row(
             children: [
               IconButton(
-                icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                icon: Icon(Icons.arrow_back_ios_new,
+                    color: AppColors.buttonColor),
                 onPressed: widget.onBack,
               ),
               Text(
@@ -125,18 +126,6 @@ class _CaretakerScreenState extends State<CaretakerScreen> {
               textColor: AppColors.kWhiteColor,
               textStyle: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
             ),
-            // child: ElevatedButton(
-            //   style:
-            //       ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent),
-            //   onPressed: () async {
-            //     await _addCaretakerEmail();
-            //     setState(() {});
-            //   },
-            //   child: Text(
-            //     "Add Caretaker",
-            //     style: GoogleFonts.poppins(fontSize: 16, color: Colors.white),
-            //   ),
-            // ),
           ),
           const SizedBox(height: 30),
           Text(

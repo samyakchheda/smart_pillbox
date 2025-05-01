@@ -19,8 +19,7 @@ class _OCRScreenState extends State<OCRScreen> {
   bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
-  final String _apiKey =
-      "AIzaSyCU0iHiaA561vAjGUBtQ4_FAhZcR7pf_UA"; // Replace with your Gemini API Key
+  final String _apiKey = "AIzaSyCU0iHiaA561vAjGUBtQ4_FAhZcR7pf_UA";
 
   Map<String, String> medicineDetails = {
     "name": "N/A",
@@ -129,7 +128,11 @@ class _OCRScreenState extends State<OCRScreen> {
         medicineDetails["name"] == "Error processing image" ||
         medicineDetails["name"] == "Failed to process image") {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No valid medicine data to add.")),
+        SnackBar(
+          content: Text("No valid medicine data to add.",
+              style: TextStyle(color: AppColors.buttonText)),
+          backgroundColor: AppColors.errorColor,
+        ),
       );
       return;
     }
@@ -137,7 +140,11 @@ class _OCRScreenState extends State<OCRScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please sign in to add medicine.")),
+        SnackBar(
+          content: Text("Please sign in to add medicine.",
+              style: TextStyle(color: AppColors.buttonText)),
+          backgroundColor: AppColors.errorColor,
+        ),
       );
       return;
     }
@@ -153,16 +160,18 @@ class _OCRScreenState extends State<OCRScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Medicine added successfully!"),
+        SnackBar(
+          content: Text("Medicine added successfully!",
+              style: TextStyle(color: AppColors.buttonText)),
           backgroundColor: Colors.green,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Error adding medicine: $e"),
-          backgroundColor: Colors.red,
+          content: Text("Error adding medicine: $e",
+              style: TextStyle(color: AppColors.buttonText)),
+          backgroundColor: AppColors.errorColor,
         ),
       );
     }
@@ -171,10 +180,12 @@ class _OCRScreenState extends State<OCRScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Medicine Scanner'),
-        backgroundColor: const Color(0xFFE0E0E0),
-        foregroundColor: Colors.black,
+        title: Text('Medicine Scanner',
+            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: AppColors.cardBackground,
+        foregroundColor: AppColors.textPrimary,
       ),
       body: Stack(
         children: [
@@ -194,7 +205,7 @@ class _OCRScreenState extends State<OCRScreen> {
           ),
           if (_isLoading)
             Container(
-              color: Colors.black45,
+              color: AppColors.darkBackground.withOpacity(0.5),
               child: Center(
                 child: CircularProgressIndicator(
                   valueColor:
@@ -217,7 +228,10 @@ class _OCRScreenState extends State<OCRScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
-            colors: [Colors.blue.shade50, Colors.white],
+            colors: [
+              AppColors.cardBackground,
+              AppColors.buttonColor.withOpacity(0.1)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -239,7 +253,7 @@ class _OCRScreenState extends State<OCRScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.buttonColor,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -275,7 +289,7 @@ class _OCRScreenState extends State<OCRScreen> {
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: Colors.white,
+            color: AppColors.cardBackground,
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
@@ -313,10 +327,10 @@ class _OCRScreenState extends State<OCRScreen> {
             content,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey.shade800,
+              color: AppColors.textSecondary,
             ),
           ),
-          const Divider(color: Colors.grey),
+          Divider(color: AppColors.borderColor),
         ],
       ),
     );
@@ -329,14 +343,14 @@ class _OCRScreenState extends State<OCRScreen> {
   }) {
     return ElevatedButton.icon(
       onPressed: onPressed,
-      icon: Icon(icon, size: 24),
-      label: Text(label),
+      icon: Icon(icon, size: 24, color: AppColors.buttonText),
+      label: Text(label, style: TextStyle(color: AppColors.buttonText)),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 4,
         backgroundColor: AppColors.buttonColor,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.buttonText,
       ),
     );
   }
@@ -351,12 +365,15 @@ class _OCRScreenState extends State<OCRScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           backgroundColor: AppColors.buttonColor,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.buttonText,
           elevation: 4,
         ),
-        child: const Text(
+        child: Text(
           "Add Medicine",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: AppColors.buttonText),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:home/screens/caretaker/home/rotation.dart';
 import 'package:home/screens/caretaker/home/user_profile_screen.dart';
 import 'package:home/screens/caretaker/medicine/medicine_list_screen.dart';
 import 'package:home/screens/pharmacy/pharmacy_screen.dart';
+import 'package:home/theme/app_colors.dart'; // Import AppColors
 import 'package:responsive_navigation_bar/responsive_navigation_bar.dart';
 
 class CareTakerHomeScreen extends StatefulWidget {
@@ -28,42 +29,51 @@ class _HomeScreenState extends State<CareTakerHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true,
+      backgroundColor: AppColors.background, // Theme-aware background
       body: Stack(
         children: [
           _pages[_currentIndex],
 
-          // Floating Navigation Bar without extra blur
+          // Floating Navigation Bar with themed styling
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 12.0), // Adjust as needed
+              padding: const EdgeInsets.only(bottom: 12.0),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(100), // Match bar shape
+                borderRadius: BorderRadius.circular(100),
                 child: ResponsiveNavigationBar(
-                  backgroundColor: Colors.transparent,
-                  backgroundBlur: 0.0, // Semi-transparent
+                  backgroundColor: AppColors.cardBackground
+                      .withOpacity(0.8), // Semi-transparent themed background
+                  backgroundBlur: 0.0,
                   selectedIndex: _currentIndex,
                   onTabChange: (index) => setState(() => _currentIndex = index),
-                  activeIconColor: Colors.white,
-                  inactiveIconColor: Colors.white,
-                  animationDuration: const Duration(minutes: 0),
+                  activeIconColor:
+                      AppColors.buttonText, // Theme-aware active icon color
+                  inactiveIconColor: AppColors.buttonText
+                      .withOpacity(0.6), // Theme-aware inactive icon color
+                  animationDuration:
+                      const Duration(milliseconds: 300), // Smooth animation
                   navigationBarButtons: [
                     NavigationBarButton(
-                        textColor: Colors.white,
-                        icon: FontAwesomeIcons.house,
-                        text: "Home".tr()),
+                      textColor: AppColors.buttonText, // Theme-aware text color
+                      icon: FontAwesomeIcons.house,
+                      text: "Home".tr(),
+                    ),
                     NavigationBarButton(
-                        textColor: Colors.white,
-                        icon: FontAwesomeIcons.pills,
-                        text: "Reminders".tr()),
+                      textColor: AppColors.buttonText,
+                      icon: FontAwesomeIcons.pills,
+                      text: "Reminders".tr(),
+                    ),
                     NavigationBarButton(
-                        textColor: Colors.white,
-                        icon: FontAwesomeIcons.user,
-                        text: "Profile".tr()),
+                      textColor: AppColors.buttonText,
+                      icon: FontAwesomeIcons.user,
+                      text: "Profile".tr(),
+                    ),
                     NavigationBarButton(
-                        textColor: Colors.white,
-                        icon: FontAwesomeIcons.shop,
-                        text: "Shop".tr()),
+                      textColor: AppColors.buttonText,
+                      icon: FontAwesomeIcons.shop,
+                      text: "Shop".tr(),
+                    ),
                   ],
                 ),
               ),

@@ -17,7 +17,6 @@ class AutoRotateCubeWithFuture extends StatefulWidget {
 
 class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
     with SingleTickerProviderStateMixin {
-  // Sample device details (Replace with real data)
   String deviceName = "Smart Pillbox";
   int batteryLevel = 80;
   String connectivityStatus = "Connected";
@@ -25,24 +24,21 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
   late AnimationController _controller;
   late Animation<double> _headerAnimation;
   late Animation<Offset> _gridSlideAnimation;
-  late Animation<double> _gridFadeAnimation;
+  late Animation<double> _gridFadeAnimation, huntingAnimation;
 
   @override
   void initState() {
     super.initState();
-    // Create the controller for all animations.
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // Header Animation: Fades and scales in
     _headerAnimation = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
     );
 
-    // Grid Animation: Slide from bottom & fade in
     _gridSlideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.5),
       end: Offset.zero,
@@ -62,7 +58,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
       ),
     );
 
-    // Start the animations
     _controller.forward();
   }
 
@@ -74,11 +69,9 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
 
   Future<Map<String, dynamic>?> fetchPatientData() async {
     try {
-      // 1️⃣ Get the logged-in user's email
       String? currentUserEmail = FirebaseAuth.instance.currentUser?.email;
       if (currentUserEmail == null) return null;
 
-      // 2️⃣ Fetch the patient’s email from Firestore
       QuerySnapshot userSnapshot = await FirebaseFirestore.instance
           .collection('caretakers')
           .where('email', isEqualTo: currentUserEmail)
@@ -87,11 +80,9 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
 
       if (userSnapshot.docs.isEmpty) return null;
 
-      // Extract the patient’s email from "patient" field
       String? patientEmail = userSnapshot.docs.first['patient'];
       if (patientEmail == null) return null;
 
-      // 3️⃣ Fetch the patient’s details using their email
       QuerySnapshot patientSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('email', isEqualTo: patientEmail)
@@ -111,26 +102,24 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background, // Theme-aware background
       body: Stack(
         children: [
-          // Full-Screen Gradient Background
           Container(
             height: 250,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   AppColors.buttonColor,
-                  Colors.grey.shade400,
+                  AppColors.cardBackground.withOpacity(0.7),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
             ),
           ),
-          // Content with Overlapping White Background
           Column(
             children: [
-              // Animated Header with Gradient (Fixed Height)
               FadeTransition(
                 opacity: _headerAnimation,
                 child: ScaleTransition(
@@ -144,19 +133,17 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                       style: GoogleFonts.poppins(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ),
                 ),
               ),
-
-              // Expanded Content Section
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE0E0E0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(40),
                       topRight: Radius.circular(40),
                     ),
@@ -169,27 +156,30 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                           style: GoogleFonts.poppins(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        // Animated cube card
                         FutureBuilder<Map<String, dynamic>?>(
                           future: fetchPatientData(),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return const Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: CircularProgressIndicator(),
+                              return Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.buttonColor,
+                                ),
                               );
                             }
                             if (!snapshot.hasData || snapshot.data == null) {
                               return Padding(
-                                padding: EdgeInsets.all(20.0),
+                                padding: const EdgeInsets.all(20.0),
                                 child: Text(
                                   'Patient data not found'.tr(),
                                   style: TextStyle(
-                                      fontSize: 16, color: Colors.black),
+                                    fontSize: 16,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                               );
                             }
@@ -204,7 +194,6 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
                           },
                         ),
                         const ReportScreen(),
-                        // Animated grid for device controls
                         SlideTransition(
                           position: _gridSlideAnimation,
                           child: FadeTransition(
@@ -250,19 +239,18 @@ class _AutoRotateCubeWithFutureState extends State<AutoRotateCubeWithFuture>
   }
 }
 
-// 🔹 Device Info Card
 Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
   return Card(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     elevation: 6,
-    color: Colors.white,
+    color: AppColors.cardBackground,
     child: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        color: Colors.white,
+        color: AppColors.cardBackground,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: AppColors.borderColor.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(2, 4),
           ),
@@ -278,16 +266,26 @@ Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
             Text(
               deviceName.tr(),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.cardText,
+              ),
             ),
             const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.battery_full,
-                    color: battery > 20 ? Colors.green : Colors.red),
+                    color: battery > 20 ? Colors.green : AppColors.errorColor),
                 const SizedBox(width: 5),
-                Text("$battery%", style: const TextStyle(fontSize: 14)),
+                Text(
+                  "$battery%",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 5),
@@ -295,13 +293,19 @@ Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(status == "Connected" ? Icons.wifi : Icons.wifi_off,
-                    color: status == "Connected" ? Colors.blue : Colors.red),
+                    color: status == "Connected"
+                        ? AppColors.buttonColor
+                        : AppColors.errorColor),
                 const SizedBox(width: 5),
-                Text(status,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color:
-                            status == "Connected" ? Colors.blue : Colors.red)),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: status == "Connected"
+                        ? AppColors.buttonColor
+                        : AppColors.errorColor,
+                  ),
+                ),
               ],
             ),
           ],
@@ -311,24 +315,26 @@ Widget _buildDeviceInfoCard(String deviceName, int battery, String status) {
   );
 }
 
-// 🔹 Reusable Card Widget
 Widget _buildCard(
     String title, String buttonText, IconData icon, VoidCallback onPressed) {
   return Card(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     elevation: 6,
-    color: Colors.white,
+    color: AppColors.cardBackground,
     child: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [Colors.white, Colors.grey.shade200],
+          colors: [
+            AppColors.cardBackground,
+            AppColors.borderColor.withOpacity(0.2),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: AppColors.borderColor.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(2, 4),
           ),
@@ -345,8 +351,11 @@ Widget _buildCard(
               child: Text(
                 title,
                 textAlign: TextAlign.center,
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.cardText,
+                ),
                 softWrap: true,
               ),
             ),
@@ -356,13 +365,19 @@ Widget _buildCard(
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.buttonColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.buttonText,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18)),
                   elevation: 4,
                 ),
                 onPressed: onPressed,
-                child: Text(buttonText, style: const TextStyle(fontSize: 16)),
+                child: Text(
+                  buttonText,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: AppColors.buttonText,
+                  ),
+                ),
               ),
             ),
           ],
@@ -372,40 +387,46 @@ Widget _buildCard(
   );
 }
 
-// 🔹 Issue Card
 Widget _buildIssueCard() {
   return Card(
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     elevation: 6,
-    color: Colors.white,
+    color: AppColors.cardBackground,
     child: Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [Colors.white, Colors.red.withOpacity(0.1)],
+          colors: [
+            AppColors.cardBackground,
+            AppColors.errorColor.withOpacity(0.1),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.red.withOpacity(0.2),
+            color: AppColors.errorColor.withOpacity(0.2),
             blurRadius: 10,
             offset: const Offset(2, 4),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.report_problem, size: 50, color: Colors.red),
-            SizedBox(height: 10),
+            Icon(Icons.report_problem, size: 50, color: AppColors.errorColor),
+            const SizedBox(height: 10),
             Expanded(
               child: Text(
                 "Facing some issues with the box?".tr(),
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.cardText,
+                ),
                 softWrap: true,
               ),
             ),
@@ -416,7 +437,6 @@ Widget _buildIssueCard() {
   );
 }
 
-// 🔹 Patient Info Card Widget
 class PatientInfoCard extends StatelessWidget {
   final String name;
   final String email;
@@ -433,7 +453,7 @@ class PatientInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.all(16),
-      color: Colors.white,
+      color: AppColors.cardBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       elevation: 6,
       child: ListTile(
@@ -441,9 +461,21 @@ class PatientInfoCard extends StatelessWidget {
           backgroundImage: NetworkImage(profileUrl),
           radius: 30,
         ),
-        title: Text(name,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        subtitle: Text(email, style: const TextStyle(fontSize: 14)),
+        title: Text(
+          name,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: AppColors.cardText,
+          ),
+        ),
+        subtitle: Text(
+          email,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

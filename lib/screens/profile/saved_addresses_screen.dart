@@ -272,7 +272,8 @@ class _SavedAddressesScreenState extends State<SavedAddressesScreen> {
             Row(
               children: [
                 IconButton(
-                  icon: Icon(Icons.arrow_back, color: AppColors.buttonColor),
+                  icon: Icon(Icons.arrow_back_ios_new,
+                      color: AppColors.buttonColor),
                   onPressed: widget.onBack,
                 ),
                 Text("Saved Addresses".tr(),

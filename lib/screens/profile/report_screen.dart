@@ -486,7 +486,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back,
+                      icon: Icon(Icons.arrow_back_ios_new,
                           color: AppColors.buttonColor, size: 28),
                       onPressed: widget.onBack,
                       padding: EdgeInsets.zero,

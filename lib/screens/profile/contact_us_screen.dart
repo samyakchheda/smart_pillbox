@@ -44,11 +44,10 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon:
-                      Icon(Icons.arrow_back_ios, color: AppColors.buttonColor),
+                  icon: Icon(Icons.arrow_back_ios_new,
+                      color: AppColors.buttonColor),
                   onPressed: widget.onBack,
                 ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     "Contact Us".tr(),
