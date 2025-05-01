@@ -1,14 +1,17 @@
-import 'dart:async'; // Add this import for StreamSubscription
+import 'dart:async';
+import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:http/http.dart' as http;
 
 class BuzzerScreen extends StatefulWidget {
   final VoidCallback onBack;
 
-  const BuzzerScreen({super.key, required this.onBack});
+  const BuzzerScreen({Key? key, required this.onBack}) : super(key: key);
 
   @override
   State<BuzzerScreen> createState() => _BuzzerScreenState();
@@ -18,17 +21,21 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
   String? _selectedTone;
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isPlaying = false;
-  StreamSubscription?
-      _playerCompleteSubscription; // Add this to manage the listener
+  StreamSubscription<void>? _playerCompleteSubscription;
 
-  final List<String> _buzzerTones = [
-    'Beep Beep'.tr(),
-    'Calm Tune'.tr(),
-    'Gentle Chime'.tr(),
-    'Soft Melody'.tr(),
-    'Relaxing Sound'.tr()
-  ];
+  // Hardcoded ESP32 IP; update or fetch from config as needed
+  final String _esp32Ip = "192.168.1.106";
 
+  /// Display name → API sound key
+  final Map<String, String> _toneToApi = {
+    'Beep Beep': 'beep_beep',
+    'Calm Tune': 'calm_tune',
+    'Gentle Chime': 'gentle_chime',
+    'Soft Melody': 'soft_melody',
+    'Relaxing Sound': 'relaxing',
+  };
+
+  /// Display name → local asset path
   final Map<String, String> _toneFiles = {
     'Beep Beep': 'assets/buzzer/beep_beep.wav',
     'Calm Tune': 'assets/buzzer/calm_tune.wav',
@@ -40,39 +47,150 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
   @override
   void initState() {
     super.initState();
-    // Set up the listener in initState
-    _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((event) {
-      if (mounted) {
-        // Check if the widget is still mounted
-        setState(() => _isPlaying = false);
-      }
+    _playerCompleteSubscription = _audioPlayer.onPlayerComplete.listen((_) {
+      if (mounted) setState(() => _isPlaying = false);
     });
   }
 
   @override
   void dispose() {
-    _playerCompleteSubscription?.cancel(); // Cancel the subscription
-    _audioPlayer.dispose(); // Dispose of the audio player
+    _playerCompleteSubscription?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  Future<void> _playPreview(String tone) async {
+  /// Sends the buzzer API request without blocking playback
+  Future<void> _sendBuzzerApi(String displayTone) async {
+    // 1. Map to API sound key
+    final apiSound = _toneToApi[displayTone];
+    if (apiSound == null) {
+      debugPrint('⚠️ Invalid tone: $displayTone');
+      return;
+    }
+
+    // 2. Fetch current Firebase user
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint('⚠️ No Firebase user signed in');
+      return;
+    }
+
+    // 3. Call Buzzer API
+    final uri =
+        Uri.parse('https://6617-183-87-183-2.ngrok-free.app/buzzer/play');
+    final body = jsonEncode({
+      'esp32_ip': _esp32Ip,
+      'sound_type': apiSound,
+    });
+
+    try {
+      final resp = await http.post(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+      if (resp.statusCode != 200) {
+        debugPrint('⚠️ Buzzer API error ${resp.statusCode}: ${resp.body}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Exception calling buzzer API: $e');
+    }
+  }
+
+  Future<void> _playPreview(String displayTone) async {
+    // 1. Stop existing playback
     if (_isPlaying) {
       await _audioPlayer.stop();
     }
-    await _audioPlayer.play(AssetSource(_toneFiles[tone]!.split('assets/')[1]));
+
+    // Fire-and-forget API call
+    unawaited(_sendBuzzerApi(displayTone));
+
+    // 2. Play local preview asset immediately
+    final rawPath = _toneFiles[displayTone];
+    if (rawPath == null) {
+      debugPrint('⚠️ No asset file for tone: $displayTone');
+      return;
+    }
+    final playPath = rawPath.replaceFirst('assets/', '');
+    await _audioPlayer.play(AssetSource(playPath));
+
+    // 3. Update UI state
     if (mounted) {
-      // Check if mounted before calling setState
-      setState(() => _isPlaying = true);
+      setState(() {
+        _selectedTone = displayTone;
+        _isPlaying = true;
+      });
     }
   }
 
   Future<void> _stopPreview() async {
     await _audioPlayer.stop();
-    if (mounted) {
-      // Check if mounted before calling setState
-      setState(() => _isPlaying = false);
-    }
+    if (mounted) setState(() => _isPlaying = false);
+  }
+
+  void _saveBuzzerTone() {
+    _stopPreview();
+    // Persist _selectedTone as needed
+    debugPrint('Selected buzzer tone: $_selectedTone');
+    widget.onBack();
+  }
+
+  List<Widget> _buildToneOptions() {
+    return _toneToApi.keys.map((tone) {
+      final isSelected = _selectedTone == tone;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Card(
+          elevation: isSelected ? 4 : 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: isSelected ? AppColors.buttonColor : Colors.grey.shade300,
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: ListTile(
+            title: Text(
+              tone.tr(),
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                color:
+                    isSelected ? AppColors.buttonColor : AppColors.textPrimary,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(
+                    _isPlaying && isSelected ? Icons.stop : Icons.play_arrow,
+                    color: AppColors.buttonColor,
+                  ),
+                  onPressed: () {
+                    if (_isPlaying && isSelected) {
+                      _stopPreview();
+                    } else {
+                      _playPreview(tone);
+                    }
+                  },
+                ),
+                if (isSelected)
+                  Icon(Icons.check_circle, color: AppColors.buttonColor),
+              ],
+            ),
+            onTap: () {
+              if (_isPlaying && isSelected) {
+                _stopPreview();
+              } else {
+                _playPreview(tone);
+              }
+            },
+          ),
+        ),
+      );
+    }).toList();
   }
 
   @override
@@ -91,12 +209,10 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
               ),
               Expanded(
                 child: Text(
-                  "Buzzer Settings".tr(),
+                  'Buzzer Settings'.tr(),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                      fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 48),
@@ -104,7 +220,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            "Select Buzzer Tone".tr(),
+            'Select Buzzer Tone'.tr(),
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.w600,
@@ -116,103 +232,26 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
           const SizedBox(height: 24),
           Center(
             child: ElevatedButton.icon(
-              onPressed: _selectedTone != null
-                  ? () {
-                      _saveBuzzerTone();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Buzzer tone set to $_selectedTone'),
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                  : null,
+              onPressed: _selectedTone != null ? _saveBuzzerTone : null,
               icon: const Icon(Icons.save, color: Colors.white),
               label: Text(
-                "Save Selection".tr(),
+                'Save Selection'.tr(),
                 style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.buttonColor,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 20,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  List<Widget> _buildToneOptions() {
-    return _buzzerTones.map((tone) {
-      final isSelected = _selectedTone == tone;
-      return Padding(
-        padding: const EdgeInsets.only(
-            bottom: 8.0), // Fix typo: 'bottom' instead of 'custom'
-        child: Card(
-          elevation: isSelected ? 4 : 1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: isSelected ? AppColors.buttonColor : Colors.grey.shade300,
-              width: isSelected ? 2 : 1,
-            ),
-          ),
-          child: ListTile(
-            title: Text(
-              tone,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                color:
-                    isSelected ? AppColors.buttonColor : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: Icon(
-                    _isPlaying && _selectedTone == tone
-                        ? Icons.stop
-                        : Icons.play_arrow,
-                    color: AppColors.buttonColor,
-                  ),
-                  onPressed: () {
-                    if (_isPlaying && _selectedTone == tone) {
-                      _stopPreview();
-                    } else {
-                      setState(() => _selectedTone = tone);
-                      _playPreview(tone);
-                    }
-                  },
-                ),
-                if (isSelected)
-                  Icon(Icons.check_circle, color: AppColors.buttonColor),
-              ],
-            ),
-            onTap: () {
-              setState(() => _selectedTone = tone);
-            },
-          ),
-        ),
-      );
-    }).toList();
-  }
-
-  void _saveBuzzerTone() {
-    _stopPreview(); // Stop any playing preview
-    print('Selected buzzer tone: $_selectedTone');
-    widget.onBack();
   }
 }

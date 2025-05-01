@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:home/theme/app_colors.dart';
 import 'package:home/theme/app_fonts.dart';
@@ -258,18 +259,27 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToDiagnosisScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DiagnosisInProgressScreen(
-          esp32Ip: "192.168.1.106",
-          userId: "5Y9cxbLbz1SdGL7zwOHTEHVuP5s2",
-          onBack: () => Navigator.pop(context),
-          onComplete: () {},
+  void _navigateToDiagnosisScreen(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser; // Get current user
+
+    if (user != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DiagnosisInProgressScreen(
+            esp32Ip: "192.168.1.106",
+            userId: user.uid, // Pass the fetched user ID
+            onBack: () => Navigator.pop(context),
+            onComplete: () {},
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      // Handle the case where the user is not signed in
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User not signed in')),
+      );
+    }
   }
 }
 

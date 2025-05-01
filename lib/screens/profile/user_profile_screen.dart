@@ -340,7 +340,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           return;
         }
 
-        final esp32Ip = docSnapshot.data()?['esp32_ip'];
+        final esp32Ip = "192.168.1.106";
         if (esp32Ip == null || esp32Ip.isEmpty) {
           mySnackBar(context, 'ESP32 IP not configured'.tr(), isError: true);
           return;

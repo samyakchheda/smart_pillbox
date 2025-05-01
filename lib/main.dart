@@ -95,7 +95,8 @@ void main() async {
   );
 
   // Initialize Gemini with your API key
-  const apiKey = ''; // Replace with your actual Gemini API key
+  const apiKey =
+      'AIzaSyD3psw8M8hiX2mnwGoXxc-0-ZvBxPa0IYY'; // Replace with your actual Gemini API key
   Gemini.init(apiKey: apiKey);
 
   // Initialize local notifications
