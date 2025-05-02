@@ -24,7 +24,7 @@ class _BuzzerScreenState extends State<BuzzerScreen> {
   StreamSubscription<void>? _playerCompleteSubscription;
 
   // Hardcoded ESP32 IP; update or fetch from config as needed
-  final String _esp32Ip = "192.168.1.106";
+  final String _esp32Ip = "192.168.222.16";
 
   /// Display name → API sound key
   final Map<String, String> _toneToApi = {

@@ -664,7 +664,7 @@ class MedicineFormScreenState extends State<MedicineFormScreen> {
       );
 
       final userId = FirebaseAuth.instance.currentUser?.uid;
-      final esp32Ip = "192.168.1.106:80";
+      final esp32Ip = "192.168.222.16";
       if (userId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

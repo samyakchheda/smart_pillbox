@@ -267,7 +267,7 @@ class SmartDiagnosisInfoScreen extends StatelessWidget {
         context,
         MaterialPageRoute(
           builder: (context) => DiagnosisInProgressScreen(
-            esp32Ip: "192.168.1.106",
+            esp32Ip: "192.168.222.16",
             userId: user.uid, // Pass the fetched user ID
             onBack: () => Navigator.pop(context),
             onComplete: () {},
