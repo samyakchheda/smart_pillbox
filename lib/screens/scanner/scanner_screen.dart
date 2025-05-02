@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:home/theme/app_colors.dart'; // Assuming this exists
+import 'package:home/theme/app_colors.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../services/scanner_service/scanner_service.dart';
 import 'image_detail_screen.dart';
 
@@ -32,8 +33,37 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   void _startScanning() async {
-    await _documentService.startScanning(widget.userId);
-    _fetchScannedDocuments();
+    // Show dialog with Camera and Gallery options
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: Text('Camera'.tr()),
+              onTap: () async {
+                Navigator.pop(context);
+                await _documentService.startScanning(widget.userId,
+                    useCamera: true);
+                _fetchScannedDocuments();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text('Gallery'.tr()),
+              onTap: () async {
+                Navigator.pop(context);
+                await _documentService.startScanning(widget.userId,
+                    useCamera: false);
+                _fetchScannedDocuments();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _deleteDocument(String documentId, String cloudinaryUrl) async {
@@ -110,7 +140,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                 document['id'], document['cloudinary_url']);
                           },
                           background: Container(
-                            color: AppColors.errorColor, // Replace Colors.red
+                            color: AppColors.errorColor,
                             child: const Align(
                               alignment: Alignment.centerRight,
                               child: Padding(

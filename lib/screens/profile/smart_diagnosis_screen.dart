@@ -866,19 +866,21 @@ class _DiagnosisInProgressScreenState extends State<DiagnosisInProgressScreen> {
                 style: AppFonts.buttonText
                     .copyWith(color: AppColors.textSecondary, fontSize: 16)),
           ),
-          MyElevatedButton(
-            text: "Exit".tr(),
+          ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               widget.onBack();
             },
-            backgroundColor: AppColors.buttonColor,
-            borderRadius: 50,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-            textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
-            height: 60,
-            textShift: 0,
-          ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.buttonColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+              fixedSize: const Size.fromHeight(20),
+              textStyle: AppFonts.buttonText.copyWith(fontSize: 16),
+            ),
+            child: Text("Exit".tr()),
+          )
         ],
       ),
     );
