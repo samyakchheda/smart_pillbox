@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+
+    <string name="app_name">SmartDose</string>
+    <string name="facebook_app_id">1120119689424550</string>
+    <string name="fb_login_protocol_scheme">fb1120119689424550</string>
+    <string name="facebook_client_token">06eceecc0a4c15a6810d89d9cc0c923a</string>
+
+</resources>

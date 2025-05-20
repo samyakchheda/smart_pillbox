@@ -1,20 +1,25 @@
-# Razorpay SDK
+# Razorpay
 -keep class com.razorpay.** { *; }
--keep class proguard.annotation.Keep { *; }
--keep class proguard.annotation.KeepClassMembers { *; }
 -dontwarn com.razorpay.**
 
-# Keep annotations
--keepattributes *Annotation*
+# GRPC + Missing okhttp classes workaround
+-keep class com.squareup.okhttp.** { *; }
+-dontwarn com.squareup.okhttp.**
 
-# Prevent stripping methods used via reflection
+# onPayment callbacks
+-keepclasseswithmembers class * {
+    public void onPayment*(...);
+}
+
+# Gson reflection
 -keepclassmembers class * {
     @com.google.gson.annotations.SerializedName <fields>;
     @com.google.gson.annotations.Expose <fields>;
     public *;
 }
 
-# General settings to avoid issues with third-party libraries
+# General
+-keepattributes *Annotation*
 -dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.**
 -dontwarn okio.**

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -89,8 +90,8 @@ Future<void> requestAlarmPermission(BuildContext context) async {
                             print("Alarm permission denied.");
                           }
                         },
-                        child: const Text(
-                          "Allow",
+                        child: Text(
+                          "Allow".tr(),
                           style: TextStyle(
                             color: Colors.blue,
                             fontSize: 16,
@@ -104,8 +105,8 @@ Future<void> requestAlarmPermission(BuildContext context) async {
                           Navigator.of(context).pop();
                           print("Permission denied by user.");
                         },
-                        child: const Text(
-                          "Don't allow",
+                        child: Text(
+                          "Don't allow".tr(),
                           style: TextStyle(
                             color: Colors.blue,
                             fontSize: 16,

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:floating_draggable_widget/floating_draggable_widget.dart';
 import 'package:flutter/material.dart';
@@ -5,49 +7,70 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_osm_plugin/flutter_osm_plugin.dart' as osm;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:home/ai/chat_screen.dart';
-import 'package:home/helpers/functions/permissions_manager.dart'; // Handles notification and alarm permissions
-import 'package:home/pharmacy/services/location_service.dart';
-import 'package:home/pharmacy/services/pharmacy_service.dart';
-import 'package:home/presentation/caretaker/home/home_screen.dart';
-import 'package:home/presentation/home/home_screen.dart';
-import 'package:home/presentation/onboarding/onboarding_screen.dart';
+import 'package:home/screens/ai/chat_screen.dart';
+import 'package:home/helpers/functions/permissions_manager.dart';
+import 'package:home/screens/language/lang_selection_screen.dart';
+import 'package:home/screens/caretaker/home/home_screen.dart';
+import 'package:home/screens/home/home_screen.dart';
 import 'package:home/firebase_options.dart';
 import 'package:home/routes/routes.dart';
 import 'package:home/services/medicine_service/medicine_service.dart';
 import 'package:home/theme/app_colors.dart';
+import 'package:home/theme/theme_provider.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:cron/cron.dart';
-import 'package:feedback/feedback.dart'; // Feedback package
-import 'package:shake_gesture/shake_gesture.dart'; // Shake gesture package
+import 'package:feedback/feedback.dart';
+import 'package:shake_gesture/shake_gesture.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
+// Global Navigator Key
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-Position? userLocation; // Global user location
-List<dynamic>? pharmacyData; // Global pharmacy data
-MapController mapController = MapController(
-  initPosition: GeoPoint(latitude: 0, longitude: 0),
+// Global Variables
+Position? userLocation;
+List<dynamic>? pharmacyData;
+osm.MapController mapController = osm.MapController(
+  initPosition:
+      osm.GeoPoint(latitude: 0, longitude: 0), // Use prefixed GeoPoint
 );
+final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-/// Example function to be called periodically.
-void callMedicineCheck() {
-  const String userId = "FCgtDXc6R5ccomEwxS2IHIYtRI73";
-  const bool isNotification = false;
-  checkMedicineTimes(userId, isNotification);
+// Preload Lottie Animation Globally
+LottieComposition? _loadingComposition;
+
+Future<void> preloadLottieAnimation() async {
+  _loadingComposition =
+      await AssetLottie('assets/animations/loading.json').load();
+  await AssetLottie('assets/animations/Doctor.json').load();
+  await AssetLottie('assets/animations/progress_tracker.json').load();
+  await AssetLottie('assets/animations/Reminders.json').load();
+}
+
+void callMedicineCheck() async {
+  User? user = FirebaseAuth.instance.currentUser;
+
+  if (user != null) {
+    String userId = user.uid;
+    bool isNotification = false;
+    debugPrint(userId);
+
+    checkMedicineTimes(userId, isNotification);
+  } else {
+    print("No user is signed in.");
+  }
 }
 
 /// Requests location permission and fetches user location & nearby pharmacies.
-/// This function is called at app startup before runApp.
 Future<void> _initializeLocationAndPharmacies() async {
-  // Check and request location permission.
   LocationPermission permission = await Geolocator.checkPermission();
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
@@ -60,47 +83,54 @@ Future<void> _initializeLocationAndPharmacies() async {
         "Location permission permanently denied. Please enable it in settings.");
     return;
   }
-
-  // Once permission is granted, fetch the location.
-  try {
-    userLocation = await LocationService.getCurrentLocation();
-    if (userLocation != null) {
-      mapController = MapController(
-        initPosition: GeoPoint(
-          latitude: userLocation!.latitude,
-          longitude: userLocation!.longitude,
-        ),
-      );
-      pharmacyData = await PharmacyService().getNearbyPharmacies(userLocation!);
-      print(
-          "Location fetched: ${userLocation!.latitude}, ${userLocation!.longitude}");
-    }
-  } catch (e) {
-    print("Error fetching location or pharmacies: $e");
-  }
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ThemeProvider.init();
+  await EasyLocalization.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+  );
 
-  // Initialize Gemini with your API key.
-  const apiKey = 'AIzaSyD3psw8M8hiX2mnwGoXxc-0-ZvBxPa0IYY';
+  // Initialize Gemini with your API key
+  const apiKey =
+      'AIzaSyD3psw8M8hiX2mnwGoXxc-0-ZvBxPa0IYY'; // Replace with your actual Gemini API key
   Gemini.init(apiKey: apiKey);
 
-  // Create a Cron instance and schedule a job (e.g., at midnight).
+  // Initialize local notifications
+  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+  await flutterLocalNotificationsPlugin.initialize(
+    const InitializationSettings(android: androidInit),
+  );
+
+  // Schedule medicine check at midnight
   final cron = Cron();
   cron.schedule(Schedule.parse('0 0 * * *'), () {
     callMedicineCheck();
   });
 
+  // Load environment variables
   await dotenv.load(fileName: "assets/.env");
 
-  // Wrap the app with BetterFeedback and our custom ShakeFeedbackWrapper.
+  // Preload Lottie animation
+  await preloadLottieAnimation();
+
   runApp(
-    const BetterFeedback(
-      child: ShakeFeedbackWrapper(
-        child: MyApp(),
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('hi', 'IN'),
+        Locale('gu', 'IN'),
+        Locale('mr', 'IN'),
+      ],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en', 'US'),
+      child: const BetterFeedback(
+        child: ShakeFeedbackWrapper(
+          child: MyApp(),
+        ),
       ),
     ),
   );
@@ -108,27 +138,73 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      theme: ThemeData(
-        scaffoldBackgroundColor: AppColors.darkBackground,
-      ),
-      title: 'Smart Pillbox',
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      onGenerateRoute: Routes.generateRoute,
-      // The main route now points to our AuthWrapper.
-      routes: {
-        '/': (context) => const AuthWrapper(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeProvider.themeNotifier,
+      builder: (context, mode, child) {
+        return MaterialApp(
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          navigatorKey: navigatorKey,
+          title: 'Smart Pillbox',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            primaryColor: AppColors.buttonColor,
+            scaffoldBackgroundColor: AppColors.lightBackground,
+            cardColor: AppColors.lightCardBackground,
+            textTheme: ThemeData.light().textTheme.apply(
+                  bodyColor: AppColors.textPrimary,
+                  displayColor: AppColors.textPrimary,
+                ),
+            iconTheme: IconThemeData(color: AppColors.buttonColor),
+            dividerColor: AppColors.textPlaceholder,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonColor,
+                foregroundColor: AppColors.buttonText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            primaryColor: AppColors.buttonColor,
+            scaffoldBackgroundColor: AppColors.darkBackground,
+            cardColor: AppColors.darkCardBackground,
+            textTheme: ThemeData.dark().textTheme.apply(
+                  bodyColor: AppColors.textPrimary,
+                  displayColor: AppColors.textPrimary,
+                ),
+            iconTheme: IconThemeData(color: AppColors.buttonColor),
+            dividerColor: AppColors.textPlaceholder,
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.buttonColor,
+                foregroundColor: AppColors.buttonText,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+          themeMode: mode,
+          initialRoute: '/',
+          onGenerateRoute: Routes.generateRoute,
+          routes: {
+            '/': (context) => const AuthWrapper(),
+          },
+        );
       },
     );
   }
 }
 
-/// AuthWrapper decides which screen to display based on authentication.
-/// It still requests notification and alarm permissions.
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -142,7 +218,6 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Request other necessary permissions.
     requestPermissions(context);
 
     return StreamBuilder<User?>(
@@ -154,16 +229,12 @@ class AuthWrapper extends StatelessWidget {
             return FutureBuilder<bool>(
               future: isCaretaker(user.email!),
               builder: (context, caretakerSnapshot) {
-                // Show caretaker or normal home screen based on user type.
                 Widget homeScreen = caretakerSnapshot.data == true
                     ? const CareTakerHomeScreen()
                     : const HomeScreen();
-                // Wrap the home screen with the floating draggable widget.
                 return FloatingDraggableWidget(
-                  dx: MediaQuery.of(context).size.width -
-                      55, // Stick to the right edge
-                  dy: MediaQuery.of(context).size.height *
-                      0.65, // Position slightly below the top
+                  dx: MediaQuery.of(context).size.width - 55,
+                  dy: MediaQuery.of(context).size.height * 0.65,
                   mainScreenWidget: homeScreen,
                   floatingWidget: GestureDetector(
                     onTap: () {
@@ -176,10 +247,10 @@ class AuthWrapper extends StatelessWidget {
                     child: Container(
                       width: 60,
                       height: 60,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: AppColors.buttonColor,
                         shape: BoxShape.circle,
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(color: Colors.black26, blurRadius: 5),
                         ],
                       ),
@@ -187,8 +258,7 @@ class AuthWrapper extends StatelessWidget {
                           color: Colors.white, size: 28),
                     ),
                   ),
-                  autoAlign:
-                      false, // Disable auto-align to keep it where we place it
+                  autoAlign: false,
                   floatingWidgetWidth: 55,
                   floatingWidgetHeight: 55,
                   speed: 0.5,
@@ -196,8 +266,7 @@ class AuthWrapper extends StatelessWidget {
               },
             );
           } else {
-            // If the user is not logged in, show the onboarding screen.
-            return const OnboardingScreen();
+            return const LanguageSelectionScreen();
           }
         } else {
           return const Center(child: CircularProgressIndicator());
@@ -206,11 +275,11 @@ class AuthWrapper extends StatelessWidget {
     );
   }
 
-  /// Requests notification and alarm permissions.
   void requestPermissions(BuildContext context) async {
     await requestNotificationPermission();
     await requestAlarmPermission(context);
     await _initializeLocationAndPharmacies();
+    await setupFCM();
   }
 }
 
@@ -241,7 +310,6 @@ Future<void> saveTokenToFirestore(String token) async {
       final userId = user.uid;
       final normalizedEmail = user.email?.trim().toLowerCase() ?? '';
 
-      // Check if the user's email exists in the "caretakers" collection.
       final caretakerQuery = await firestore.FirebaseFirestore.instance
           .collection('caretakers')
           .where('email', isEqualTo: normalizedEmail)
@@ -276,7 +344,6 @@ Future<void> saveTokenToFirestore(String token) async {
   }
 }
 
-/// Writes screenshot bytes to a temporary file and returns the file path.
 Future<String> writeScreenshotToFile(Uint8List screenshotBytes) async {
   final directory = await getTemporaryDirectory();
   final filePath = '${directory.path}/feedback_screenshot.png';
@@ -285,9 +352,6 @@ Future<String> writeScreenshotToFile(Uint8List screenshotBytes) async {
   return filePath;
 }
 
-/// ShakeFeedbackWrapper uses the shake_gesture package to detect shakes
-/// and triggers the BetterFeedback dialog. Once feedback is submitted,
-/// an email is pre-composed with the screenshot attached.
 class ShakeFeedbackWrapper extends StatelessWidget {
   final Widget child;
   const ShakeFeedbackWrapper({super.key, required this.child});
@@ -304,9 +368,7 @@ class ShakeFeedbackWrapper extends StatelessWidget {
           final email = Email(
             body: "User submitted feedback with a screenshot attached.",
             subject: 'User Feedback',
-            recipients: [
-              'smartdose.care@gmail.com'
-            ], // Update to your support email.
+            recipients: ['smartdose.care@gmail.com'],
             attachmentPaths: screenshotPath != null ? [screenshotPath] : null,
             isHTML: false,
           );
