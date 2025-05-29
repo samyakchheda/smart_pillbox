@@ -114,9 +114,9 @@ ESP32/
 
 ## 👨‍💻 Developed By
 
-- Samyak Chheda (B008)
-- Parth Dave (B011)
-- Rishi Vejani (B057)
+- Samyak Chheda
+- Parth Dave
+- Rishi Vejani
 
 **Mentor:** Mrs. Sharyu Kadam
 **Institution:** Shri Bhagubhai Mafatlal Polytechnic, Computer Engineering Dept.
